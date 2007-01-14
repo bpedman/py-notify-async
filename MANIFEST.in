@@ -1,0 +1,11 @@
+include            COPYING
+include		   AUTHORS INSTALL README
+include		   HACKING TODO
+include		   MANIFEST MANIFEST.in
+
+include            version
+include		   ChangeLog
+
+include            generate-docs.py run-tests.py
+
+recursive-include  test *.py

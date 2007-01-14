@@ -1,0 +1,27 @@
+			 SYSTEM REQUIREMENTS
+
+Py-notify requires Python 2.3 or later.  It currently contains no C
+code, but that is expected to appear.  So, while a C compiler is not
+required at the moment, it will be required for later versions.
+
+
+
+		 PY-NOTIFY INSTALLATION INSTRUCTIONS
+
+Normally, just executing
+
+	./setup.py install
+
+under a super-user account from this directory should suffice.
+However, it will create root-owned files in source tree, so you should
+use
+
+	./setup.py build
+	su
+	[PASSWORD]
+	./setup.py install
+
+instead.
+
+In general, Py-notify installation doesn't involve anything uncommon.
+It should be just like that of any Python package that uses distutils.

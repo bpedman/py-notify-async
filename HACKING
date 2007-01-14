@@ -1,0 +1,76 @@
+			 TESTING YOUR CHANGES
+
+Normally, Python will prefer installed Py-notify copy, so be careful.
+Your changes might seemingly have no effect simply because they are
+not executed at all.
+
+You can make Python import Py-notify from your working copy by putting
+this in start-up Python file of your code:
+
+	import sys
+	sys.path.insert (0, PATH-TO-YOUR-WORKING-COPY)
+
+Py-notify tests (in the `test' directory) do this automatically, so no
+special steps are required to make them test what they need to.
+
+Also, if you run Python interpreter from the working copy directory,
+it should import that Py-notify copy, not the installed one.
+
+
+
+		   NEW-STYLE OR OLD-STYLE CLASSES?
+
+Always use new-style classes.  Old-style will be even dropped from
+Python 3.0.
+
+
+
+				SLOTS
+
+Don't forget to specify __slots__ = () in case class should not
+introduce new slots.  Otherwise, instances will be created with a
+dictionary and that is absolutely wrong for our case.
+
+
+
+		      CALLING SUPERCLASS METHODS
+
+Please always use super (..., self) idiom to call superclass methods
+and don't specify explicit name.  This is somewhat slower, but not
+error-prone if you change inheritance tree.  The only exception might
+be multiple inheritance, but we currently don't use that at all.
+
+
+
+			 OBJECT CONSTRUCTORS
+
+Classes directly derived from `object' (and from anything else too)
+and overriding __init__() function, must always explicitly call
+super (..., self).__init__().  This may seem like an unneeded
+requirement, but otherwise multiple inheritance may cease to work.
+Consider this:
+
+	class C (object):
+	    def __init__(self):
+		print "C"
+		# super (C, self).__init__()
+
+	class D (object):
+	    def __init__(self):
+		print "D"
+		super (D, self).__init__()
+
+	class E (C, D):
+	    def __init__(self):
+		print "E"
+		super (E, self).__init__()
+
+	E ()
+
+This example never prints "D", because class `C' never calls
+__init__() method of its superclass.  If you uncomment the call,
+initialization is back to normal.
+
+So, while we currently don't use multiple inheritance at all, let's do
+what is right and not track obscure bugs later.  Besides, who knows if
+a user of the library uses multiple inheritance for some reason?

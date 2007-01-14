@@ -1,0 +1,320 @@
+# -*- coding: utf-8 -*-
+
+#--------------------------------------------------------------------#
+# This file is part of Py-notify.                                    #
+#                                                                    #
+# Copyright (C) 2006, 2007 Paul Pogonyshev.                          #
+#                                                                    #
+# This library is free software; you can redistribute it and/or      #
+# modify it under the terms of the GNU Lesser General Public License #
+# as published by the Free Software Foundation; either version 2.1   #
+# of the License, or (at your option) any later version.             #
+#                                                                    #
+# This library is distributed in the hope that it will be useful,    #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of     #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU  #
+# Lesser General Public License for more details.                    #
+#                                                                    #
+# You should have received a copy of the GNU Lesser General Public   #
+# License along with this library; if not, write to the Free         #
+# Software Foundation, Inc., 51 Franklin Street, Fifth Floor,        #
+# Boston, MA 02110-1301 USA                                          #
+#--------------------------------------------------------------------#
+
+
+"""
+Mediators can be used to transform values from one format to another and back.  Main
+advantage over transformation ‘by hands’ is that both ‘to’ and ‘from’ transformations are
+encapsulated in one object and are not separated from each other.
+
+If two mediators are equal and L{AbstractMediator.forward} or L{AbstractMediator.back} are
+called with equal functions on each of the two, resulting callables will be equal.  This
+may be not easy to achive with simple functions when you need transformation to depend on
+a parameter:
+
+    >>> f1 = lambda x: x + 10
+    ... f2 = lambda x: x + 10
+    ... f1 != f2
+    ...
+    ... import operator
+    ... from notify.mediator import *
+    ... identity = lambda x: x
+    ... m1 = FunctionalMediator (operator.add, operator.sub, 10)
+    ... m2 = FunctionalMediator (operator.add, operator.sub, 10)
+    ... m1 == m2
+    ... m1.forward (identity) == m2.forward (identity)
+
+This property is important when using L{Signal.disconnect <signal.Signal.disconnect>} or
+one of the functions that base on it.  Since it disconnects an I{equal} (not identical)
+handler, with mediators you can avoid storing handler around: an equal one can be
+constructed when needed.  When using lambdas, you’d have to store handler.
+
+G{classtree AbstractMediator}
+"""
+
+__docformat__ = 'epytext en'
+__all__       = ('AbstractMediator', 'BooleanMediator', 'FunctionalMediator')
+
+
+from notify.utils import *
+
+
+
+#-- Base mediator class ----------------------------------------------
+
+class AbstractMediator (object):
+
+    """
+    An abstract object that can transform values between two formats (back and forth).  In
+    addition, it can create proxies for arbitrary functions with L{forward} and L{back}
+    methods.  When a proxy is called with single value, the value is transformed forth or
+    back first, and then passed to underlying function.
+
+    In other words, proxies work in such a way that
+        >>> mediator.forward (some_function) (value)
+
+    is the same as
+        >>> some_function (mediator.forward_value (value))
+
+    Former expression is somewhat more cryptic and generally should not be used when you
+    just need to convert I{one} value.  However, it (without the last call) can be exactly
+    what is needed to create an argument to a L{signal}.
+    """
+
+    def forward_value (self, value):
+        raise_not_implemented_exception (self)
+
+    def back_value (self, value):
+        raise_not_implemented_exception (self)
+
+
+    def forward (self, function):
+        if callable (function):
+            return _Forward (self, function)
+        else:
+            raise TypeError ("`function' must be callable")
+
+    def back (self, function):
+        if callable (function):
+            return _Back (self, function)
+        else:
+            raise TypeError ("`function' must be callable")
+
+
+    def reverse (self):
+        """
+        Return a mediator that does exactly opposite transformations.  More specifically,
+        if C{m2 = m1.reverse ()}, then:
+
+            >>> m1.forward_value (value)    == m2.back_value    (value)
+            ... m1.back_value    (value)    == m2.forward_value (value)
+            ... m1.forward       (function) == m2.back          (function)
+            ... m1.back          (function) == m2.forward       (function)
+
+        Additionaly, it holds that C{mediator.reverse ().reverse () == mediator}.
+
+        @rtype: AbstractMediator
+        """
+
+        return _ReverseMediator (self)
+
+
+    def __eq__(self, other):
+        return self is other
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+
+
+#-- Standard mediator classes ----------------------------------------
+
+class BooleanMediator (AbstractMediator):
+
+    """
+    A mediator that transforms C{true_value} and C{false_value} to C{True} and C{False}
+    correspondingly.  Other values are transformed using C{fallback} function to C{True}
+    or C{False}, depending on C{bool} result over C{fallback}’s return value.  Back
+    transformation is like this: logically true values are transformed to C{True},
+    logically false ones—to C{False}.
+
+    It may be more understandable from an example:
+
+        >>> mediator = BooleanMediator ('apple', 'orange', lambda x: isinstance (x, str))
+        ...
+        ... mediator.forward_value ('apple')  == True
+        ... mediator.forward_value ('orange') == False
+        ... mediator.forward_value ('')       == True
+        ... mediator.forward_value (15)       == False
+        ...
+        ... mediator.back_value    (True)     == 'apple'
+        ... mediator.back_value    (False)    == 'orange'
+        ... mediator.back_value    (15)       == 'apple'
+    """
+
+    __slots__ = ('_BooleanMediator__true_value', '_BooleanMediator__false_value',
+                 '_BooleanMediator__fallback')
+
+
+    def __init__(self, true_value = True, false_value = False, fallback = None):
+        if fallback is None:
+            fallback = bool
+        else:
+            if not callable (fallback):
+                raise TypeError ("`fallback' must be a callable")
+
+        super (BooleanMediator, self).__init__()
+
+        self.__true_value  = true_value
+        self.__false_value = false_value
+        self.__fallback    = fallback
+
+
+    def forward_value (self, value):
+        if value == self.__true_value:
+            return True
+        elif value == self.__false_value:
+            return False
+        else:
+            return bool (self.__fallback (value))
+
+
+    def back_value (self, value):
+        if value:
+            return self.__true_value
+        else:
+            return self.__false_value
+
+
+    def __eq__(self, other):
+        return (isinstance (other, BooleanMediator)
+                and self.__true_value  == other.__true_value
+                and self.__false_value == other.__false_value
+                and self.__fallback    == other.__fallback)
+
+
+
+class FunctionalMediator (AbstractMediator):
+
+    __slots__ = ('_FunctionalMediator__forward_function', '_FunctionalMediator__back_function',
+                 '_FunctionalMediator__arguments')
+
+
+    def __init__(self, forward_function = None, back_function = None, *arguments):
+        if (   not (forward_function is None or callable (forward_function))
+            or not (back_function    is None or callable (back_function))):
+            raise TypeError ('both functions must be callable or None')
+
+        super (FunctionalMediator, self).__init__()
+
+        self.__forward_function = forward_function or _identity
+        self.__back_function    = back_function    or _identity
+        self.__arguments        = arguments
+
+
+    def forward_value (self, value):
+        return self.__forward_function (value, *self.__arguments)
+
+    def back_value (self, value):
+        return self.__back_function (value, *self.__arguments)
+
+
+    def reverse (self):
+        """
+        Return a mediator that does exactly opposite transformations.
+        """
+
+        return self.__class__(self.__back_function, self.__forward_function, *self.__arguments)
+
+
+    def __eq__(self, other):
+        return (isinstance (other, FunctionalMediator)
+                and self.__forward_function == other.__forward_function
+                and self.__back_function    == other.__back_function
+                and self.__arguments        == other.__arguments)
+
+
+
+#-- Internal mediator and related classes ----------------------------
+
+class _ReverseMediator (AbstractMediator):
+
+    __slots__ = ('_ReverseMediator__wrapped_mediator')
+
+
+    def __init__(self, wrapped_mediator):
+        super (_ReverseMediator, self).__init__()
+        self.__wrapped_mediator = wrapped_mediator
+
+
+    def forward_value (self, value):
+        return self.__wrapped_mediator.back_value (value)
+
+    def back_value (self, value):
+        return self.__wrapped_mediator.forward_value (value)
+
+
+    def forward (self, function):
+        return self.__wrapped_mediator.back (function)
+
+    def back (self, function):
+        return self.__wrapped_mediator.forward (function)
+
+
+    def reverse (self):
+        """
+        Return a mediator that does exactly opposite transformations.
+        """
+
+        return self.__wrapped_mediator
+
+
+    def __eq__(self, other):
+        return (isinstance (other, _ReverseMediator)
+                and self.__wrapped_mediator == other.__wrapped_mediator)
+
+
+
+class _Function (object):
+
+    __slots__ = ('_mediator', '_function')
+
+
+    def __init__(self, mediator, function):
+        super (_Function, self).__init__()
+
+        self._mediator = mediator
+        self._function = function
+
+
+
+    def __eq__(self, other):
+        return (    self.__class__ is other.__class__
+                and self._mediator == other._mediator
+                and self._function == other._function)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+
+
+class _Forward (_Function):
+
+    def __call__(self, value):
+        return self._function (self._mediator.forward_value (value))
+
+
+
+class _Back (_Function):
+
+    def __call__(self, value):
+        return self._function (self._mediator.back_value (value))
+
+
+
+# Local variables:
+# mode: python
+# python-indent: 4
+# indent-tabs-mode: nil
+# fill-column: 90
+# End:

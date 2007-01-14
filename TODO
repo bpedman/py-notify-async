@@ -1,0 +1,45 @@
+			    OPTIMIZATIONS
+
+AbstractValueObject._set_used and AbstractValueObject._set_unused must
+be optimized.  Probably need to optimize them in C.
+
+
+
+			    TEST COVERAGE
+
+Currently, unit test coverage is inadequate.  Add more tests and make
+sure all of them pass.
+
+
+
+			    NAMED SIGNALS
+
+It would look like this: there is a single object (maybe
+`SignalFactory' or `SignalCollection', don't know yet.)  Its
+__getitem__() operator is overriden to get single string---name of
+signal---and return `AbstractSignal' subclass instance, an internal
+proxy consisting of reference to the factory and the name.
+
+Factory would maintain a single list of handlers, indexed by signal
+names somehow.  This makes them useful: a single factory would take
+less memory than several `Signal's.
+
+Note that factory would _not_ implement `AbstractSignal' itself, only
+returned proxies would.
+
+It is unclear if a factory should impose any restrictions on signal
+names.  Probably yes, at least optionally.
+
+Sample usage would look like this:
+
+       factory['create'].connect (...)
+       factory['create'] (some, list, of, arguments)
+
+Optimized usage (that avoids creating proxies all the time):
+
+       signal = factory['create']
+       signal.connect (...)
+       signal (some, list, of, arguments)
+
+In both cases, `create' is a name of the signal and has absolutely no
+special meaning to `factory'.
