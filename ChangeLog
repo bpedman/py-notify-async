@@ -1,0 +1,31 @@
+2007-01-15  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/condition.py (_Binary._get_dummy_reference): Remove
+	method.
+	(_IfElse): Reimplement completely and thus make new test pass.
+	(_DummyCondition): Remove class (unused.)
+	(_get_dummy_reference): New function, replaces removed method of
+	`_Binary' class.
+
+	* test/condition.py
+	(GarbageCollectionConditionTestCase.test_garbage_collection_ifelse):
+	New test.
+
+	* notify/condition.py: Add one-sentence documentation.
+	* notify/variable.py: Likewise.
+
+
+
+Changes before the project registration on Gna! (2007-01-13) were not logged.
+
+
+  Copyright (C) 2007 Paul Pogonyshev.
+
+  Copying and distribution of this file, with or without modification,
+  are permitted provided the copyright notice and this notice are preserved.
+
+
+
+Local Variables:
+coding: utf-8
+End:

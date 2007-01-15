@@ -23,6 +23,9 @@
 
 
 """
+L{Conditions <AbstractCondition>} are boolean variables with attached L{signal
+<AbstractSignal>} that is emitted when condition state changes.
+
 G{classtree AbstractCondition}
 """
 
@@ -507,20 +510,15 @@ class _Binary (AbstractCondition):
                 self._set_unused ()
         else:
             if object is self.__condition1:
-                self.__condition1 = self._get_dummy_reference (self.__condition2)
+                self.__condition1 = _get_dummy_reference (self._num_true_conditions
+                                                          - self.__condition2 ().get ())
                 if self._has_signal () and isinstance (self.__condition2, _DummyReference):
                     self._set_unused ()
             else:
-                self.__condition2 = self._get_dummy_reference (self.__condition1)
+                self.__condition2 = _get_dummy_reference (self._num_true_conditions
+                                                          - self.__condition1 ().get ())
                 if self._has_signal () and isinstance (self.__condition1, _DummyReference):
                     self._set_unused ()
-
-
-    def _get_dummy_reference (self, other_condition):
-        if self._num_true_conditions - other_condition ().get ():
-            return _TRUE_REFERENCE
-        else:
-            return _FALSE_REFERENCE
 
 
     def _get_operator_name (self):
@@ -610,31 +608,79 @@ class _Xor (_Binary):
 
 
 
-class _IfElse (AbstractStateTrackingCondition):
+class _IfElse (AbstractCondition):
 
-    __slots__ = ('_IfElse__if', '_IfElse__then', '_IfElse__else')
+    __slots__ = ('_IfElse__if', '_IfElse__then', '_IfElse__else', '_IfElse__term_state')
+
+
+    __TERM_STATE_TO_SELF_STATE = (False, True, False, True, False, False, True, True)
 
 
     def __init__(self, _if, _then, _else):
-        if _if:
-            super (_IfElse, self).__init__(_then.get ())
-        else:
-            super (_IfElse, self).__init__(_else.get ())
+        super (_IfElse, self).__init__ ()
 
-        self.__if   = _if
-        self.__then = _then
-        self.__else = _else
+        self.__if         = weakref.ref (_if,   self.__on_usage_change)
+        self.__then       = weakref.ref (_then, self.__on_usage_change)
+        self.__else       = weakref.ref (_else, self.__on_usage_change)
+        self.__term_state = (_if.get () * 4 + _then.get () * 2 + _else.get ())
 
         _if  .signal_changed ().connect (self.__on_term_change)
         _then.signal_changed ().connect (self.__on_term_change)
         _else.signal_changed ().connect (self.__on_term_change)
 
 
+    def get (self):
+        return _IfElse.__TERM_STATE_TO_SELF_STATE[self.__term_state]
+
+
     def __on_term_change (self, new_state):
-        if self.__if.get ():
-            self._set (self.__then.get ())
+        # FIXME: Is it efficient enough?
+        old_state         = _IfElse.__TERM_STATE_TO_SELF_STATE[self.__term_state]
+        self.__term_state = (  self.__if   ().get () * 4
+                             + self.__then ().get () * 2
+                             + self.__else ().get ())
+        new_state         = _IfElse.__TERM_STATE_TO_SELF_STATE[self.__term_state]
+
+        if  new_state != old_state:
+            self._changed (new_state)
+
+
+    def _create_signal (self):
+        if (   isinstance (self.__if,   weakref.ReferenceType)
+            or isinstance (self.__then, weakref.ReferenceType)
+            or isinstance (self.__else, weakref.ReferenceType)):
+            self._set_used ()
+
+        return CleanSignal (self.__on_usage_change)
+
+
+    def __on_usage_change (self, object):
+        if self._remove_signal (object):
+            if (   isinstance (self.__if,   weakref.ReferenceType)
+                or isinstance (self.__then, weakref.ReferenceType)
+                or isinstance (self.__else, weakref.ReferenceType)):
+                self._set_unused ()
         else:
-            self._set (self.__else.get ())
+            if object is self.__if:
+                self.__if = _get_dummy_reference (self.__term_state & 4)
+                if (self._has_signal ()
+                    and isinstance (self.__then, _DummyReference)
+                    and isinstance (self.__else, _DummyReference)):
+                    self._set_unused ()
+
+            elif object is self.__then:
+                self.__then = _get_dummy_reference (self.__term_state & 2)
+                if (self._has_signal ()
+                    and isinstance (self.__if,   _DummyReference)
+                    and isinstance (self.__else, _DummyReference)):
+                    self._set_unused ()
+
+            else:
+                self.__else = _get_dummy_reference (self.__term_state & 1)
+                if (self._has_signal ()
+                    and isinstance (self.__if,   _DummyReference)
+                    and isinstance (self.__then, _DummyReference)):
+                    self._set_unused ()
 
 
     def __repr__(self):
@@ -642,20 +688,6 @@ class _IfElse (AbstractStateTrackingCondition):
 
     def __str__(self):
         return '<%s if %s else %s>' % (self.__then, self.__if, self.__else)
-
-
-
-class _DummyCondition (AbstractValueObject):
-
-    def get (self):
-        return False
-
-
-    def __repr__ (self):
-        return '?'
-
-    def __str__ (self):
-        return '?'
 
 
 
@@ -673,6 +705,14 @@ class _DummyReference (object):
 
 _TRUE_REFERENCE  = _DummyReference (AbstractCondition.TRUE)
 _FALSE_REFERENCE = _DummyReference (AbstractCondition.FALSE)
+
+
+
+def _get_dummy_reference (is_true):
+    if is_true:
+        return _TRUE_REFERENCE
+    else:
+        return _FALSE_REFERENCE
 
 
 

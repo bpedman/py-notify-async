@@ -301,6 +301,41 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
             self.assert_results (*expected_results)
 
 
+    def test_garbage_collection_ifelse (self):
+        self.results     = []
+
+        condition1       = Condition (False)
+        condition2       = Condition (False)
+        condition3       = Condition (True)
+        ifelse_condition = condition1.ifelse (condition2, condition3)
+
+        ifelse_condition.store (self.simple_handler)
+        ifelse_condition = weakref.ref (ifelse_condition)
+
+        del condition2
+        gc.collect ()
+        gc.collect ()
+
+        self.assertNotEqual (ifelse_condition (), None)
+
+        condition3.state = False
+
+        del condition1
+        gc.collect ()
+        gc.collect ()
+
+        self.assertNotEqual (ifelse_condition (), None)
+
+        condition3.state = True
+
+        del condition3
+        gc.collect ()
+        gc.collect ()
+
+        self.assertEqual    (ifelse_condition (), None)
+        self.assert_results (True, False, True)
+
+
 
 if __name__ == '__main__':
     unittest.main ()

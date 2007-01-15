@@ -23,6 +23,9 @@
 
 
 """
+L{Variables <AbstractVariable>} hold any Python object and emit attached L{signal
+<AbstractSignal>} when their value changes.
+
 G{classtree AbstractVariable}
 """
 
