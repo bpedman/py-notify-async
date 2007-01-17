@@ -1,3 +1,38 @@
+2007-01-17  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/variable.py (_PredicateOverVariable): Update for new
+	signal storage and creation scheme.
+
+	* notify/condition.py (WatcherCondition): Update for new signal
+	storage and creation scheme.
+	(_Not): Likewise.
+	(_Binary): Likewise.
+	(_IfElse): Likewise.
+
+	* notify/signal.py (CleanSignal): Reimplement completely.
+
+	* notify/utils.py (_USED_OBJECTS, mark_object_as_used)
+	(mark_object_as_unused): Variable and function moved here from
+	`notify.base' module.
+
+	* notify/base.py (_USED_VALUE_OBJECTS): Remove from this module.
+	(AbstractValueObject.signal_changed): Reimplement for new storage
+	scheme.
+	(AbstractValueObject._create_signal): Likewise.
+	(AbstractValueObject._changed): Likewise.
+	(AbstractValueObject._set_used, AbstractValueObject._set_unused):
+	Remove from this class and module.
+
+	* run-tests.py: Reimplement so it is possible to run tests by
+	name.
+
+2007-01-16  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* README: Clarify section about standard test cases.
+
+	* test/condition.py
+	(SignalConditionTestCase.test_referenced_signal): New test.
+
 2007-01-15  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/condition.py (_Binary._get_dummy_reference): Remove

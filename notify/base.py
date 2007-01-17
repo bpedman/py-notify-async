@@ -38,14 +38,6 @@ from notify.utils    import *
 
 
 
-# FIXME: This is very inefficient and should be redone in C sooner or later.  One idea is
-#        instead of adding to this list or removing from it, to add or remove a `leaked'
-#        reference.  I'm not sure if that is allowed by the interpreter, though.
-
-_USED_VALUE_OBJECTS = []
-
-
-
 #-- Base class for conditions and variables --------------------------
 
 class AbstractValueObject (object):
@@ -136,10 +128,14 @@ class AbstractValueObject (object):
         @rtype: C{L{AbstractSignal}}
         """
 
-        if self.__signal is None:
-            self.__signal = self._create_signal ()
+        if self.__signal is not None:
+            signal = self.__signal
+            if not isinstance (signal, AbstractSignal):
+                signal = signal ()
+        else:
+            signal, self.__signal = self._create_signal ()
 
-        return self.__signal
+        return signal
 
 
     def _create_signal (self):
@@ -152,10 +148,11 @@ class AbstractValueObject (object):
         is no signal yet.  I.e. only for the first invocation at all or first invocation
         after a call to C{L{_remove_signal}}.
 
-        @rtype: AbstractSignal
+        @rtype: AbstractSignal, object
         """
 
-        return Signal ()
+        signal = Signal ()
+        return signal, signal
 
 
     def _has_signal (self):
@@ -328,37 +325,12 @@ class AbstractValueObject (object):
         """
 
         if self.__signal is not None:
-            self.__signal (new_value)
+            if isinstance (self.__signal, AbstractSignal):
+                self.__signal (new_value)
+            else:
+                self.__signal () (new_value)
 
         return True
-
-
-    def _set_used (self):
-        """
-        Mark the object as ‘used’ to prevent it from being garbage-collecting.  This
-        method I{must not} be called from outside, it is only for descendant classes use.
-        It also I{must not} be called if C{self} is already marked as ‘used’ and such call
-        may result in undefined behavior, including memory leaks and program crashing.
-
-        Objects start as ‘unused’, i.e. can be garbage-collected if there are no normal
-        references to them.
-        """
-
-        _USED_VALUE_OBJECTS.append (self)
-
-    def _set_unused (self):
-        """
-        Mark the object as ‘unused’ to allow garbage-collecting it.  This method I{must
-        not} be called from outside, it is only for descendant classes use.  It also
-        I{must not} be called if C{self} is already marked as ‘unused’ (including right
-        after creation) and such call may result in undefined behavior, including memory
-        leaks and program crashing.
-
-        Objects start as ‘unused’, i.e. can be garbage-collected if there are no normal
-        references to them.
-        """
-
-        _USED_VALUE_OBJECTS.remove (self)
 
 
     def _additional_description (self, formatter):

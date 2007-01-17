@@ -30,7 +30,9 @@ is very simple, just run
 	./run-tests.py
 
 in this directory.  Tests take just a few seconds to complete.  If any
-of them fails, it is a bug, so please report it.
+of them fails in a released version, it is a bug, so please report it.
+However, this doesn't apply to Py-notify you get from Subversion
+repository, those can occasionally contain failing tests.
 
 
 

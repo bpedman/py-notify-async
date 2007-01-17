@@ -337,6 +337,28 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
 
 
 
+class SignalConditionTestCase (NotifyTestCase):
+
+    def test_referenced_signal (self):
+        self.results = []
+
+        condition = Condition (False)
+        signal    = (~condition).signal_changed ()
+        signal.connect (self.simple_handler)
+
+        condition.state = True
+
+        # This must not change anything.  But current (at the time of test addition)
+        # implementation destroys the `not' condition despite the reference to its signal.
+        signal.disconnect (self.simple_handler)
+        signal.connect    (self.simple_handler)
+
+        condition.state = False
+
+        self.assert_results (False, True)
+
+
+
 if __name__ == '__main__':
     unittest.main ()
 

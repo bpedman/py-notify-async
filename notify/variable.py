@@ -39,6 +39,7 @@ import weakref
 from notify.base      import *
 from notify.condition import *
 from notify.signal    import *
+from notify.utils     import *
 
 
 
@@ -262,16 +263,17 @@ class _PredicateOverVariable (AbstractStateTrackingCondition):
 
     def _create_signal (self):
         if self.__variable () is not None:
-            self._set_used ()
+            mark_object_as_used (self)
 
-        return CleanSignal (self.__on_usage_change)
+        signal = CleanSignal ()
+        return signal, weakref.ref (signal, self.__on_usage_change)
 
 
     def __on_usage_change (self, object):
         self._remove_signal (object)
 
         if self._has_signal () or self.__variable () is not None:
-            self._set_unused ()
+            mark_object_as_unused (self)
 
 
     def _additional_description (self, formatter):

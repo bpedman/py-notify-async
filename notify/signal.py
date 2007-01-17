@@ -804,29 +804,24 @@ class Signal (AbstractSignal):
 class CleanSignal (Signal):
 
     """
-    Subclass of C{L{Signal}}, which emits specified callback when all handlers are
-    disconnected from it.  This C{L{AbstractSignal}} implementation also wraps its
-    handlers in such a way that garbage-collected ones are detected instantly.
-
-    In C{emptied_callback}, ‘owner’ object of the signal may e.g. replace it with
-    C{None}.
+    Subclass of C{L{Signal}} which wraps its handlers in such a way that garbage-collected
+    ones are detected instantly.
     """
 
-    __slots__ = ('_CleanSignal__emptied_callback')
+    __slots__ = ('__weakref__')
 
 
-    def __init__(self, emptied_callback, accumulator = None):
-        if not callable (emptied_callback):
-            raise TypeError ("`emptied_callback' must be callable")
+    def do_connect (self, handler):
+        if not self.has_handlers ():
+            mark_object_as_used (self)
 
-        super (CleanSignal, self).__init__(accumulator)
-        self.__emptied_callback = emptied_callback
+        super (CleanSignal, self).do_connect (handler)
 
 
     def disconnect (self, handler, *arguments):
         if super (CleanSignal, self).disconnect (handler, *arguments):
             if self.get_emission_level () == 0 and not self.has_handlers ():
-                self.__emptied_callback (self)
+                mark_object_as_unused (self)
 
             return True
 
@@ -836,7 +831,7 @@ class CleanSignal (Signal):
     def disconnect_all (self, handler, *arguments):
         if super (CleanSignal, self).disconnect_all (handler, *arguments):
             if self.get_emission_level () == 0 and not self.has_handlers ():
-                self.__emptied_callback (self)
+                mark_object_as_unused (self)
 
             return True
 
@@ -856,7 +851,7 @@ class CleanSignal (Signal):
         super (CleanSignal, self).collect_garbage ()
 
         if not self.has_handlers ():
-            self.__emptied_callback (self)
+            mark_object_as_unused (self)
 
 
 

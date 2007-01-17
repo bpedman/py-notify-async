@@ -38,6 +38,7 @@ import weakref
 
 from notify.base   import *
 from notify.signal import *
+from notify.utils  import *
 
 
 
@@ -261,9 +262,9 @@ class WatcherCondition (AbstractStateTrackingCondition):
 
         if self._has_signal ():
             if watched_condition is None and condition_to_watch is not None:
-                self._set_used ()
+                mark_object_as_used (self)
             elif watched_condition is not None and condition_to_watch is None:
-                self._set_unused ()
+                mark_object_as_unused (self)
 
 
     def __get_watched_condition (self):
@@ -275,9 +276,10 @@ class WatcherCondition (AbstractStateTrackingCondition):
 
     def _create_signal (self):
         if self.__get_watched_condition () is not None:
-            self._set_used ()
+            mark_object_as_used (self)
 
-        return CleanSignal (self.__on_usage_change)
+        signal = CleanSignal ()
+        return signal, weakref.ref (signal, self.__on_usage_change)
 
 
     def __on_usage_change (self, object):
@@ -286,13 +288,13 @@ class WatcherCondition (AbstractStateTrackingCondition):
 
         if self._remove_signal (object):
             if self.__get_watched_condition () is not None:
-                self._set_unused ()
+                mark_object_as_unused (self)
         else:
             if object is self.__watched_condition:
                 self.__watched_condition = None
 
                 if self._has_signal ():
-                    self._set_unused ()
+                    mark_object_as_unused (self)
 
 
     def _additional_description (self, formatter):
@@ -439,15 +441,16 @@ class _Not (AbstractStateTrackingCondition):
 
     def _create_signal (self):
         if self.__negated_condition () is not None:
-            self._set_used ()
+            mark_object_as_used (self)
 
-        return CleanSignal (self.__on_usage_change)
+        signal = CleanSignal ()
+        return signal, weakref.ref (signal, self.__on_usage_change)
 
     def __on_usage_change (self, object):
         self._remove_signal (object)
 
         if self._has_signal () or self.__negated_condition () is not None:
-            self._set_unused ()
+            mark_object_as_unused (self)
 
 
     def _additional_description (self, formatter):
@@ -498,27 +501,28 @@ class _Binary (AbstractCondition):
     def _create_signal (self):
         if (   isinstance (self.__condition1, weakref.ReferenceType)
             or isinstance (self.__condition2, weakref.ReferenceType)):
-            self._set_used ()
+            mark_object_as_used (self)
 
-        return CleanSignal (self.__on_usage_change)
+        signal = CleanSignal ()
+        return signal, weakref.ref (signal, self.__on_usage_change)
 
 
     def __on_usage_change (self, object):
         if self._remove_signal (object):
             if (   isinstance (self.__condition1, weakref.ReferenceType)
                 or isinstance (self.__condition2, weakref.ReferenceType)):
-                self._set_unused ()
+                mark_object_as_unused (self)
         else:
             if object is self.__condition1:
                 self.__condition1 = _get_dummy_reference (self._num_true_conditions
                                                           - self.__condition2 ().get ())
                 if self._has_signal () and isinstance (self.__condition2, _DummyReference):
-                    self._set_unused ()
+                    mark_object_as_unused (self)
             else:
                 self.__condition2 = _get_dummy_reference (self._num_true_conditions
                                                           - self.__condition1 ().get ())
                 if self._has_signal () and isinstance (self.__condition1, _DummyReference):
-                    self._set_unused ()
+                    mark_object_as_unused (self)
 
 
     def _get_operator_name (self):
@@ -649,9 +653,10 @@ class _IfElse (AbstractCondition):
         if (   isinstance (self.__if,   weakref.ReferenceType)
             or isinstance (self.__then, weakref.ReferenceType)
             or isinstance (self.__else, weakref.ReferenceType)):
-            self._set_used ()
+            mark_object_as_used (self)
 
-        return CleanSignal (self.__on_usage_change)
+        signal = CleanSignal ()
+        return signal, weakref.ref (signal, self.__on_usage_change)
 
 
     def __on_usage_change (self, object):
@@ -659,28 +664,28 @@ class _IfElse (AbstractCondition):
             if (   isinstance (self.__if,   weakref.ReferenceType)
                 or isinstance (self.__then, weakref.ReferenceType)
                 or isinstance (self.__else, weakref.ReferenceType)):
-                self._set_unused ()
+                mark_object_as_unused (self)
         else:
             if object is self.__if:
                 self.__if = _get_dummy_reference (self.__term_state & 4)
                 if (self._has_signal ()
                     and isinstance (self.__then, _DummyReference)
                     and isinstance (self.__else, _DummyReference)):
-                    self._set_unused ()
+                    mark_object_as_unused (self)
 
             elif object is self.__then:
                 self.__then = _get_dummy_reference (self.__term_state & 2)
                 if (self._has_signal ()
                     and isinstance (self.__if,   _DummyReference)
                     and isinstance (self.__else, _DummyReference)):
-                    self._set_unused ()
+                    mark_object_as_unused (self)
 
             else:
                 self.__else = _get_dummy_reference (self.__term_state & 1)
                 if (self._has_signal ()
                     and isinstance (self.__if,   _DummyReference)
                     and isinstance (self.__then, _DummyReference)):
-                    self._set_unused ()
+                    mark_object_as_unused (self)
 
 
     def __repr__(self):

@@ -26,25 +26,24 @@
 import unittest
 
 
-def _load_all_tests ():
-    test_suite = unittest.TestSuite ()
-
-    for module_name in ('all', 'bind', 'condition', 'mediator', 'signal', 'variable'):
-        module = __import__('test.%s' % module_name, globals (), locals (), ('*',))
-        test_suite.addTest (unittest.defaultTestLoader.loadTestsFromModule (module))
-
-    return test_suite
-
 
 class AllTests (object):
 
     def __init__(self):
-        self.load_all_tests = _load_all_tests
+        everything = unittest.TestSuite ()
+
+        for module_name in ('all', 'bind', 'condition', 'mediator', 'signal', 'variable'):
+            module = __import__('test.%s' % module_name, globals (), locals (), ('*',))
+
+            setattr (self, module_name, module)
+            everything.addTest (unittest.defaultTestLoader.loadTestsFromModule (module))
+
+        setattr (self, 'everything', lambda: everything)
 
 
 print 'Note that most of the time is spent in gc.collect() calls, not in this package\n'
 
-unittest.main (AllTests (), 'load_all_tests')
+unittest.main (AllTests (), 'everything')
 
 
 
