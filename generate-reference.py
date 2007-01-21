@@ -65,7 +65,7 @@ epydoc.cli.cli ()
 sys.stdout.write ('Post-processing generated HTML files...\n')
 
 
-prompt_regex = re.compile ('<span class="py-prompt">([^<]*)</span>')
+prompt_regex = re.compile ('<span class="(py-prompt|py-more)">([^<]*)</span>')
 
 def replace_prompt (match_object):
     if '\n' in match_object.group (1):

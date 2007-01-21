@@ -46,11 +46,20 @@ gc.set_threshold (0, 0, 0)
 class BaseConditionTestCase (NotifyTestCase):
 
     def test_mutable (self):
-        condition1 = Condition (False)
-        condition2 = ~condition1
+        # This also stresses usage algorithm, as a bonus.
+        mutable_condition = Condition (False)
+        not_condition     = ~mutable_condition
+        and_condition     = not_condition & mutable_condition
+        or_condition      = and_condition | not_condition
+        xor_condition     = or_condition  ^ and_condition
+        ifelse_condition  = or_condition.ifelse (mutable_condition, or_condition)
 
-        self.assert_(condition1.mutable)
-        self.assert_(not condition2.mutable)
+        self.assert_(mutable_condition   .mutable)
+        self.assert_(not not_condition   .mutable)
+        self.assert_(not and_condition   .mutable)
+        self.assert_(not or_condition    .mutable)
+        self.assert_(not xor_condition   .mutable)
+        self.assert_(not ifelse_condition.mutable)
 
 
 

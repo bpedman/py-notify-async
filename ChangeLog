@@ -1,4 +1,21 @@
+2007-01-21  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/signal.py (AbstractSignal.default_exception_handler)
+	(AbstractSignal.ignoring_exception_handler)
+	(AbstractSignal.printing_exception_handler)
+	(AbstractSignal.reraising_exception_handler): New functions.
+	(Signal.emit): Call `AbstractSignal.exception_handler' on
+	exceptions raised from handlers.
+	(Signal): Make `_handlers' and `_blocked_handlers' protected.
+	(CleanSignal.collect_garbage): Rewrite.
+
+	* test/condition.py (BaseConditionTestCase.test_mutable): Expand.
+
+	* generate-reference.py: Rename from `generate-docs.py'.
+
 2007-01-17  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* generate-docs.py: Update post-processing for newer Epydoc.
 
 	* notify/variable.py (_PredicateOverVariable): Update for new
 	signal storage and creation scheme.

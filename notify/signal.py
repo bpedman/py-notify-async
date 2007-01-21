@@ -102,10 +102,14 @@ __docformat__ = 'epytext en'
 __all__       = ('AbstractSignal', 'Signal', 'CleanSignal')
 
 
+import sys
+
 from notify.bind  import *
 from notify.utils import *
 
 
+
+#-- Signal interface classes -----------------------------------------
 
 class AbstractSignal (object):
 
@@ -498,6 +502,35 @@ class AbstractSignal (object):
         pass
 
 
+
+    def default_exception_handler (signal, exception, handler):
+        if isinstance (exception, (SystemExit, KeyboardInterrupt)):
+            raise exception
+        else:
+            sys.excepthook (*sys.exc_info ())
+
+
+    def ignoring_exception_handler (signal, exception, handler):
+        pass
+
+
+    def printing_exception_handler (signal, exception, handler):
+        sys.excepthook (*sys.exc_info ())
+
+
+    def reraising_exception_handler (signal, exception, handler):
+        raise exception
+
+
+    default_exception_handler   = staticmethod (default_exception_handler)
+    ignoring_exception_handler  = staticmethod (ignoring_exception_handler)
+    printing_exception_handler  = staticmethod (printing_exception_handler)
+    reraising_exception_handler = staticmethod (reraising_exception_handler)
+
+
+    exception_handler           = default_exception_handler
+
+
     def __repr__(self):
         return self.__to_string (self.__class__.__name__)
 
@@ -521,6 +554,8 @@ class AbstractSignal (object):
 
 
 
+#-- Standard signal classes ------------------------------------------
+
 class Signal (AbstractSignal):
 
     """
@@ -531,14 +566,11 @@ class Signal (AbstractSignal):
     """
 
 
-
     # Note that standard signals cannot be weak-referenced.  Such
     # references must be a really weird thing to do, so if you really
     # need them, you should use your own `Signal' subclass.
-    __slots__ = ('_Signal__handlers',
-                 '_Signal__blocked_handlers',
-                 '_Signal__accumulator',
-                 '_Signal__emission_level')
+    __slots__ = ('_handlers', '_blocked_handlers',
+                 '_Signal__accumulator', '_Signal__emission_level')
 
 
     def __init__(self, accumulator = None):
@@ -547,17 +579,17 @@ class Signal (AbstractSignal):
 
         super (Signal, self).__init__()
 
-        self.__handlers         = None
-        self.__blocked_handlers = None
-        self.__accumulator      = accumulator
-        self.__emission_level   = 0
+        self._handlers         = None
+        self._blocked_handlers = None
+        self.__accumulator     = accumulator
+        self.__emission_level  = 0
 
 
     def has_handlers (self):
-        if self.__handlers is None:
+        if self._handlers is None:
             return False
 
-        for handler in self.__handlers:
+        for handler in self._handlers:
             if handler is not None and (not isinstance (handler, WeakBinding) or handler):
                 return True
 
@@ -566,8 +598,8 @@ class Signal (AbstractSignal):
     def count_handlers (self):
         num_handlers = 0
 
-        if self.__handlers is not None:
-            for handler in self.__handlers:
+        if self._handlers is not None:
+            for handler in self._handlers:
                 if handler is not None and (not isinstance (handler, WeakBinding) or handler):
                     num_handlers += 1
 
@@ -575,32 +607,32 @@ class Signal (AbstractSignal):
 
 
     def is_connected (self, handler, *arguments):
-        if self.__handlers is not None and callable (handler):
+        if self._handlers is not None and callable (handler):
             if arguments:
                 handler = Binding (handler, *arguments)
 
-            return handler in self.__handlers
+            return handler in self._handlers
 
         else:
             return False
 
 
     def is_blocked (self, handler, *arguments):
-        if self.__blocked_handlers is not None and callable (handler):
+        if self._blocked_handlers is not None and callable (handler):
             if arguments:
                 handler = Binding (handler, *arguments)
 
-            return handler in self.__blocked_handlers
+            return handler in self._blocked_handlers
 
         else:
             return False
 
 
     def do_connect (self, handler):
-        if self.__handlers is not None:
-            self.__handlers.append (handler)
+        if self._handlers is not None:
+            self._handlers.append (handler)
         else:
-            self.__handlers = [handler]
+            self._handlers = [handler]
 
 
     # Implementation note: we set disconnected (or garbage-collected) handlers to None,
@@ -609,28 +641,28 @@ class Signal (AbstractSignal):
 
 
     def disconnect (self, handler, *arguments):
-        if self.__handlers is None or not callable (handler):
+        if self._handlers is None or not callable (handler):
             return False
 
         if arguments:
             handler = Binding (handler, *arguments)
 
-        for index, _handler in enumerate (self.__handlers):
+        for index, _handler in enumerate (self._handlers):
             if _handler == handler:
                 if self.__emission_level == 0:
-                    del self.__handlers[index]
+                    del self._handlers[index]
                 else:
-                    self.__handlers[index] = None
+                    self._handlers[index] = None
 
-                if (self.__blocked_handlers is not None
-                    and handler not in self.__handlers[index:]):
+                if (self._blocked_handlers is not None
+                    and handler not in self._handlers[index:]):
                     # This is the last handler, need to make sure it is not listed in
-                    # `__blocked_handlers'.
-                    self.__blocked_handlers = [_handler for _handler in self.__blocked_handlers
-                                               if _handler != handler]
+                    # `_blocked_handlers'.
+                    self._blocked_handlers = [_handler for _handler in self._blocked_handlers
+                                              if _handler != handler]
 
-                    if not self.__blocked_handlers:
-                        self.__blocked_handlers = None
+                    if not self._blocked_handlers:
+                        self._blocked_handlers = None
 
                 return True
 
@@ -640,34 +672,34 @@ class Signal (AbstractSignal):
     # Overriden for efficiency.
 
     def disconnect_all (self, handler, *arguments):
-        if self.__handlers is None or not callable (handler):
+        if self._handlers is None or not callable (handler):
             return False
 
         if arguments:
             handler = Binding (handler, *arguments)
 
         if self.__emission_level == 0:
-            old_length      = len (self.__handlers)
-            self.__handlers = [_handler for _handler in self.__handlers if _handler != handler]
-            any_removed     = (len (self.__handlers) != old_length)
+            old_length     = len (self._handlers)
+            self._handlers = [_handler for _handler in self._handlers if _handler != handler]
+            any_removed    = (len (self._handlers) != old_length)
 
-            if not self.__handlers:
-                self.__handlers = None
+            if not self._handlers:
+                self._handlers = None
 
         else:
             any_removed = False
 
-            for index, _handler in enumerate (self.__handlers):
+            for index, _handler in enumerate (self._handlers):
                 if _handler == handler:
-                    self.__handlers[index] = None
-                    any_removed            = True
+                    self._handlers[index] = None
+                    any_removed           = True
 
-        if any_removed and self.__blocked_handlers is not None:
-            self.__blocked_handlers = [_handler for _handler in self.__blocked_handlers
-                                       if _handler != handler]
+        if any_removed and self._blocked_handlers is not None:
+            self._blocked_handlers = [_handler for _handler in self._blocked_handlers
+                                      if _handler != handler]
 
-            if not self.__blocked_handlers:
-                self.__blocked_handlers = None
+            if not self._blocked_handlers:
+                self._blocked_handlers = None
 
         return any_removed
 
@@ -676,15 +708,15 @@ class Signal (AbstractSignal):
 
 
     def block (self, handler, *arguments):
-        if callable (handler) and self.__handlers is not None:
+        if callable (handler) and self._handlers is not None:
             if arguments:
                 handler = Binding (handler, *arguments)
 
-            if handler in self.__handlers:
-                if self.__blocked_handlers is not None:
-                    self.__blocked_handlers.append (handler)
+            if handler in self._handlers:
+                if self._blocked_handlers is not None:
+                    self._blocked_handlers.append (handler)
                 else:
-                    self.__blocked_handlers = [handler]
+                    self._blocked_handlers = [handler]
 
                 return True
 
@@ -692,17 +724,17 @@ class Signal (AbstractSignal):
 
 
     def unblock (self, handler, *arguments):
-        if self.__blocked_handlers is None or not callable (handler):
+        if self._blocked_handlers is None or not callable (handler):
             return False
 
         if arguments:
             handler = Binding (handler, *arguments)
 
         try:
-            self.__blocked_handlers.remove (handler)
+            self._blocked_handlers.remove (handler)
 
-            if not self.__blocked_handlers:
-                self.__blocked_handlers = None
+            if not self._blocked_handlers:
+                self._blocked_handlers = None
 
             return True
 
@@ -712,7 +744,7 @@ class Signal (AbstractSignal):
 
 
     def emit (self, *arguments):
-        if self.__handlers is None or self.__emission_level < 0:
+        if self._handlers is None or self.__emission_level < 0:
             return None
 
         if self.__accumulator is None:
@@ -720,21 +752,21 @@ class Signal (AbstractSignal):
         else:
             value = self.__accumulator.get_initial_value ()
 
-        if self.__blocked_handlers is None:
+        if self._blocked_handlers is None:
             blocked_handlers = ()
         else:
-            blocked_handlers = self.__blocked_handlers
+            blocked_handlers = self._blocked_handlers
 
         try:
             self.__emission_level += 1
 
-            for index, handler in enumerate (self.__handlers):
+            for index, handler in enumerate (self._handlers):
                 # Disconnected or garbage-collected hanlders are temporary set to None.
                 if handler is None or handler in blocked_handlers:
                     continue
 
                 if isinstance (handler, WeakBinding) and not handler:
-                    self.__handlers[index] = None
+                    self._handlers[index] = None
                     continue
 
                 if self.__emission_level < 0:
@@ -744,14 +776,9 @@ class Signal (AbstractSignal):
                 try:
                     handler_value = handler (*arguments)
 
-                except Exception, exception:
-                    # FIXME: Revamp.
-                    if isinstance (exception, (SystemExit, KeyboardInterrupt)):
-                        raise exception
-
-                    # Other exceptions in handlers are printed and otherwise ignored.
-                    import sys
-                    sys.excepthook (*sys.exc_info ())
+                # To also catch old-style string-only exceptions.
+                except:
+                    AbstractSignal.exception_handler (self, sys.exc_info () [1], handler)
                     continue
 
                 if self.__accumulator is not None:
@@ -765,10 +792,10 @@ class Signal (AbstractSignal):
 
         if self.__emission_level == 0:
             # Inlined and simplified collect_garbage(), for efficiency.
-            self.__handlers = [handler for handler in self.__handlers if handler]
+            self._handlers = [handler for handler in self._handlers if handler]
 
-            if not self.__handlers:
-                self.__handlers = None
+            if not self._handlers:
+                self._handlers = None
 
         if self.__accumulator is not None:
             value = self.__accumulator.post_process_value (value)
@@ -791,13 +818,13 @@ class Signal (AbstractSignal):
     def collect_garbage (self):
         # Don't remove disconnected or garbage-collected handlers if in nested emission,
         # it will spoil emit() calls completely.
-        if self.__handlers is not None and self.__emission_level == 0:
-            self.__handlers = [handler for handler in self.__handlers
-                               if handler is not None and (not isinstance (handler, WeakBinding)
-                                                           or handler)]
+        if self._handlers is not None and self.__emission_level == 0:
+            self._handlers = [handler for handler in self._handlers
+                              if handler is not None and (not isinstance (handler, WeakBinding)
+                                                          or handler)]
 
-            if not self.__handlers:
-                self.__handlers = None
+            if not self._handlers:
+                self._handlers = None
 
 
 
@@ -812,7 +839,7 @@ class CleanSignal (Signal):
 
 
     def do_connect (self, handler):
-        if not self.has_handlers ():
+        if self._handlers is None:
             mark_object_as_used (self)
 
         super (CleanSignal, self).do_connect (handler)
@@ -820,7 +847,7 @@ class CleanSignal (Signal):
 
     def disconnect (self, handler, *arguments):
         if super (CleanSignal, self).disconnect (handler, *arguments):
-            if self.get_emission_level () == 0 and not self.has_handlers ():
+            if self.get_emission_level () == 0 and self._handlers is None:
                 mark_object_as_unused (self)
 
             return True
@@ -830,7 +857,7 @@ class CleanSignal (Signal):
 
     def disconnect_all (self, handler, *arguments):
         if super (CleanSignal, self).disconnect_all (handler, *arguments):
-            if self.get_emission_level () == 0 and not self.has_handlers ():
+            if self.get_emission_level () == 0 and self._handlers is None:
                 mark_object_as_unused (self)
 
             return True
@@ -842,17 +869,14 @@ class CleanSignal (Signal):
     def _wrap_handler (self, handler, *arguments):
         return WeakBinding.wrap (handler, arguments, self.__handler_garbage_collected)
 
-    def __handler_garbage_collected (self, object = None):
-        if self.get_emission_level () == 0:
-            self.collect_garbage ()
+    def __handler_garbage_collected (self, object):
+        self.collect_garbage ();
 
 
     def collect_garbage (self):
-        super (CleanSignal, self).collect_garbage ()
-
-        if not self.has_handlers ():
-            mark_object_as_unused (self)
-
+        if self._handlers is not None and self.get_emission_level () == 0:
+            if super (CleanSignal, self).collect_garbage () and self._handlers is None:
+                mark_object_as_unused (self)
 
 
 # Local variables:

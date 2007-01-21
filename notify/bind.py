@@ -249,7 +249,7 @@ class WeakBinding (Binding):
 
             try:
                 self._object = weakref.ref (self._object, callback)
-            except Exception, e:
+            except:
                 raise CannotWeakReferenceError (self._object)
 
 
