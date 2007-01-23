@@ -664,6 +664,9 @@ class Signal (AbstractSignal):
                     if not self._blocked_handlers:
                         self._blocked_handlers = None
 
+                if not self._handlers:
+                    self._handlers = None
+
                 return True
 
         return False
@@ -875,7 +878,8 @@ class CleanSignal (Signal):
 
     def collect_garbage (self):
         if self._handlers is not None and self.get_emission_level () == 0:
-            if super (CleanSignal, self).collect_garbage () and self._handlers is None:
+            super (CleanSignal, self).collect_garbage ()
+            if self._handlers is None:
                 mark_object_as_unused (self)
 
 

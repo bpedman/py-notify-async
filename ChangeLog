@@ -1,3 +1,10 @@
+2007-01-23  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/signal.py (Signal.disconnect): Reset `self._handlers' to
+	None if possible.
+	(CleanSignal.collect_garbage): collect_garbage() doesn't return
+	anything, remove it from the test.
+
 2007-01-21  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/signal.py (AbstractSignal.default_exception_handler)
