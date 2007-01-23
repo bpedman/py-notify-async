@@ -6,6 +6,9 @@ include		   MANIFEST MANIFEST.in
 include            version
 include		   ChangeLog
 
-include            generate-docs.py run-tests.py
+include            generate-reference.py run-tests.py
+
+include		   notify/__init__.py.in
+exclude		   notify/__init__.py
 
 recursive-include  test *.py

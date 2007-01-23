@@ -1,5 +1,12 @@
 2007-01-23  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	* version: Release 0.1.1.
+
+	* NEWS: New file.
+
+	* MANIFEST.in: Include `notify/__init__.py.in', exclude the
+	generated file.
+
 	* notify/signal.py (Signal.disconnect): Reset `self._handlers' to
 	None if possible.
 	(CleanSignal.collect_garbage): collect_garbage() doesn't return

@@ -1,0 +1,21 @@
+--- New in Py-notify 0.1.1 -------------------------------------------
+
+* First released version.
+
+* Support for signals, conditions, variables, logical composition of
+  conditions, predicate conditions and other features.
+
+* 59 unit tests.
+
+
+
+  Copyright (C) 2007 Paul Pogonyshev.
+
+  Copying and distribution of this file, with or without modification,
+  are permitted provided the copyright notice and this notice are preserved.
+
+
+
+Local Variables:
+coding: utf-8
+End:
