@@ -345,6 +345,71 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
         self.assert_results (True, False, True)
 
 
+    def test_garbage_collection_signal_referenced_1 (self):
+        condition1   = Condition (True)
+        condition2   = ~condition1
+        signal       = condition2.signal_changed ()
+
+        condition2   = weakref.ref (condition2)
+
+        gc.collect ()
+
+        self.assertNotEqual (condition2 (), None)
+
+        del condition1
+        gc.collect ()
+
+        self.assertEqual (condition2 (), None)
+
+
+    def test_garbage_collection_signal_referenced_2 (self):
+        condition1   = Condition (True)
+        condition2   = ~condition1
+        signal       = condition2.signal_changed ()
+
+        signal.connect (self.simple_handler)
+
+        condition2   = weakref.ref (condition2)
+
+        gc.collect ()
+
+        self.assertNotEqual (condition2 (), None)
+
+        signal.disconnect (self.simple_handler)
+
+        gc.collect ()
+
+        self.assertNotEqual (condition2 (), None)
+
+        del signal
+        gc.collect ()
+
+        self.assertEqual (condition2 (), None)
+
+
+    def test_signal_garbage_collection (self):
+        self.results = []
+
+        condition1   = Condition (True)
+        condition2   = ~condition1
+
+        condition2.signal_changed ().connect (self.simple_handler)
+
+        # We also assume that `Not's condition signal can be weakly referenced, but I
+        # don't see other way...
+        signal = weakref.ref (condition2.signal_changed ())
+
+        condition1.state = False
+        self.assert_results (True)
+
+        del condition1
+
+        gc.collect ()
+        gc.collect ()
+
+        self.assertEqual (signal (), None)
+
+
 
 class SignalConditionTestCase (NotifyTestCase):
 

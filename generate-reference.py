@@ -50,11 +50,10 @@ if fast_mode:
 
 sys.argv.extend (['--name=Py-notify',
                   '--url=http://home.gna.org/py-notify/',
-                  '--inheritance=grouped'])
+                  '--inheritance=grouped',
+                  '--no-sourcecode'])
 
-if fast_mode:
-    sys.argv.append ('--no-sourcecode')
-else:
+if not fast_mode:
     sys.argv.append ('--graph=classtree')
 
 sys.argv.append ('notify')

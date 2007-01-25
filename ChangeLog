@@ -1,3 +1,16 @@
+2007-01-25  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* test/condition.py
+	(GarbageCollectionConditionTestCase.test_garbage_collection_signal_referenced_1)
+	(GarbageCollectionConditionTestCase.test_garbage_collection_signal_referenced_2)
+	(GarbageCollectionConditionTestCase.test_signal_garbage_collection):
+	New tests.
+
+2007-01-24  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* generate-reference.py: Don't generate marked up source code
+	files by default.
+
 2007-01-23  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* version: Release 0.1.1.
