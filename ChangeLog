@@ -1,3 +1,10 @@
+2007-01-26  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* generate-reference.py: Use new `doc/epydoc.css'.  More
+	post-processing.
+
+	* docs/epydoc.css: New file.
+
 2007-01-25  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* test/condition.py

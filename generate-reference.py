@@ -51,7 +51,8 @@ if fast_mode:
 sys.argv.extend (['--name=Py-notify',
                   '--url=http://home.gna.org/py-notify/',
                   '--inheritance=grouped',
-                  '--no-sourcecode'])
+                  '--no-sourcecode',
+                  '--css=%s' % os.path.join ('docs', 'epydoc.css')])
 
 if not fast_mode:
     sys.argv.append ('--graph=classtree')
@@ -83,6 +84,9 @@ def replace_paren_2 (match_object):
     return match_object.group (0) [:-1] + ' ('
 
 
+hr_regex = re.compile ('<hr */>')
+
+
 for root, directories, filenames in os.walk ('html'):
     for filename in filenames:
         if not filename.endswith ('.html'):
@@ -107,6 +111,8 @@ for root, directories, filenames in os.walk ('html'):
                                      '  <meta http-equiv="Content-Type" '
                                      'content="text/html; charset=utf-8" />\n</head>')
         contents = contents.replace (' - ', ' — ')
+
+        contents = hr_regex.sub ('', contents)
 
         file = open (os.path.join (root, filename), 'w')
 
