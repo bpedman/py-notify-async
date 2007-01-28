@@ -80,3 +80,6 @@ License version 2.1 or (at your option) any later version.  GNU LGPL
 version 2.1 can be found in the file COPYING.
 
 * File `setup.py' is explicitly put in Public Domain.
+
+* File `benchmark/notify.py' is copyright (C) 2005-2006 Michael Foord,
+  Nicola Larosa and released under the terms of the BSD License.

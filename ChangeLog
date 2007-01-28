@@ -1,5 +1,16 @@
 2007-01-28  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	* benchmark/configobj.py: New file, by Michael Foord and Nicola
+	Larosa.
+
+	* benchmark.py: New file.
+	* benchmark/__init__.py: New file.
+	* benchmark/benchmarking.py: New file.
+	* benchmark/emission.py: New file.
+
+	* notify/signal.py (AbstractSignal._wrap_handler): Fix: don't pass
+	`arguments' to WeakBinding.wrap() expanded.
+
 	* test/condition.py: Use new `NotifyTestCase.collect_garbage'
 	function everywhere.
 	* test/bind.py: Likewise.

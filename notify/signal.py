@@ -370,7 +370,7 @@ class AbstractSignal (object):
             return False
 
     def _wrap_handler (self, handler, *arguments):
-        return WeakBinding.wrap (handler, *arguments)
+        return WeakBinding.wrap (handler, arguments)
 
 
     def do_connect (self, handler):
