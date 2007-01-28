@@ -265,7 +265,7 @@ class _PredicateOverVariable (AbstractStateTrackingCondition):
         if self.__variable () is not None:
             mark_object_as_used (self)
 
-        signal = CleanSignal ()
+        signal = CleanSignal (self)
         return signal, weakref.ref (signal, self.__on_usage_change)
 
 

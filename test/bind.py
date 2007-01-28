@@ -31,13 +31,8 @@ if __name__ == '__main__':
 
 import unittest
 
-import gc
-
-from notify.bind import *
-
-
-
-gc.set_threshold (0, 0, 0)
+from notify.bind   import *
+from test.__common import *
 
 
 
@@ -62,7 +57,7 @@ DUMMY = Dummy ()
 
 
 
-class BindingTestCase (unittest.TestCase):
+class BindingTestCase (NotifyTestCase):
 
     def test_creation (self):
         Binding            (DUMMY.identity_function)
@@ -93,7 +88,7 @@ class BindingTestCase (unittest.TestCase):
         self.assertEqual (method (15), 15)
 
         del object
-        gc.collect ()
+        self.collect_garbage ()
 
         self.assertEqual (method (15), None)
 
@@ -105,13 +100,13 @@ class BindingTestCase (unittest.TestCase):
         self.assertEqual (method (15), 15)
 
         del object
-        gc.collect ()
+        self.collect_garbage ()
 
         self.assertRaises (GarbageCollectedError, method)
 
 
 
-class BindingWrapTestCase (unittest.TestCase):
+class BindingWrapTestCase (NotifyTestCase):
 
     def test_wrap_1 (self):
         callable = lambda: None

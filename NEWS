@@ -1,3 +1,13 @@
+--- New in Py-notify 0.1.2 -------------------------------------------
+
+* Fixed `WatcherCondition' class.
+
+* Plugged memory leak in `AbstractValueObject' signal creation.
+
+* # more unit tests (# in total.)
+
+
+
 --- New in Py-notify 0.1.1 -------------------------------------------
 
 * First released version.

@@ -245,8 +245,8 @@ class WatcherCondition (AbstractStateTrackingCondition):
 
     def watch (self, condition_to_watch):
         if (condition_to_watch is not None
-            and isinstance (condition_to_watch, AbstractCondition)
-            and condition_to_watch is not self):
+            and (   not isinstance (condition_to_watch, AbstractCondition)
+                 or condition_to_watch is self)):
             raise TypeError ('can only watch other conditions')
 
         watched_condition = self.__get_watched_condition ()
@@ -278,7 +278,7 @@ class WatcherCondition (AbstractStateTrackingCondition):
         if self.__get_watched_condition () is not None:
             mark_object_as_used (self)
 
-        signal = CleanSignal ()
+        signal = CleanSignal (self)
         return signal, weakref.ref (signal, self.__on_usage_change)
 
 
@@ -443,7 +443,7 @@ class _Not (AbstractStateTrackingCondition):
         if self.__negated_condition () is not None:
             mark_object_as_used (self)
 
-        signal = CleanSignal ()
+        signal = CleanSignal (self)
         return signal, weakref.ref (signal, self.__on_usage_change)
 
     def __on_usage_change (self, object):
@@ -503,7 +503,7 @@ class _Binary (AbstractCondition):
             or isinstance (self.__condition2, weakref.ReferenceType)):
             mark_object_as_used (self)
 
-        signal = CleanSignal ()
+        signal = CleanSignal (self)
         return signal, weakref.ref (signal, self.__on_usage_change)
 
 
@@ -655,7 +655,7 @@ class _IfElse (AbstractCondition):
             or isinstance (self.__else, weakref.ReferenceType)):
             mark_object_as_used (self)
 
-        signal = CleanSignal ()
+        signal = CleanSignal (self)
         return signal, weakref.ref (signal, self.__on_usage_change)
 
 

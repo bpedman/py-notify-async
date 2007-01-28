@@ -103,6 +103,7 @@ __all__       = ('AbstractSignal', 'Signal', 'CleanSignal')
 
 
 import sys
+import weakref
 
 from notify.bind  import *
 from notify.utils import *
@@ -838,11 +839,31 @@ class CleanSignal (Signal):
     ones are detected instantly.
     """
 
-    __slots__ = ('__weakref__')
+    __slots__ = ('_CleanSignal__parent', '__weakref__')
+
+
+    def __init__(self, parent, accumulator = None):
+        super (CleanSignal, self).__init__(accumulator)
+
+        if parent is not None:
+            self.__parent = weakref.ref (parent, self.__orphan)
+        else:
+            self.__parent = None
+
+
+    def orphan (self):
+        if self.__parent is not None:
+            if self._handlers is not None:
+                mark_object_as_unused (self)
+
+            self.__parent = None
+
+    def __orphan (self, reference = None):
+        self.orphan ()
 
 
     def do_connect (self, handler):
-        if self._handlers is None:
+        if self._handlers is None and self.__parent is not None:
             mark_object_as_used (self)
 
         super (CleanSignal, self).do_connect (handler)
@@ -850,7 +871,9 @@ class CleanSignal (Signal):
 
     def disconnect (self, handler, *arguments):
         if super (CleanSignal, self).disconnect (handler, *arguments):
-            if self.get_emission_level () == 0 and self._handlers is None:
+            if (    self.get_emission_level () == 0
+                and self._handlers is None
+                and self.__parent is not None):
                 mark_object_as_unused (self)
 
             return True
@@ -860,7 +883,9 @@ class CleanSignal (Signal):
 
     def disconnect_all (self, handler, *arguments):
         if super (CleanSignal, self).disconnect_all (handler, *arguments):
-            if self.get_emission_level () == 0 and self._handlers is None:
+            if (    self.get_emission_level () == 0
+                and self._handlers is None
+                and self.__parent is not None):
                 mark_object_as_unused (self)
 
             return True
@@ -879,7 +904,7 @@ class CleanSignal (Signal):
     def collect_garbage (self):
         if self._handlers is not None and self.get_emission_level () == 0:
             super (CleanSignal, self).collect_garbage ()
-            if self._handlers is None:
+            if self._handlers is None and self.__parent is not None:
                 mark_object_as_unused (self)
 
 

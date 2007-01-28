@@ -22,6 +22,7 @@
 #--------------------------------------------------------------------#
 
 
+import gc
 import unittest
 
 
@@ -30,6 +31,11 @@ __all__ = ('NotifyTestCase',)
 
 
 class NotifyTestCase (unittest.TestCase):
+
+    def setUp (self):
+        gc.set_threshold (0, 0, 0)
+        super (NotifyTestCase, self).setUp ()
+
 
     def assert_results (self, *results):
         valid_results = list (results)
@@ -43,6 +49,11 @@ class NotifyTestCase (unittest.TestCase):
             arguments = arguments[0]
 
         self.results.append (arguments)
+
+
+    def collect_garbage (self, times = 1):
+        for k in range (0, times):
+            gc.collect ()
 
 
 

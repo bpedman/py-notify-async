@@ -1,3 +1,34 @@
+2007-01-28  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* test/condition.py: Use new `NotifyTestCase.collect_garbage'
+	function everywhere.
+	* test/bind.py: Likewise.
+
+	* test/__common.py (NotifyTestCase.setUp)
+	(NotifyTestCase.collect_garbage): New functions.
+
+	* notify/condition.py (WatcherCondition._create_signal): Account
+	for the change in `CleanSignal' interface.
+	(_Not._create_signal): Likewise.
+	(_Binary._create_signal): Likewise.
+	(_IfElse._create_signal): Likewise.
+	* notify/variable.py (_PredicateOverVariable._create_signal):
+	Likewise.
+
+	* notify/signal.py (CleanSignal): Reimplement: add `__parent'
+	field and `orphan' method; don't mark self as used if
+	orphaned (i.e. if don't have a parent.)
+
+	* test/condition.py
+	(GarbageCollectionConditionTestCase.test_signal_garbage_collection):
+	Fix: remove reference from condition to make it
+	garbage-collectable.
+
+	* notify/condition.py (WatcherCondition.watch): Fix
+	is-valid-to-watch condition.
+
+	* test/condition.py (WatcherConditionTestCase): New test case.
+
 2007-01-26  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* generate-reference.py: Use new `doc/epydoc.css'.  More

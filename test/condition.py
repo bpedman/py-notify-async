@@ -30,7 +30,6 @@ if __name__ == '__main__':
 
 
 import unittest
-import gc
 import weakref
 import operator
 
@@ -38,9 +37,6 @@ from notify.condition import *
 from notify.variable  import *
 from test.__common    import *
 
-
-
-gc.set_threshold (0, 0, 0)
 
 
 class BaseConditionTestCase (NotifyTestCase):
@@ -180,6 +176,57 @@ class LogicConditionTestCase (NotifyTestCase):
 
 
 
+class WatcherConditionTestCase (NotifyTestCase):
+
+    def test_watcher_condition_1 (self):
+        self.results = []
+
+        watcher = WatcherCondition ()
+        watcher.store (self.simple_handler)
+
+        condition = Condition (True)
+        watcher.watch (condition)
+
+        condition.state = False
+
+        self.assert_results (False, True, False)
+
+
+    def test_watcher_condition_2 (self):
+        self.results = []
+
+        condition1 = Condition (True)
+        condition2 = Condition (False)
+        condition3 = Condition (False)
+
+        watcher = WatcherCondition (condition1)
+        watcher.store (self.simple_handler)
+
+        watcher.watch (condition2)
+        watcher.watch (condition3)
+        watcher.watch (None)
+
+        # Later two watch() calls must not change watcher's state.
+        self.assert_results (True, False)
+
+
+    def test_watcher_condition_error_1 (self):
+        self.assertRaises (TypeError, lambda: WatcherCondition (25))
+
+
+    def test_watcher_condition_error_2 (self):
+        watcher = WatcherCondition ()
+        self.assertRaises (TypeError, lambda: watcher.watch (25))
+
+
+    def test_watcher_condition_error_3 (self):
+        condition = Condition (True)
+        watcher   = WatcherCondition (condition)
+
+        self.assertRaises (TypeError, lambda: watcher.watch (watcher))
+
+
+
 class GarbageCollectionConditionTestCase (NotifyTestCase):
 
     def test_garbage_collection_1 (self):
@@ -193,16 +240,16 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
 
         # This must not collect the `is_true' condition, even though it is not directly
         # referenced at all.
-        gc.collect ()
+        self.collect_garbage ()
         self.assertNotEqual (condition (), None)
 
-        gc.collect ()
+        self.collect_garbage ()
         variable.value = 10
 
         # This makes condition `unused' and it must become available to garbage collector
         # again.
         del variable
-        gc.collect ()
+        self.collect_garbage ()
 
         self.assertEqual (condition (), None)
         self.assert_results (False, True)
@@ -221,18 +268,17 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
         condition1 = weakref.ref (condition1)
         condition2 = weakref.ref (condition2)
 
-        gc.collect ()
+        self.collect_garbage ()
         self.assertNotEqual (condition1 (), None)
         self.assertNotEqual (condition2 (), None)
 
-        gc.collect ()
+        self.collect_garbage ()
         variable.value = 10
 
         del variable
 
         # Run twice so that both outstanding conditions can be collected.
-        gc.collect ()
-        gc.collect ()
+        self.collect_garbage (2)
 
         self.assertEqual (condition1 (), None)
         self.assertEqual (condition2 (), None)
@@ -253,24 +299,24 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
         condition1 = weakref.ref (condition1)
         condition2 = weakref.ref (condition2)
 
-        gc.collect ()
+        self.collect_garbage ()
         self.assertNotEqual (condition1 (), None)
         self.assertNotEqual (condition2 (), None)
 
-        gc.collect ()
+        self.collect_garbage ()
         variable.value = 10
 
         condition2 ().signal_changed ().disconnect (self.simple_handler)
 
-        # Run twice so that both outstanding conditions can be collected.
-        gc.collect ()
-        gc.collect ()
+        # FIXME: Invent a way to calculate times that is not dependent on implementation
+        #        details.
+        self.collect_garbage (4)
 
         self.assertEqual (condition1 (), None)
         self.assertEqual (condition2 (), None)
 
         variable = weakref.ref (variable)
-        gc.collect ()
+        self.collect_garbage ()
 
         self.assertEqual (variable (), None)
 
@@ -289,16 +335,14 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
             binary_condition = weakref.ref (binary_condition)
 
             del condition1
-            gc.collect ()
-            gc.collect ()
+            self.collect_garbage (2)
 
             self.assertNotEqual (binary_condition (), None)
 
             condition2.state = True
 
             del condition2
-            gc.collect ()
-            gc.collect ()
+            self.collect_garbage (2)
 
             self.assertEqual (binary_condition (), None)
 
@@ -322,24 +366,21 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
         ifelse_condition = weakref.ref (ifelse_condition)
 
         del condition2
-        gc.collect ()
-        gc.collect ()
+        self.collect_garbage (2)
 
         self.assertNotEqual (ifelse_condition (), None)
 
         condition3.state = False
 
         del condition1
-        gc.collect ()
-        gc.collect ()
+        self.collect_garbage (2)
 
         self.assertNotEqual (ifelse_condition (), None)
 
         condition3.state = True
 
         del condition3
-        gc.collect ()
-        gc.collect ()
+        self.collect_garbage (2)
 
         self.assertEqual    (ifelse_condition (), None)
         self.assert_results (True, False, True)
@@ -352,12 +393,12 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
 
         condition2   = weakref.ref (condition2)
 
-        gc.collect ()
+        self.collect_garbage ()
 
         self.assertNotEqual (condition2 (), None)
 
         del condition1
-        gc.collect ()
+        self.collect_garbage ()
 
         self.assertEqual (condition2 (), None)
 
@@ -371,18 +412,18 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
 
         condition2   = weakref.ref (condition2)
 
-        gc.collect ()
+        self.collect_garbage ()
 
         self.assertNotEqual (condition2 (), None)
 
         signal.disconnect (self.simple_handler)
 
-        gc.collect ()
+        self.collect_garbage ()
 
         self.assertNotEqual (condition2 (), None)
 
         del signal
-        gc.collect ()
+        self.collect_garbage (2)
 
         self.assertEqual (condition2 (), None)
 
@@ -402,12 +443,14 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
         condition1.state = False
         self.assert_results (True)
 
-        del condition1
+        condition1 = weakref.ref (condition1)
+        condition2 = weakref.ref (condition2)
 
-        gc.collect ()
-        gc.collect ()
+        self.collect_garbage (2)
 
-        self.assertEqual (signal (), None)
+        self.assertEqual (condition1 (), None)
+        self.assertEqual (condition2 (), None)
+        self.assertEqual (signal     (), None)
 
 
 
