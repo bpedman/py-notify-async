@@ -1,5 +1,14 @@
 2007-01-28  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	* version: Release 0.1.2.
+
+	* NEWS: Update.
+
+	* MANIFEST.in: Distribute new benchmarking files.
+
+	* notify/signal.py (AbstractSignal.connect_safe): Fix: expand
+	`arguments' before passing them to AbstractSignal.do_connect().
+
 	* benchmark/configobj.py: New file, by Michael Foord and Nicola
 	Larosa.
 

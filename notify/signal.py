@@ -364,7 +364,7 @@ class AbstractSignal (object):
 
     def connect_safe (self, handler, *arguments):
         if not self.is_connected (handler, *arguments):
-            self.do_connect (self._wrap_handler (handler, arguments))
+            self.do_connect (self._wrap_handler (handler, *arguments))
             return True
         else:
             return False
