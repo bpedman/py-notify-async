@@ -255,7 +255,7 @@ class RecursiveEmissionSignalTestCase (NotifyTestCase):
         self.assert_results (0, 1, 2)
 
 
-    def test_block_in_recursive_emission (self):
+    def test_block_in_recursive_emission_1 (self):
         signal       = Signal ()
         self.signal  = signal
         self.results = []
@@ -272,6 +272,19 @@ class RecursiveEmissionSignalTestCase (NotifyTestCase):
                              3,
                              4,
                              102, 101, 100)
+
+
+    def test_block_in_recursive_emission_2 (self):
+        signal       = Signal ()
+        self.results = []
+
+        signal.connect (self.simple_handler)
+        signal.connect (lambda x: signal.block (self.simple_handler))
+        signal.connect (self.simple_handler)
+
+        signal.emit (1)
+
+        self.assert_results (1)
 
 
     def simple_handler_100 (self, *arguments):

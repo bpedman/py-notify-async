@@ -748,13 +748,17 @@ class Signal (AbstractSignal):
 
 
     def emit (self, *arguments):
-        if self._handlers is None or self.__emission_level < 0:
-            return None
+        # Speed optimization.
+        handlers    = self._handlers
+        accumulator = self.__accumulator
 
-        if self.__accumulator is None:
+        if accumulator is None:
             value = None
         else:
-            value = self.__accumulator.get_initial_value ()
+            value = accumulator.get_initial_value ()
+
+        if handlers is None or self.__emission_level < 0:
+            return value
 
         if self._blocked_handlers is None:
             blocked_handlers = ()
@@ -764,13 +768,13 @@ class Signal (AbstractSignal):
         try:
             self.__emission_level += 1
 
-            for index, handler in enumerate (self._handlers):
-                # Disconnected or garbage-collected hanlders are temporary set to None.
+            for index, handler in enumerate (handlers):
+                # Disconnected or garbage-collected handlers are temporary set to None.
                 if handler is None or handler in blocked_handlers:
                     continue
 
                 if isinstance (handler, WeakBinding) and not handler:
-                    self._handlers[index] = None
+                    handlers[index] = None
                     continue
 
                 if self.__emission_level < 0:
@@ -785,10 +789,10 @@ class Signal (AbstractSignal):
                     AbstractSignal.exception_handler (self, sys.exc_info () [1], handler)
                     continue
 
-                if self.__accumulator is not None:
-                    value = self.__accumulator.accumulate_value (value, handler_value)
+                if accumulator is not None:
+                    value = accumulator.accumulate_value (value, handler_value)
 
-                    if not self.__accumulator.should_continue (value):
+                    if not accumulator.should_continue (value):
                         break
 
         finally:
@@ -796,13 +800,13 @@ class Signal (AbstractSignal):
 
         if self.__emission_level == 0:
             # Inlined and simplified collect_garbage(), for efficiency.
-            self._handlers = [handler for handler in self._handlers if handler]
+            self._handlers = [handler for handler in handlers if handler]
 
             if not self._handlers:
                 self._handlers = None
 
-        if self.__accumulator is not None:
-            value = self.__accumulator.post_process_value (value)
+        if accumulator is not None:
+            value = accumulator.post_process_value (value)
 
         return value
 

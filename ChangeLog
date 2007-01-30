@@ -1,3 +1,18 @@
+2007-01-30  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* test/signal.py
+	(RecursiveEmissionSignalTestCase.test_block_in_recursive_emission_1):
+	Rename from `test_block_in_recursive_emission'.
+	(RecursiveEmissionSignalTestCase.test_block_in_recursive_emission_2):
+	New test.
+
+2007-01-29  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/signal.py (Signal.emit): Fix for the case of present
+	accumulator and zero handlers.  Optimize for speed a little.
+
+	* benchmark/benchmarking.py: Add option for number of runs.
+
 2007-01-28  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* version: Release 0.1.2.

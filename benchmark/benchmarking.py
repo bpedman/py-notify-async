@@ -85,13 +85,13 @@ class Benchmark (object):
         pass
 
 
-    def run (self, scale, silent = False):
+    def run (self, scale, num_runs = _NUM_RUNS, silent = False):
         if not silent:
             sys.stdout.write ('%s\n' % self.description (scale))
 
         times = []
 
-        for k in range (0, _NUM_RUNS):
+        for k in range (0, num_runs):
             self.initialize ()
             gc.disable ()
 
@@ -126,9 +126,9 @@ class BenchmarkSuite (object):
         self.__children.append (child)
 
 
-    def run (self, scale, silent = False):
+    def run (self, scale, num_runs = _NUM_RUNS, silent = False):
         for child in self.__children:
-            child.run (scale, silent)
+            child.run (scale, num_runs, silent)
 
 
     def __iter__(self):
@@ -171,12 +171,17 @@ class BenchmarkProgram (object):
             silent  = True
             results = ConfigObj (self.__options.output)
 
-        if _NUM_RUNS > 1 and not silent:
+        num_runs = _NUM_RUNS
+
+        if self.__options.num_runs is not None:
+            num_runs = self.__options.num_runs
+
+        if num_runs > 1 and not silent:
             sys.stdout.write (('Each benchmark is executed %d times '
                                'and the best performance is reported\n\n')
                               % _NUM_RUNS)
 
-        self.__suite.run (self.__options.scale, silent)
+        self.__suite.run (self.__options.scale, num_runs, silent)
 
         if silent:
             self.__store_results (self.__suite, results)
@@ -186,8 +191,9 @@ class BenchmarkProgram (object):
     def __build_parser (self):
         parser = optparse.OptionParser ()
 
-        parser.add_option ('-o', '--output', dest = 'output')
-        parser.add_option ('-s', '--scale', type = 'float', default = 1.0, dest = 'scale')
+        parser.add_option ('-o', '--output',   dest = 'output')
+        parser.add_option ('-r', '--num-runs', type = 'int',   dest = 'num_runs')
+        parser.add_option ('-s', '--scale',    type = 'float', default = 1.0, dest = 'scale')
 
         return parser
 
