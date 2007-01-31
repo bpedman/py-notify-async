@@ -260,7 +260,7 @@ class AbstractSignal (object):
         __slots__ = ()
 
 
-        def accumulated_value (self, accumulated_value, value_to_add):
+        def accumulate_value (self, accumulated_value, value_to_add):
             return value_to_add
 
 
@@ -277,8 +277,9 @@ class AbstractSignal (object):
         def get_initial_value (self):
             return []
 
-        def accumulated_value (self, accumulated_value, value_to_add):
+        def accumulate_value (self, accumulated_value, value_to_add):
             accumulated_value.append (value_to_add)
+            return accumulated_value
 
 
     ANY_ACCEPTS = AnyAcceptsAccumulator ()
@@ -581,7 +582,7 @@ class Signal (AbstractSignal):
         super (Signal, self).__init__()
 
         self._handlers         = None
-        self._blocked_handlers = None
+        self._blocked_handlers = ()
         self.__accumulator     = accumulator
         self.__emission_level  = 0
 
@@ -619,7 +620,7 @@ class Signal (AbstractSignal):
 
 
     def is_blocked (self, handler, *arguments):
-        if self._blocked_handlers is not None and callable (handler):
+        if self._blocked_handlers is not () and callable (handler):
             if arguments:
                 handler = Binding (handler, *arguments)
 
@@ -655,7 +656,7 @@ class Signal (AbstractSignal):
                 else:
                     self._handlers[index] = None
 
-                if (self._blocked_handlers is not None
+                if (self._blocked_handlers is not ()
                     and handler not in self._handlers[index:]):
                     # This is the last handler, need to make sure it is not listed in
                     # `_blocked_handlers'.
@@ -663,7 +664,7 @@ class Signal (AbstractSignal):
                                               if _handler != handler]
 
                     if not self._blocked_handlers:
-                        self._blocked_handlers = None
+                        self._blocked_handlers = ()
 
                 if not self._handlers:
                     self._handlers = None
@@ -698,12 +699,12 @@ class Signal (AbstractSignal):
                     self._handlers[index] = None
                     any_removed           = True
 
-        if any_removed and self._blocked_handlers is not None:
+        if any_removed and self._blocked_handlers is not ():
             self._blocked_handlers = [_handler for _handler in self._blocked_handlers
                                       if _handler != handler]
 
             if not self._blocked_handlers:
-                self._blocked_handlers = None
+                self._blocked_handlers = ()
 
         return any_removed
 
@@ -717,7 +718,7 @@ class Signal (AbstractSignal):
                 handler = Binding (handler, *arguments)
 
             if handler in self._handlers:
-                if self._blocked_handlers is not None:
+                if self._blocked_handlers is not ():
                     self._blocked_handlers.append (handler)
                 else:
                     self._blocked_handlers = [handler]
@@ -728,7 +729,7 @@ class Signal (AbstractSignal):
 
 
     def unblock (self, handler, *arguments):
-        if self._blocked_handlers is None or not callable (handler):
+        if self._blocked_handlers is () or not callable (handler):
             return False
 
         if arguments:
@@ -738,7 +739,7 @@ class Signal (AbstractSignal):
             self._blocked_handlers.remove (handler)
 
             if not self._blocked_handlers:
-                self._blocked_handlers = None
+                self._blocked_handlers = ()
 
             return True
 
@@ -757,53 +758,42 @@ class Signal (AbstractSignal):
         else:
             value = accumulator.get_initial_value ()
 
-        if handlers is None or self.__emission_level < 0:
-            return value
+        if handlers is not None and self.__emission_level >= 0:
+            try:
+                self.__emission_level += 1
 
-        if self._blocked_handlers is None:
-            blocked_handlers = ()
-        else:
-            blocked_handlers = self._blocked_handlers
+                for index, handler in enumerate (handlers):
+                    # Disconnected or garbage-collected handlers are temporary set to
+                    # None.
+                    if handler is None or handler in self._blocked_handlers:
+                        continue
 
-        try:
-            self.__emission_level += 1
+                    if isinstance (handler, WeakBinding) and not handler:
+                        handlers[index] = None
+                        continue
 
-            for index, handler in enumerate (handlers):
-                # Disconnected or garbage-collected handlers are temporary set to None.
-                if handler is None or handler in blocked_handlers:
-                    continue
-
-                if isinstance (handler, WeakBinding) and not handler:
-                    handlers[index] = None
-                    continue
-
-                if self.__emission_level < 0:
-                    self.__emission_level = -self.__emission_level
-                    break
-
-                try:
-                    handler_value = handler (*arguments)
-
-                # To also catch old-style string-only exceptions.
-                except:
-                    AbstractSignal.exception_handler (self, sys.exc_info () [1], handler)
-                    continue
-
-                if accumulator is not None:
-                    value = accumulator.accumulate_value (value, handler_value)
-
-                    if not accumulator.should_continue (value):
+                    if self.__emission_level < 0:
+                        self.__emission_level = -self.__emission_level
                         break
 
-        finally:
-            self.__emission_level -= 1
+                    try:
+                        handler_value = handler (*arguments)
 
-        if self.__emission_level == 0:
-            # Inlined and simplified collect_garbage(), for efficiency.
-            self._handlers = [handler for handler in handlers if handler]
+                    # To also catch old-style string-only exceptions.
+                    except:
+                        AbstractSignal.exception_handler (self, sys.exc_info () [1], handler)
+                        continue
 
-            if not self._handlers:
-                self._handlers = None
+                    if accumulator is not None:
+                        value = accumulator.accumulate_value (value, handler_value)
+
+                        if not accumulator.should_continue (value):
+                            break
+
+            finally:
+                self.__emission_level -= 1
+
+            self.collect_garbage ()
 
         if accumulator is not None:
             value = accumulator.post_process_value (value)

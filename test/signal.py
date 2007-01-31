@@ -356,6 +356,100 @@ class RecursiveEmissionSignalTestCase (NotifyTestCase):
 
 
 
+class AccumulatorSignalTestCase (NotifyTestCase):
+
+    def test_any_accepts_accumulator (self):
+        signal = Signal (AbstractSignal.ANY_ACCEPTS)
+        self.assertEqual (signal.emit (), False)
+
+        signal.connect (lambda: False)
+        self.assertEqual (signal.emit (), False)
+
+        signal.connect (lambda: ())
+        self.assertEqual (signal.emit (), ())
+
+        signal.connect (lambda: 'I accept')
+        self.assertEqual (signal.emit (), 'I accept')
+
+        signal.connect (lambda: ())
+        self.assertEqual (signal.emit (), 'I accept')
+
+
+    def test_all_accept_accumulator (self):
+        signal = Signal (AbstractSignal.ALL_ACCEPT)
+        self.assertEqual (signal.emit (), True)
+
+        signal.connect (lambda: True)
+        self.assertEqual (signal.emit (), True)
+
+        signal.connect (lambda: 'I accept')
+        self.assertEqual (signal.emit (), 'I accept')
+
+        signal.connect (lambda: [])
+        self.assertEqual (signal.emit (), [])
+
+        signal.connect (lambda: True)
+        self.assertEqual (signal.emit (), [])
+
+
+    def test_last_value_accumulator (self):
+        signal = Signal (AbstractSignal.LAST_VALUE)
+        self.assertEqual (signal.emit (), None)
+
+        signal.connect (lambda: 15)
+        self.assertEqual (signal.emit (), 15)
+
+        signal.connect (lambda: 'abc')
+        self.assertEqual (signal.emit (), 'abc')
+
+
+    def test_value_list_accumulator (self):
+        signal = Signal (AbstractSignal.VALUE_LIST)
+        self.assertEqual (signal.emit (), [])
+
+        signal.connect (lambda: 50)
+        self.assertEqual (signal.emit (), [50])
+
+        signal.connect (lambda: None)
+        signal.connect (lambda: ())
+        self.assertEqual (signal.emit (), [50, None, ()])
+
+
+    def test_custom_accumulator (self):
+
+        class CustomAccumulator (AbstractSignal.AbstractAccumulator):
+
+            def get_initial_value (self):
+                return 10
+
+            def accumulate_value (self, accumulated_value, value_to_add):
+                return accumulated_value + value_to_add
+
+            def should_continue (self, accumulated_value):
+                return accumulated_value <= 50
+
+            def post_process_value (self, accumulated_value):
+                return -accumulated_value
+
+
+        signal = Signal (CustomAccumulator ())
+        self.assertEqual (signal.emit (), -10)
+
+        signal.connect (lambda: 15)
+        self.assertEqual (signal.emit (), -25)
+
+        signal.connect (lambda: 20)
+        self.assertEqual (signal.emit (), -45)
+
+        signal.connect (lambda: 30)
+        self.assertEqual (signal.emit (), -75)
+
+        # This handler should never be invoked.
+        signal.connect (lambda: 50)
+        self.assertEqual (signal.emit (), -75)
+
+
+
 class ExoticSignalTestCase (NotifyTestCase):
 
     def test_disconnect_blocked_handler_1 (self):

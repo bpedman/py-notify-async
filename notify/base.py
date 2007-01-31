@@ -108,7 +108,7 @@ class AbstractValueObject (object):
 
 
     mutable = property (lambda self: self._is_mutable (),
-                        doc = (u"""
+                        doc = ("""
                                Read-only property indicating if this object is mutable.
                                In other words, if object’s value can be changed by
                                C{L{set}} method, or if it is computed by some means and
