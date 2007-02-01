@@ -1,3 +1,33 @@
+2007-02-01  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/signal.py (Signal.is_connected): Don't expand `arguments'
+	tuple when constructing `Binding'.
+	(Signal.is_blocked): Likewise.
+	(Signal.disconnect): Likewise.
+	(Signal.disconnect_all): Likewise.
+	(Signal.block): Likewise.
+	(Signal.unblock): Likewise.
+
+	* test/signal.py
+	(SimpleSignalTestCase.test_connect_with_arguments): New test.
+
+	* benchmark/emission.py (GObjectEmissionBenchmark.get_version):
+	New function.
+
+	* benchmark/benchmarking.py (Benchmark.get_description): Rename
+	from description().
+	(Benchmark.get_version): New function.
+	(BenchmarkProgram.__store_results): Use it.
+
+	* notify/bind.py (Binding.get_object, Binding.get_function)
+	(Binding.get_class, Binding.get_arguments): New functions.
+	(Binding): Use new functions instead of properties.  Make
+	properties use functions and not access fields directly.
+	(WeakBinding.get_object): Rename from __get_object().
+	(WeakBinding.__call__): Don't call super method and inline it
+	instead (major speed improvement, so "do what is right" is
+	sacrificed in this case.)
+
 2007-01-31  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/signal.py

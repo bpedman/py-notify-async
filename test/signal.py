@@ -67,6 +67,20 @@ class SimpleSignalTestCase (NotifyTestCase):
         self.assert_results (())
 
 
+    def test_connect_with_arguments (self):
+        signal       = Signal ()
+        self.results = []
+
+        signal.connect_safe (self.simple_handler, 'one argument')
+        signal.connect_safe (self.simple_handler, 'first', 'second', 3)
+
+        signal.emit ()
+        signal.emit ('a', 'b')
+
+        self.assert_results ('one argument', ('first', 'second', 3),
+                             ('one argument', 'a', 'b'), ('first', 'second', 3, 'a', 'b'))
+
+
     def test_argument_passing (self):
         signal       = Signal ()
         self.results = []

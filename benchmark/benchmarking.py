@@ -74,9 +74,12 @@ class Benchmark (object):
     def initialize (self):
         pass
 
-    def description (self, scale):
+    def get_description (self, scale):
         return ("Benchmark `%s.%s', with scale %s"
                 % (self.__module__, self.__class__.__name__, scale))
+
+    def get_version (self):
+        return notify.__version__
 
     def execute (self, scale):
         raise_not_implemented_exception (self)
@@ -87,7 +90,7 @@ class Benchmark (object):
 
     def run (self, scale, num_runs = _NUM_RUNS, silent = False):
         if not silent:
-            sys.stdout.write ('%s\n' % self.description (scale))
+            sys.stdout.write ('%s\n' % self.get_description (scale))
 
         times = []
 
@@ -205,7 +208,7 @@ class BenchmarkProgram (object):
 
         elif isinstance (suite, Benchmark):
             benchmark_name = ('%s.%s-%s'
-                              % (suite.__module__, suite.__class__.__name__, notify.__version__))
+                              % (suite.__module__, suite.__class__.__name__, suite.get_version ()))
             is_new_result  = True
 
             for section in results:

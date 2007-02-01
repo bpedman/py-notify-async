@@ -611,7 +611,7 @@ class Signal (AbstractSignal):
     def is_connected (self, handler, *arguments):
         if self._handlers is not None and callable (handler):
             if arguments:
-                handler = Binding (handler, *arguments)
+                handler = Binding (handler, arguments)
 
             return handler in self._handlers
 
@@ -622,7 +622,7 @@ class Signal (AbstractSignal):
     def is_blocked (self, handler, *arguments):
         if self._blocked_handlers is not () and callable (handler):
             if arguments:
-                handler = Binding (handler, *arguments)
+                handler = Binding (handler, arguments)
 
             return handler in self._blocked_handlers
 
@@ -647,7 +647,7 @@ class Signal (AbstractSignal):
             return False
 
         if arguments:
-            handler = Binding (handler, *arguments)
+            handler = Binding (handler, arguments)
 
         for index, _handler in enumerate (self._handlers):
             if _handler == handler:
@@ -681,7 +681,7 @@ class Signal (AbstractSignal):
             return False
 
         if arguments:
-            handler = Binding (handler, *arguments)
+            handler = Binding (handler, arguments)
 
         if self.__emission_level == 0:
             old_length     = len (self._handlers)
@@ -715,7 +715,7 @@ class Signal (AbstractSignal):
     def block (self, handler, *arguments):
         if callable (handler) and self._handlers is not None:
             if arguments:
-                handler = Binding (handler, *arguments)
+                handler = Binding (handler, arguments)
 
             if handler in self._handlers:
                 if self._blocked_handlers is not ():
@@ -733,7 +733,7 @@ class Signal (AbstractSignal):
             return False
 
         if arguments:
-            handler = Binding (handler, *arguments)
+            handler = Binding (handler, arguments)
 
         try:
             self._blocked_handlers.remove (handler)

@@ -51,7 +51,7 @@ class EmissionBenchmark (benchmarking.Benchmark):
         self.__signal = signal
 
 
-    def description (self, scale = 1.0):
+    def get_description (self, scale = 1.0):
         return '%d emissions of a signal with 4 handlers' % int (scale * _NUM_EMISSIONS)
 
 
@@ -64,6 +64,9 @@ class EmissionBenchmark (benchmarking.Benchmark):
 
 
 try:
+    import pygtk
+    pygtk.require ('2.0')
+
     import gtk
 
     class GObjectEmissionBenchmark (benchmarking.Benchmark):
@@ -79,9 +82,12 @@ try:
             self.__adjustment = adjustment
 
 
-        def description (self, scale = 1.0):
+        def get_description (self, scale = 1.0):
             return ("%d emissions of gtk.Adjustment `changed' signal with 4 handlers"
                     % int (scale * _NUM_EMISSIONS))
+
+        def get_version (self):
+            return '.'.join (map (lambda x: str (x), gtk.pygtk_version))
 
 
         def execute (self, scale):

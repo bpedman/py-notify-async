@@ -113,6 +113,19 @@ class Binding (object):
     wrap = classmethod (wrap)
 
 
+    def get_object (self):
+        return self._object
+
+    def get_function (self):
+        return self._function
+
+    def get_class (self):
+        return self._class
+
+    def get_arguments (self):
+        return self._arguments
+
+
     def __call__(self, *arguments):
         """
         Call the wrapped plain method or function and return whatever it returns.  If
@@ -123,10 +136,12 @@ class Binding (object):
         @raises exception: whatever wrapped method raises, if anything.
         """
 
-        if self.im_class is not None:
-            return self.im_func (self.im_self, *(self.im_args + arguments))
+        # NOTE: If, for some reason, you change this, don't forget to adjust
+        #       `WeakBinding.__call__' accordingly.
+        if self.get_class () is not None:
+            return self.get_function () (self.get_object (), *(self.get_arguments () + arguments))
         else:
-            return self.im_func (*(self.im_args + arguments))
+            return self.get_function () (*(self.get_arguments () + arguments))
 
 
     def __eq__(self, other):
@@ -144,15 +159,15 @@ class Binding (object):
         if not isinstance (other, BindingCompatibleTypes):
             return False
 
-        if (   self.im_self  is not other.im_self
-            or self.im_func  is not other.im_func
-            or self.im_class is not other.im_class):
+        if (   self.get_object   () is not other.im_self
+            or self.get_function () is not other.im_func
+            or self.get_class    () is not other.im_class):
             return False
 
         if isinstance (other, Binding):
-            return self.im_args == other.im_args
+            return self.get_arguments () == other.get_arguments ()
         else:
-            return self.im_args is ()
+            return self.get_arguments () is ()
 
 
     def __ne__(self, other):
@@ -183,8 +198,10 @@ class Binding (object):
         """
 
         # FIXME: I'm not sure it is not a hack...
-        _hash     = hash (types.MethodType (self.im_func, self.im_self, self.im_class))
-        arguments = self.im_args
+        _hash     = hash (types.MethodType (self.get_function (),
+                                            self.get_object (),
+                                            self.get_class ()))
+        arguments = self.get_arguments ()
 
         if arguments:
             _hash += 31 * hash (arguments)
@@ -193,7 +210,7 @@ class Binding (object):
 
 
 
-    im_self  = property (lambda self: self._object,
+    im_self  = property (lambda self: self.get_object (),
                          doc = ("""
                                 The object of this weak method or C{None} if it has been
                                 garbage-collected already.  This property is provided
@@ -202,7 +219,7 @@ class Binding (object):
 
                                 @type: object
                                 """))
-    im_func  = property (lambda self: self._function,
+    im_func  = property (lambda self: self.get_function (),
                          doc = ("""
                                 Function of this weak method.  This property is provided
                                 mainly for consistency with similar property of plain
@@ -210,7 +227,7 @@ class Binding (object):
 
                                 @type: function
                                 """))
-    im_class = property (lambda self: self._class,
+    im_class = property (lambda self: self.get_class (),
                          doc = ("""
                                 Class of this weak method.  This property is provided
                                 mainly for consistency with similar property of plain
@@ -218,7 +235,7 @@ class Binding (object):
 
                                 @type: class or type
                                 """))
-    im_args  = property (lambda self: self._arguments,
+    im_args  = property (lambda self: self.get_arguments (),
                          doc = ("""
                                 Class of this weak method.  This property is provided
                                 mainly for consistency with similar property of plain
@@ -266,6 +283,15 @@ class WeakBinding (Binding):
     wrap = classmethod (wrap)
 
 
+    def get_object (self):
+        reference = self._object
+
+        if reference is not None:
+            return reference ()
+        else:
+            return None
+
+
     def __call__(self, *arguments):
         """
         Like L{Binding.__call__}, but account for garbage-collected objects.  If object
@@ -275,14 +301,22 @@ class WeakBinding (Binding):
         @raises exception: whatever wrapped method raises, if anything.
         """
 
-        reference = self._object
+        object = self._object
 
-        if reference is not None:
-            object = reference ()
+        if object is not None:
+            object = object ()
             if object is None:
                 return self._call_after_garbage_collecting ()
 
-        return super (WeakBinding, self).__call__(*arguments)
+        # NOTE: This is essentially inlined method of the superclass.  While calling that
+        #       method would be more proper, inlining it gives significant speed
+        #       improvement.  Since it makes no difference for derivatives, we sacrifice
+        #       "do what is right" principle in this case.
+
+        if self.get_class () is not None:
+            return self.get_function () (object, *(self.get_arguments () + arguments))
+        else:
+            return self.get_function () (*(self.get_arguments () + arguments))
 
 
     def _call_after_garbage_collecting (self):
@@ -298,26 +332,6 @@ class WeakBinding (Binding):
 
         reference = self._object
         return reference is None or reference () is not None
-
-
-    def __get_object (self):
-        reference = self._object
-
-        if reference is not None:
-            return reference ()
-        else:
-            return None
-
-
-    im_self  = property (__get_object,
-                         doc = ("""
-                                The object of this weak method or C{None} if it has been
-                                garbage-collected already.  This property is provided
-                                mainly for consistency with similar property of plain
-                                methods.
-
-                                @type: object
-                                """))
 
 
 
