@@ -1,3 +1,16 @@
+2007-02-03  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* test/variable.py (WatcherVariableTestCase): New test case (much
+	like `WatcherConditionTestCase'.)
+	(BaseVariableTestCase.test_predicate): Test that predicate
+	condition is not mutable.
+
+	* test/all.py (AllTestCase.test_variable): Test that it is
+	defined.
+
+	* notify/variable.py (WatcherVariable): New class (much like
+	`WatcherCondition'.)
+
 2007-02-02  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* test/variable.py (BaseVariableTestCase): New test case.

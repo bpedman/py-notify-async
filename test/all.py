@@ -79,6 +79,7 @@ class AllTestCase (unittest.TestCase):
     def test_variable (self):
         self.assert_is_class (AbstractVariable)
         self.assert_is_class (Variable)
+        self.assert_is_class (WatcherVariable)
 
 
 

@@ -30,7 +30,8 @@ G{classtree AbstractVariable}
 """
 
 __docformat__ = 'epytext en'
-__all__       = ('AbstractVariable', 'AbstractValueTrackingVariable', 'Variable')
+__all__       = ('AbstractVariable', 'AbstractValueTrackingVariable',
+                 'Variable', 'WatcherVariable')
 
 
 import types
@@ -223,7 +224,7 @@ class AbstractValueTrackingVariable (AbstractVariable):
 
 
 
-#-- Standard non-abstract variable -----------------------------------
+#-- Standard non-abstract variables ----------------------------------
 
 class Variable (AbstractValueTrackingVariable):
 
@@ -232,6 +233,78 @@ class Variable (AbstractValueTrackingVariable):
 
     def set (self, value):
         self._set (value)
+
+
+
+class WatcherVariable (AbstractValueTrackingVariable):
+
+    __slots__ = ('_WatcherVariable__watched_variable')
+
+
+    def __init__(self, variable_to_watch = None):
+        super (WatcherVariable, self).__init__(None)
+
+        self.__watched_variable = None
+        self.watch (variable_to_watch)
+
+
+    def watch (self, variable_to_watch):
+        if (variable_to_watch is not None
+            and (   not isinstance (variable_to_watch, AbstractVariable)
+                 or variable_to_watch is self)):
+            raise TypeError ('can only watch other variables')
+
+        watched_variable = self.__get_watched_variable ()
+        if watched_variable is not None:
+            watched_variable.signal_changed ().disconnect (self._set)
+
+        if variable_to_watch is not None:
+            self.__watched_variable = weakref.ref (variable_to_watch, self.__on_usage_change)
+            variable_to_watch.store (self._set)
+        else:
+            self.__watched_variable = None
+            self._set (None)
+
+        if self._has_signal ():
+            if watched_variable is None and variable_to_watch is not None:
+                mark_object_as_used (self)
+            elif watched_variable is not None and variable_to_watch is None:
+                mark_object_as_unused (self)
+
+
+    def __get_watched_variable (self):
+        if self.__watched_variable is not None:
+            return self.__watched_variable ()
+        else:
+            return None
+
+
+    def _create_signal (self):
+        if self.__get_watched_variable () is not None:
+            mark_object_as_used (self)
+
+        signal = CleanSignal (self)
+        return signal, weakref.ref (signal, self.__on_usage_change)
+
+
+    def __on_usage_change (self, object):
+        # Complexities because watched variable can change and this function may be called
+        # on previously watched variable.
+
+        if self._remove_signal (object):
+            if self.__get_watched_variable () is not None:
+                mark_object_as_unused (self)
+        else:
+            if object is self.__watched_variable:
+                self.__watched_variable = None
+
+                if self._has_signal ():
+                    mark_object_as_unused (self)
+
+
+    def _additional_description (self, formatter):
+        return (['watching %s' % formatter (self.__get_watched_variable ())]
+                + super (WatcherVariable, self)._additional_description (formatter))
 
 
 

@@ -49,6 +49,7 @@ class BaseVariableTestCase (NotifyTestCase):
         is_single_digit = variable.predicate (lambda value: 0 <= value < 10)
 
         self.assert_(is_single_digit)
+        self.assert_(not is_single_digit.mutable)
 
         variable.value = -5
         self.assert_(not is_single_digit)
@@ -117,6 +118,57 @@ class BaseVariableTestCase (NotifyTestCase):
         self.assertRaises (ValueError, lambda: variable.set (-5))
         self.assertRaises (ValueError, lambda: variable.set (2.2))
         self.assertRaises (ValueError, lambda: variable.set ([]))
+
+
+
+class WatcherVariableTestCase (NotifyTestCase):
+
+    def test_watcher_variable_1 (self):
+        self.results = []
+
+        watcher = WatcherVariable ()
+        watcher.store (self.simple_handler)
+
+        variable = Variable ('abc')
+        watcher.watch (variable)
+
+        variable.value = 60
+
+        self.assert_results (None, 'abc', 60)
+
+
+    def test_watcher_variable_2 (self):
+        self.results = []
+
+        variable1 = Variable ([])
+        variable2 = Variable ('string')
+        variable3 = Variable ('string')
+
+        watcher = WatcherVariable (variable1)
+        watcher.store (self.simple_handler)
+
+        watcher.watch (variable2)
+        watcher.watch (variable3)
+        watcher.watch (None)
+
+        # Later two watch() calls must not change watcher's value.
+        self.assert_results ([], 'string', None)
+
+
+    def test_watcher_variable_error_1 (self):
+        self.assertRaises (TypeError, lambda: WatcherVariable (25))
+
+
+    def test_watcher_variable_error_2 (self):
+        watcher = WatcherVariable ()
+        self.assertRaises (TypeError, lambda: watcher.watch (25))
+
+
+    def test_watcher_variable_error_3 (self):
+        variable = Variable ()
+        watcher  = WatcherVariable (variable)
+
+        self.assertRaises (TypeError, lambda: watcher.watch (watcher))
 
 
 
