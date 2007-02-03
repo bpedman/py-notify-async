@@ -1,10 +1,23 @@
+--- New in Py-notify 0.1.3 -------------------------------------------
+
+* New class `WatcherVariable', just like `WatcherCondition'.
+
+* Many bug-fixes in `Signal' class and in standard signal value
+  accumulators.
+
+* Speed optimizations in bindings and signals.
+
+* 18 more unit tests (85 in total.)
+
+
+
 --- New in Py-notify 0.1.2 -------------------------------------------
 
 * Bug-fixes in `WatcherCondition' and `AbstractSignal' classes.
 
 * Plugged memory leak in `AbstractValueObject' signal creation.
 
-* 8 more unit tests ( in total.)
+* 8 more unit tests (67 in total.)
 
 * Benchmarking support (with single comparison to PyGObject at
   present.)

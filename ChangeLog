@@ -1,5 +1,9 @@
 2007-02-03  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	* version: Release 0.1.3.
+
+	* NEWS: Update.
+
 	* test/variable.py (WatcherVariableTestCase): New test case (much
 	like `WatcherConditionTestCase'.)
 	(BaseVariableTestCase.test_predicate): Test that predicate
