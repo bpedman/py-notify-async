@@ -234,6 +234,10 @@ class FunctionalMediator (AbstractMediator):
                 and self.__arguments        == other.__arguments)
 
 
+def _identity (value, *ignored_arguments):
+    return value
+
+
 
 #-- Internal mediator and related classes ----------------------------
 

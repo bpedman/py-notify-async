@@ -42,6 +42,19 @@ class AllTestCase (unittest.TestCase):
     def assert_is_class (self, _class):
         self.assert_(isinstance (_class, (type, types.ClassType)), _class)
 
+        # Also assert that classes define `__slots__' variable appropriately.  We use a
+        # trick hoping that constructor of `_class' accepts a number of `None' values.
+        # Thus, not all classes are tested.
+
+        for num_arguments in range (0, 10):
+            try:
+                object = _class (* ((None,) * num_arguments))
+            except:
+                continue
+
+            self.assertRaises (AttributeError, lambda: object.this_attribute_sure_doesnt_exist)
+            break
+
 
     def test_base (self):
         self.assert_is_class (AbstractValueObject)
