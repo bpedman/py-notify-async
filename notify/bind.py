@@ -189,26 +189,6 @@ class Binding (object):
 
         return True
 
-    def __hash__(self):
-        """
-        Hash code, equal to those of the wrapped method.  If object has been
-        garbage-collected, hash code of the corresponding unbound method instead.
-
-        @rtype: int
-        """
-
-        # FIXME: I'm not sure it is not a hack...
-        _hash     = hash (types.MethodType (self.get_function (),
-                                            self.get_object (),
-                                            self.get_class ()))
-        arguments = self.get_arguments ()
-
-        if arguments:
-            _hash += 31 * hash (arguments)
-
-        return _hash
-
-
 
     im_self  = property (lambda self: self.get_object (),
                          doc = ("""

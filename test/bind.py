@@ -151,8 +151,6 @@ class BindingWrapTestCase (NotifyTestCase):
             self.assertEqual (_class.wrap (callable),        _class.wrap (callable))
             self.assertEqual (bool (_class.wrap (callable)), bool (callable))
             self.assertEqual (bool (_class.wrap (callable)), bool (_class.wrap (callable)))
-            self.assertEqual (hash (_class.wrap (callable)), hash (callable))
-            self.assertEqual (hash (_class.wrap (callable)), hash (_class.wrap (callable)))
 
 
     def test_wrap_6 (self):

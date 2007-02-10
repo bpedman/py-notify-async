@@ -1,3 +1,24 @@
+2007-02-11  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/all.py: Calculate `__all__' variable from imported
+	modules.
+
+	* test/bind.py (BindingWrapTestCase.test_wrap_5): Don't test
+	hashes.
+
+	* notify/bind.py (Binding): Remove: changeable object cannot be
+	used as dictionary keys.
+
+2007-02-09  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* benchmark/emission.py (EmissionBenchmark1): Rename from
+	`EmissionBenchmark'.
+	(EmissionBenchmark2): New benchmark test.
+	(GObjectEmissionBenchmark1): Rename from
+	`GObjectEmissionBenchmark'.
+	(GObjectEmissionBenchmark2): New benchmark test.
+	(_Dummy): New class.
+
 2007-02-03  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/mediator.py (_identity): New function.

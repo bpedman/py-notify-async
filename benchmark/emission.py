@@ -38,7 +38,7 @@ from notify.signal import *
 _NUM_EMISSIONS = 100000
 
 
-class EmissionBenchmark (benchmarking.Benchmark):
+class EmissionBenchmark1 (benchmarking.Benchmark):
 
     def initialize (self):
         signal = Signal ()
@@ -52,7 +52,35 @@ class EmissionBenchmark (benchmarking.Benchmark):
 
 
     def get_description (self, scale = 1.0):
-        return '%d emissions of a signal with 4 handlers' % int (scale * _NUM_EMISSIONS)
+        return '%d emissions of a signal with 4 function handlers' % int (scale * _NUM_EMISSIONS)
+
+
+    def execute (self, scale = 1.0):
+        signal = self.__signal
+
+        for k in xrange (0, int (scale * _NUM_EMISSIONS)):
+            signal ()
+
+
+class EmissionBenchmark2 (benchmarking.Benchmark):
+
+    def initialize (self):
+        signal = Signal ()
+        object = _Dummy ()
+
+        signal.connect (object.ignoring_handler)
+        signal.connect (object.ignoring_handler, 1)
+        signal.connect (object.ignoring_handler, 'a', 'b')
+        signal.connect (object.ignoring_handler, None, True, False)
+
+        self.__signal = signal
+
+        # To keep it alive.
+        self.__object = object
+
+
+    def get_description (self, scale = 1.0):
+        return '%d emissions of a signal with 4 method handlers' % int (scale * _NUM_EMISSIONS)
 
 
     def execute (self, scale = 1.0):
@@ -69,7 +97,7 @@ try:
 
     import gtk
 
-    class GObjectEmissionBenchmark (benchmarking.Benchmark):
+    class GObjectEmissionBenchmark1 (benchmarking.Benchmark):
 
         def initialize (self):
             adjustment = gtk.Adjustment ()
@@ -83,7 +111,40 @@ try:
 
 
         def get_description (self, scale = 1.0):
-            return ("%d emissions of gtk.Adjustment `changed' signal with 4 handlers"
+            return ("%d emissions of gtk.Adjustment `changed' signal with 4 function handlers"
+                    % int (scale * _NUM_EMISSIONS))
+
+        def get_version (self):
+            return '.'.join (map (lambda x: str (x), gtk.pygtk_version))
+
+
+        def execute (self, scale):
+            adjustment = self.__adjustment
+
+            for k in xrange (0, int (scale * _NUM_EMISSIONS)):
+                adjustment.emit ('changed')
+
+
+
+    class GObjectEmissionBenchmark2 (benchmarking.Benchmark):
+
+        def initialize (self):
+            adjustment = gtk.Adjustment ()
+            object     = _Dummy ()
+
+            adjustment.connect ('changed', object.ignoring_handler)
+            adjustment.connect ('changed', object.ignoring_handler, 1)
+            adjustment.connect ('changed', object.ignoring_handler, 'a', 'b')
+            adjustment.connect ('changed', object.ignoring_handler, None, True, False)
+
+            self.__adjustment = adjustment
+
+            # To keep it alive.
+            self.__object = object
+
+
+        def get_description (self, scale = 1.0):
+            return ("%d emissions of gtk.Adjustment `changed' signal with 4 method handlers"
                     % int (scale * _NUM_EMISSIONS))
 
         def get_version (self):
@@ -103,6 +164,13 @@ except ImportError:
 
 def _ignoring_handler (*arguments):
     pass
+
+
+
+class _Dummy (object):
+
+    def ignoring_handler (*arguments):
+        pass
 
 
 
