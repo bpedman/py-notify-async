@@ -31,21 +31,15 @@ Whether to use this feature is up to you.
 """
 
 __docformat__ = 'epytext en'
-__all__       = ()
 
 
-for module_name in ('base', 'bind', 'condition', 'mediator', 'signal', 'variable', 'utils'):
-    module = __import__('notify.%s' % module_name, globals (), locals (), '*')
-
-    for name in module.__all__:
-        globals () [name] = getattr (module, name)
-
-    __all__ += module.__all__
-
-
-del module_name
-del module
-del name
+from notify.base      import *
+from notify.bind      import *
+from notify.condition import *
+from notify.mediator  import *
+from notify.signal    import *
+from notify.utils     import *
+from notify.variable  import *
 
 
 

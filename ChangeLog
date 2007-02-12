@@ -1,5 +1,8 @@
 2007-02-11  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	* notify/all.py: Change to a list of plain imports (more readable
+	and doesn't seem to change anything; suggested by Edward Loper.)
+
 	* notify/all.py: Calculate `__all__' variable from imported
 	modules.
 
