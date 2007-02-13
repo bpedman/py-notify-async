@@ -69,6 +69,8 @@ __all__       = ('Binding', 'WeakBinding', 'RaisingWeakBinding',
 import types
 import weakref
 
+from notify.utils import *
+
 
 
 #-- Base binding class -----------------------------------------------
@@ -234,7 +236,7 @@ BindingCompatibleTypes = (types.MethodType, Binding)
 
 class WeakBinding (Binding):
 
-    __slots__ = ()
+    __slots__ = ('_WeakBinding__callback')
 
 
     def __init__(self, callable_object, arguments = (), callback = None):
@@ -245,9 +247,12 @@ class WeakBinding (Binding):
                 raise TypeError ("`callback' must be callable")
 
             try:
-                self._object = weakref.ref (self._object, callback)
+                self.__callback = callback
+                self._object    = weakref.ref (self._object, self.__object_garbage_collected)
             except:
                 raise CannotWeakReferenceError (self._object)
+        else:
+            self._object = _NONE_REFERENCE
 
 
     def wrap (_class, callable_object, arguments = (), callback = None):
@@ -281,26 +286,33 @@ class WeakBinding (Binding):
         @raises exception: whatever wrapped method raises, if anything.
         """
 
-        object = self._object
+        reference = self._object
 
-        if object is not None:
-            object = object ()
-            if object is None:
-                return self._call_after_garbage_collecting ()
+        if reference is not None:
+            # NOTE: This is essentially inlined method of the superclass.  While calling
+            #       that method would be more proper, inlining it gives significant speed
+            #       improvement.  Since it makes no difference for derivatives, we
+            #       sacrifice "do what is right" principle in this case.
 
-        # NOTE: This is essentially inlined method of the superclass.  While calling that
-        #       method would be more proper, inlining it gives significant speed
-        #       improvement.  Since it makes no difference for derivatives, we sacrifice
-        #       "do what is right" principle in this case.
-
-        if self.get_class () is not None:
-            return self.get_function () (object, *(self.get_arguments () + arguments))
+            if self.get_class () is not None:
+                return self.get_function () (reference (), *(self.get_arguments () + arguments))
+            else:
+                return self.get_function () (*(self.get_arguments () + arguments))
         else:
-            return self.get_function () (*(self.get_arguments () + arguments))
+            return self._call_after_garbage_collecting ()
 
 
     def _call_after_garbage_collecting (self):
         return None
+
+
+    def __object_garbage_collected (self, reference):
+        self._object = None
+
+        callback = self.__callback
+        if callback is not None:
+            self.__callback = None
+            callback (reference)
 
 
     def __nonzero__(self):
@@ -310,8 +322,10 @@ class WeakBinding (Binding):
         @rtype: bool
         """
 
-        reference = self._object
-        return reference is None or reference () is not None
+        return self._object is not None
+
+
+_NONE_REFERENCE = DummyReference (None)
 
 
 

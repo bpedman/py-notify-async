@@ -29,7 +29,8 @@ A collection of utilities that can also be used from outside, if needed.
 __docformat__ = 'epytext en'
 __all__       = ('raise_not_implemented_exception',
                  'is_valid_identifier',
-                 'mark_object_as_used', 'mark_object_as_unused')
+                 'mark_object_as_used', 'mark_object_as_unused',
+                 'DummyReference')
 
 
 import re
@@ -151,6 +152,19 @@ def mark_object_as_unused (object):
     """
 
     _USED_OBJECTS.remove (object)
+
+
+
+class DummyReference (object):
+
+    __slots__ = ('_DummyReference__object')
+
+
+    def __init__ (self, object):
+        self.__object = object
+
+    def __call__ (self):
+        return self.__object
 
 
 

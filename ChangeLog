@@ -1,3 +1,30 @@
+2007-02-13  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* benchmark/benchmarking.py (Benchmark.has_been_run)
+	(Benchmark.get_full_name): New functions.
+	(BenchmarkProgram.run): Use new `__do_run' function instead of
+	directly calling `run' on `self.__suite'.
+	(BenchmarkProgram.__build_parser): Add `--force' option.
+	(BenchmarkProgram.__do_run): New function.
+	(BenchmarkProgram.__store_results): Check if benchmark test has
+	been run at all.
+	(BenchmarkProgram.__test_is_new): New function.
+
+	* test/all.py (AllTestCase.assert_is_function): New function.
+	(AllTestCase.test_util): New test.
+
+	* notify/bind.py (WeakBinding.__init__): Store `callback' argument
+	in the object and use new internal `__object_garbage_collected'
+	function as a proxy.  Initialize `_object' field to new
+	`_NONE_REFERENCE' variable if no object is present.
+	(WeakBinding.__call__): Adjust for new scheme.
+	(WeakBinding.__object_garbage_collected): New function.
+	(WeakBinding.__nonzero__): Adjust for new scheme.
+	(_NONE_REFERENCE): New internal constant.
+
+	* notify/utils.py (DummyReference): Move here from
+	`notify/condition.py' and rename from `_DummyReference'.
+
 2007-02-11  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/all.py: Change to a list of plain imports (more readable

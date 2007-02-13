@@ -516,12 +516,12 @@ class _Binary (AbstractCondition):
             if object is self.__condition1:
                 self.__condition1 = _get_dummy_reference (self._num_true_conditions
                                                           - self.__condition2 ().get ())
-                if self._has_signal () and isinstance (self.__condition2, _DummyReference):
+                if self._has_signal () and isinstance (self.__condition2, DummyReference):
                     mark_object_as_unused (self)
             else:
                 self.__condition2 = _get_dummy_reference (self._num_true_conditions
                                                           - self.__condition1 ().get ())
-                if self._has_signal () and isinstance (self.__condition1, _DummyReference):
+                if self._has_signal () and isinstance (self.__condition1, DummyReference):
                     mark_object_as_unused (self)
 
 
@@ -669,22 +669,22 @@ class _IfElse (AbstractCondition):
             if object is self.__if:
                 self.__if = _get_dummy_reference (self.__term_state & 4)
                 if (self._has_signal ()
-                    and isinstance (self.__then, _DummyReference)
-                    and isinstance (self.__else, _DummyReference)):
+                    and isinstance (self.__then, DummyReference)
+                    and isinstance (self.__else, DummyReference)):
                     mark_object_as_unused (self)
 
             elif object is self.__then:
                 self.__then = _get_dummy_reference (self.__term_state & 2)
                 if (self._has_signal ()
-                    and isinstance (self.__if,   _DummyReference)
-                    and isinstance (self.__else, _DummyReference)):
+                    and isinstance (self.__if,   DummyReference)
+                    and isinstance (self.__else, DummyReference)):
                     mark_object_as_unused (self)
 
             else:
                 self.__else = _get_dummy_reference (self.__term_state & 1)
                 if (self._has_signal ()
-                    and isinstance (self.__if,   _DummyReference)
-                    and isinstance (self.__then, _DummyReference)):
+                    and isinstance (self.__if,   DummyReference)
+                    and isinstance (self.__then, DummyReference)):
                     mark_object_as_unused (self)
 
 
@@ -696,20 +696,8 @@ class _IfElse (AbstractCondition):
 
 
 
-class _DummyReference (object):
-
-    __slots__ = ('_DummyReference__object')
-
-
-    def __init__ (self, object):
-        self.__object = object
-
-    def __call__ (self):
-        return self.__object
-
-
-_TRUE_REFERENCE  = _DummyReference (AbstractCondition.TRUE)
-_FALSE_REFERENCE = _DummyReference (AbstractCondition.FALSE)
+_TRUE_REFERENCE  = DummyReference (AbstractCondition.TRUE)
+_FALSE_REFERENCE = DummyReference (AbstractCondition.FALSE)
 
 
 

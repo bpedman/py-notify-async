@@ -113,8 +113,27 @@ class Benchmark (object):
             sys.stdout.write ('Executed in %s s\n\n' % self.__time)
 
 
+    def has_been_run (self):
+        try:
+            self.get_time ()
+            return True
+        except:
+            return False
+
     def get_time (self):
         return self.__time
+
+
+    def get_full_name (benchmark):
+        if isinstance (benchmark, Benchmark):
+            return ('%s.%s-%s' % (benchmark.__module__,
+                                  benchmark.__class__.__name__,
+                                  benchmark.get_version ()))
+        else:
+            return None
+
+
+    get_full_name = staticmethod (get_full_name)
 
 
 
@@ -168,11 +187,17 @@ class BenchmarkProgram (object):
 
 
     def run (self):
+        should_run_test = lambda test_or_suite: True
+
         if self.__options.output is None:
             silent  = False
         else:
             silent  = True
             results = ConfigObj (self.__options.output)
+
+            if not self.__options.force:
+                should_run_test = (lambda test_or_suite:
+                                       BenchmarkProgram.__test_is_new (test_or_suite, results))
 
         num_runs = _NUM_RUNS
 
@@ -184,7 +209,7 @@ class BenchmarkProgram (object):
                                'and the best performance is reported\n\n')
                               % _NUM_RUNS)
 
-        self.__suite.run (self.__options.scale, num_runs, silent)
+        self.__do_run (self.__suite, self.__options.scale, num_runs, silent, should_run_test)
 
         if silent:
             self.__store_results (self.__suite, results)
@@ -194,11 +219,24 @@ class BenchmarkProgram (object):
     def __build_parser (self):
         parser = optparse.OptionParser ()
 
-        parser.add_option ('-o', '--output',   dest = 'output')
-        parser.add_option ('-r', '--num-runs', type = 'int',   dest = 'num_runs')
-        parser.add_option ('-s', '--scale',    type = 'float', default = 1.0, dest = 'scale')
+        parser.add_option ('-o', '--output')
+        parser.add_option ('-f', '--force',    action = 'store_true', default = False)
+        parser.add_option ('-r', '--num-runs', type   = 'int')
+        parser.add_option ('-s', '--scale',    type   = 'float',      default = 1.0)
 
         return parser
+
+
+    def __do_run (self, suite, scale, num_runs, silent, should_run_test):
+        if not should_run_test (suite):
+            return
+
+        if isinstance (suite, BenchmarkSuite):
+            for benchmark in suite:
+                self.__do_run (benchmark, scale, num_runs, silent, should_run_test)
+
+        elif isinstance (suite, Benchmark):
+            suite.run (scale, num_runs)
 
 
     def __store_results (self, suite, results):
@@ -207,21 +245,37 @@ class BenchmarkProgram (object):
                 self.__store_results (benchmark, results)
 
         elif isinstance (suite, Benchmark):
-            benchmark_name = ('%s.%s-%s'
-                              % (suite.__module__, suite.__class__.__name__, suite.get_version ()))
+            if not suite.has_been_run ():
+                return
+
+            benchmark_name = Benchmark.get_full_name (suite)
             is_new_result  = True
 
             for section in results:
                 for name in results[section]:
                     if name == benchmark_name:
                         results[section][name] = suite.get_time ()
-                        is_new_result = False
+                        is_new_result          = False
 
             if is_new_result:
                 if 'NEW RESULTS' in results:
                     results['NEW RESULTS'][benchmark_name] = suite.get_time ()
                 else:
                     results['NEW RESULTS'] = { benchmark_name: suite.get_time () }
+
+
+    def __test_is_new (test_or_suite, results):
+        if isinstance (test_or_suite, Benchmark):
+            benchmark_name = Benchmark.get_full_name (test_or_suite)
+
+            for section in results:
+                if benchmark_name in results[section]:
+                    return False
+
+        return True
+
+
+    __test_is_new = staticmethod (__test_is_new)
 
 
 main = BenchmarkProgram

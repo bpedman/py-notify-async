@@ -39,6 +39,10 @@ from notify.all import *
 
 class AllTestCase (unittest.TestCase):
 
+    def assert_is_function (self, function):
+        self.assert_(isinstance (function, types.FunctionType))
+
+
     def assert_is_class (self, _class):
         self.assert_(isinstance (_class, (type, types.ClassType)), _class)
 
@@ -88,6 +92,13 @@ class AllTestCase (unittest.TestCase):
     def test_signal (self):
         self.assert_is_class (Signal)
 
+
+    def test_util (self):
+        self.assert_is_function (raise_not_implemented_exception)
+        self.assert_is_function (is_valid_identifier)
+        self.assert_is_function (mark_object_as_used)
+        self.assert_is_function (mark_object_as_unused)
+        self.assert_is_class    (DummyReference)
 
     def test_variable (self):
         self.assert_is_class (AbstractVariable)
