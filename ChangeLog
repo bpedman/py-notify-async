@@ -1,5 +1,7 @@
 2007-02-15  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	* setup.py: Fix for the case of existing symbolic link.
+
 	* TODO: Update.
 
 	* test/all.py (AllTestCase.test_gc): New test.

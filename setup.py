@@ -109,6 +109,11 @@ class build_ext (_build_ext):
 
             try:
                 os.remove  (filename)
+            except:
+                # Ignore all errors.
+                pass
+
+            try:
                 os.symlink (os.path.join (os.pardir, self.build_lib, filename),
                             os.path.join ('notify', os.path.basename (filename)))
             except:
