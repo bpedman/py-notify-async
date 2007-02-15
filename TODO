@@ -1,10 +1,3 @@
-			    OPTIMIZATIONS
-
-AbstractValueObject._set_used and AbstractValueObject._set_unused must
-be optimized.  Probably need to optimize them in C.
-
-
-
 			    TEST COVERAGE
 
 Currently, unit test coverage is inadequate.  Add more tests and make

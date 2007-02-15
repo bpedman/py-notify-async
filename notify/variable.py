@@ -39,8 +39,8 @@ import weakref
 
 from notify.base      import *
 from notify.condition import *
+from notify.gc        import *
 from notify.signal    import *
-from notify.utils     import *
 
 
 
@@ -267,9 +267,9 @@ class WatcherVariable (AbstractValueTrackingVariable):
 
         if self._has_signal ():
             if watched_variable is None and variable_to_watch is not None:
-                mark_object_as_used (self)
+                AbstractGCProtector.default.protect (self)
             elif watched_variable is not None and variable_to_watch is None:
-                mark_object_as_unused (self)
+                AbstractGCProtector.default.unprotect (self)
 
 
     def __get_watched_variable (self):
@@ -281,7 +281,7 @@ class WatcherVariable (AbstractValueTrackingVariable):
 
     def _create_signal (self):
         if self.__get_watched_variable () is not None:
-            mark_object_as_used (self)
+            AbstractGCProtector.default.protect (self)
 
         signal = CleanSignal (self)
         return signal, weakref.ref (signal, self.__on_usage_change)
@@ -293,13 +293,13 @@ class WatcherVariable (AbstractValueTrackingVariable):
 
         if self._remove_signal (object):
             if self.__get_watched_variable () is not None:
-                mark_object_as_unused (self)
+                AbstractGCProtector.default.unprotect (self)
         else:
             if object is self.__watched_variable:
                 self.__watched_variable = None
 
                 if self._has_signal ():
-                    mark_object_as_unused (self)
+                    AbstractGCProtector.default.unprotect (self)
 
 
     def _additional_description (self, formatter):
@@ -336,7 +336,7 @@ class _PredicateOverVariable (AbstractStateTrackingCondition):
 
     def _create_signal (self):
         if self.__variable () is not None:
-            mark_object_as_used (self)
+            AbstractGCProtector.default.protect (self)
 
         signal = CleanSignal (self)
         return signal, weakref.ref (signal, self.__on_usage_change)
@@ -346,7 +346,7 @@ class _PredicateOverVariable (AbstractStateTrackingCondition):
         self._remove_signal (object)
 
         if self._has_signal () or self.__variable () is not None:
-            mark_object_as_unused (self)
+            AbstractGCProtector.default.unprotect (self)
 
 
     def _additional_description (self, formatter):

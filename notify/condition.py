@@ -37,6 +37,7 @@ __all__       = ('AbstractCondition', 'AbstractStateTrackingCondition',
 import weakref
 
 from notify.base   import *
+from notify.gc     import *
 from notify.signal import *
 from notify.utils  import *
 
@@ -262,9 +263,9 @@ class WatcherCondition (AbstractStateTrackingCondition):
 
         if self._has_signal ():
             if watched_condition is None and condition_to_watch is not None:
-                mark_object_as_used (self)
+                AbstractGCProtector.default.protect (self)
             elif watched_condition is not None and condition_to_watch is None:
-                mark_object_as_unused (self)
+                AbstractGCProtector.default.unprotect (self)
 
 
     def __get_watched_condition (self):
@@ -276,7 +277,7 @@ class WatcherCondition (AbstractStateTrackingCondition):
 
     def _create_signal (self):
         if self.__get_watched_condition () is not None:
-            mark_object_as_used (self)
+            AbstractGCProtector.default.protect (self)
 
         signal = CleanSignal (self)
         return signal, weakref.ref (signal, self.__on_usage_change)
@@ -288,13 +289,13 @@ class WatcherCondition (AbstractStateTrackingCondition):
 
         if self._remove_signal (object):
             if self.__get_watched_condition () is not None:
-                mark_object_as_unused (self)
+                AbstractGCProtector.default.unprotect (self)
         else:
             if object is self.__watched_condition:
                 self.__watched_condition = None
 
                 if self._has_signal ():
-                    mark_object_as_unused (self)
+                    AbstractGCProtector.default.unprotect (self)
 
 
     def _additional_description (self, formatter):
@@ -441,7 +442,7 @@ class _Not (AbstractStateTrackingCondition):
 
     def _create_signal (self):
         if self.__negated_condition () is not None:
-            mark_object_as_used (self)
+            AbstractGCProtector.default.protect (self)
 
         signal = CleanSignal (self)
         return signal, weakref.ref (signal, self.__on_usage_change)
@@ -450,7 +451,7 @@ class _Not (AbstractStateTrackingCondition):
         self._remove_signal (object)
 
         if self._has_signal () or self.__negated_condition () is not None:
-            mark_object_as_unused (self)
+            AbstractGCProtector.default.unprotect (self)
 
 
     def _additional_description (self, formatter):
@@ -501,7 +502,7 @@ class _Binary (AbstractCondition):
     def _create_signal (self):
         if (   isinstance (self.__condition1, weakref.ReferenceType)
             or isinstance (self.__condition2, weakref.ReferenceType)):
-            mark_object_as_used (self)
+            AbstractGCProtector.default.protect (self)
 
         signal = CleanSignal (self)
         return signal, weakref.ref (signal, self.__on_usage_change)
@@ -511,18 +512,18 @@ class _Binary (AbstractCondition):
         if self._remove_signal (object):
             if (   isinstance (self.__condition1, weakref.ReferenceType)
                 or isinstance (self.__condition2, weakref.ReferenceType)):
-                mark_object_as_unused (self)
+                AbstractGCProtector.default.unprotect (self)
         else:
             if object is self.__condition1:
                 self.__condition1 = _get_dummy_reference (self._num_true_conditions
                                                           - self.__condition2 ().get ())
                 if self._has_signal () and isinstance (self.__condition2, DummyReference):
-                    mark_object_as_unused (self)
+                    AbstractGCProtector.default.unprotect (self)
             else:
                 self.__condition2 = _get_dummy_reference (self._num_true_conditions
                                                           - self.__condition1 ().get ())
                 if self._has_signal () and isinstance (self.__condition1, DummyReference):
-                    mark_object_as_unused (self)
+                    AbstractGCProtector.default.unprotect (self)
 
 
     def _get_operator_name (self):
@@ -653,7 +654,7 @@ class _IfElse (AbstractCondition):
         if (   isinstance (self.__if,   weakref.ReferenceType)
             or isinstance (self.__then, weakref.ReferenceType)
             or isinstance (self.__else, weakref.ReferenceType)):
-            mark_object_as_used (self)
+            AbstractGCProtector.default.protect (self)
 
         signal = CleanSignal (self)
         return signal, weakref.ref (signal, self.__on_usage_change)
@@ -664,28 +665,28 @@ class _IfElse (AbstractCondition):
             if (   isinstance (self.__if,   weakref.ReferenceType)
                 or isinstance (self.__then, weakref.ReferenceType)
                 or isinstance (self.__else, weakref.ReferenceType)):
-                mark_object_as_unused (self)
+                AbstractGCProtector.default.unprotect (self)
         else:
             if object is self.__if:
                 self.__if = _get_dummy_reference (self.__term_state & 4)
                 if (self._has_signal ()
                     and isinstance (self.__then, DummyReference)
                     and isinstance (self.__else, DummyReference)):
-                    mark_object_as_unused (self)
+                    AbstractGCProtector.default.unprotect (self)
 
             elif object is self.__then:
                 self.__then = _get_dummy_reference (self.__term_state & 2)
                 if (self._has_signal ()
                     and isinstance (self.__if,   DummyReference)
                     and isinstance (self.__else, DummyReference)):
-                    mark_object_as_unused (self)
+                    AbstractGCProtector.default.unprotect (self)
 
             else:
                 self.__else = _get_dummy_reference (self.__term_state & 1)
                 if (self._has_signal ()
                     and isinstance (self.__if,   DummyReference)
                     and isinstance (self.__then, DummyReference)):
-                    mark_object_as_unused (self)
+                    AbstractGCProtector.default.unprotect (self)
 
 
     def __repr__(self):

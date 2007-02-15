@@ -106,6 +106,7 @@ import sys
 import weakref
 
 from notify.bind  import *
+from notify.gc    import *
 from notify.utils import *
 
 
@@ -848,7 +849,7 @@ class CleanSignal (Signal):
     def orphan (self):
         if self.__parent is not None:
             if self._handlers is not None:
-                mark_object_as_unused (self)
+                AbstractGCProtector.default.unprotect (self)
 
             self.__parent = None
 
@@ -858,7 +859,7 @@ class CleanSignal (Signal):
 
     def do_connect (self, handler):
         if self._handlers is None and self.__parent is not None:
-            mark_object_as_used (self)
+            AbstractGCProtector.default.protect (self)
 
         super (CleanSignal, self).do_connect (handler)
 
@@ -868,7 +869,7 @@ class CleanSignal (Signal):
             if (    self.get_emission_level () == 0
                 and self._handlers is None
                 and self.__parent is not None):
-                mark_object_as_unused (self)
+                AbstractGCProtector.default.unprotect (self)
 
             return True
 
@@ -880,7 +881,7 @@ class CleanSignal (Signal):
             if (    self.get_emission_level () == 0
                 and self._handlers is None
                 and self.__parent is not None):
-                mark_object_as_unused (self)
+                AbstractGCProtector.default.unprotect (self)
 
             return True
 
@@ -899,7 +900,7 @@ class CleanSignal (Signal):
         if self._handlers is not None and self.get_emission_level () == 0:
             super (CleanSignal, self).collect_garbage ()
             if self._handlers is None and self.__parent is not None:
-                mark_object_as_unused (self)
+                AbstractGCProtector.default.unprotect (self)
 
 
 # Local variables:

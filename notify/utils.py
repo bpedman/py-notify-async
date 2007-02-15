@@ -29,19 +29,10 @@ A collection of utilities that can also be used from outside, if needed.
 __docformat__ = 'epytext en'
 __all__       = ('raise_not_implemented_exception',
                  'is_valid_identifier',
-                 'mark_object_as_used', 'mark_object_as_unused',
                  'DummyReference')
 
 
 import re
-
-
-
-# FIXME: This is very inefficient and should be redone in C sooner or later.  One idea is
-#        instead of adding to this list or removing from it, to add or remove a `leaked'
-#        reference.  I'm not sure if that is allowed by the interpreter, though.
-
-_USED_OBJECTS = []
 
 
 
@@ -122,36 +113,6 @@ def _find_declaration_classes (_class, function_name):
 def is_valid_identifier (identifier):
     return (isinstance (identifier, basestring)
             and re.match ('^[_a-zA-Z][_a-zA-Z0-9]*$', identifier) is not None)
-
-
-
-def mark_object_as_used (object):
-    """
-    Mark the object as ‘used’ to prevent it from being garbage-collecting.  This method
-    I{must not} be called from outside, it is only for descendant classes use.  It also
-    I{must not} be called if C{object} is already marked as ‘used’ and such call may
-    result in undefined behavior, including memory leaks and program crashing.
-
-    Objects start as ‘unused’, i.e. can be garbage-collected if there are no normal
-    references to them.
-    """
-
-    _USED_OBJECTS.append (object)
-
-
-def mark_object_as_unused (object):
-    """
-    Mark the object as ‘unused’ to allow garbage-collecting it.  This method I{must not}
-    be called from outside, it is only for descendant classes use.  It also I{must not} be
-    called if C{object} is already marked as ‘unused’ (including right after creation) and
-    such call may result in undefined behavior, including memory leaks and program
-    crashing.
-
-    Objects start as ‘unused’, i.e. can be garbage-collected if there are no normal
-    references to them.
-    """
-
-    _USED_OBJECTS.remove (object)
 
 
 

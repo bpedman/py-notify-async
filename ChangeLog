@@ -1,3 +1,24 @@
+2007-02-15  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* TODO: Update.
+
+	* test/all.py (AllTestCase.test_gc): New test.
+	(AllTestCase.test_util): Don't test removed functions anymore.
+
+	* notify/condition.py: Use new gc-protector instead of the removed
+	functions everywhere.
+	* notify/signal.py: Likewise.
+	* notify/variable.py: Likewise.
+
+	* notify/utils.py (_USED_OBJECTS): Remove variable.
+	(mark_object_as_used, mark_object_as_unused): Remove functions.
+
+	* notify/all.py: Import new `notify.gc' module.
+
+	* setup.py: Build it as a C extension.
+
+	* notify/gc.c: New file.
+
 2007-02-13  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* benchmark/benchmarking.py (Benchmark.has_been_run)

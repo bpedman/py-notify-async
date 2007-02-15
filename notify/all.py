@@ -36,6 +36,7 @@ __docformat__ = 'epytext en'
 from notify.base      import *
 from notify.bind      import *
 from notify.condition import *
+from notify.gc        import *
 from notify.mediator  import *
 from notify.signal    import *
 from notify.utils     import *

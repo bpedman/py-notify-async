@@ -83,6 +83,11 @@ class AllTestCase (unittest.TestCase):
         self.assert_is_class (WatcherCondition)
 
 
+    def test_gc (self):
+        self.assert_is_class (AbstractGCProtector)
+        self.assert_is_class (FastGCProtector)
+
+
     def test_mediator (self):
         self.assert_is_class (AbstractMediator)
         self.assert_is_class (BooleanMediator)
@@ -96,8 +101,6 @@ class AllTestCase (unittest.TestCase):
     def test_util (self):
         self.assert_is_function (raise_not_implemented_exception)
         self.assert_is_function (is_valid_identifier)
-        self.assert_is_function (mark_object_as_used)
-        self.assert_is_function (mark_object_as_unused)
         self.assert_is_class    (DummyReference)
 
     def test_variable (self):

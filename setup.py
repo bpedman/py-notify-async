@@ -94,7 +94,31 @@ classifiers = ['Topic :: Software Development :: Libraries :: Python Modules',
 
 
 
-from distutils.core import *
+from distutils.core              import *
+from distutils.command.build_ext import build_ext as _build_ext
+
+
+
+class build_ext (_build_ext):
+
+    def build_extension (self, extension):
+        _build_ext.build_extension (self, extension)
+
+        if not self.inplace and os.name == 'posix':
+            filename = self.get_ext_filename (extension.name)
+
+            try:
+                os.remove  (filename)
+                os.symlink (os.path.join (os.pardir, self.build_lib, filename),
+                            os.path.join ('notify', os.path.basename (filename)))
+            except:
+                # Ignore all errors.
+                pass
+
+
+
+gc_extension = Extension (name    = 'notify.gc',
+                          sources = [os.path.join ('notify', 'gc.c')])
 
 
 
@@ -107,7 +131,9 @@ setup (name         = 'py-notify',
        download_url = 'http://download.gna.org/py-notify/',
        license      = "GNU Lesser General Public License v2.1 (see `COPYING')",
        classifiers  = classifiers,
-       packages     = ['notify'])
+       packages     = ['notify'],
+       ext_modules  = [gc_extension],
+       cmdclass     = { 'build_ext': build_ext })
 
 
 
