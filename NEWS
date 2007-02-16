@@ -1,3 +1,16 @@
+--- New in Py-notify 0.1.4 -------------------------------------------
+
+* New fast and generic GC-protector module (notify.gc) replaces
+  inefficient mark_object_as_used() and mark_object_as_unused()
+  functions.
+
+* Speed optimizations in bindings.
+
+* 2 more unit tests (87 in total.)
+
+* 2 more benchmark tests (4 in total.)
+
+
 --- New in Py-notify 0.1.3 -------------------------------------------
 
 * New class `WatcherVariable', just like `WatcherCondition'.
