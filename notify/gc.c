@@ -48,6 +48,18 @@ static PyObject *   FastGCProtector_unprotect       (FastGCProtector *self, PyOb
 
 /*- Documentation --------------------------------------------------*/
 
+#define MODULE_DOC "\
+A module for protecting objects from garbage collector.  Sometimes, objects that don't \
+have a reference to them (and so are valid garbage collector targets) need to stay alive.  \
+Good example of this are logic L{conditions <condition>}: their state can change because \
+they have term conditions, yet they may be not referenced from anywhere, since handlers \
+don't need a reference to notice a state change.\n\
+\n\
+This module defines both a simple L{interface <AbstractGCProtector>} and several \
+implementations, some which are suitable for production use (C{L{FastGCProtector}}), \
+some for debugging purposes."
+
+
 #define GC_PROTECTOR_DOC                                                \
   NULL
 
@@ -198,14 +210,14 @@ AbstractGCProtector_dealloc (PyObject *self)
 static PyObject *
 AbstractGCProtector_protect (PyObject *self, PyObject *arguments)
 {
-  return PyObject_CallFunctionObjArgs (raise_not_implemented_exception, self, NULL);
+  return PyObject_CallFunction (raise_not_implemented_exception, "Os", self, "protect");
 }
 
 
 static PyObject *
 AbstractGCProtector_unprotect (PyObject *self, PyObject *arguments)
 {
-  return PyObject_CallFunctionObjArgs (raise_not_implemented_exception, self, NULL);
+  return PyObject_CallFunction (raise_not_implemented_exception, "Os", self, "unprotect");
 }
 
 
@@ -214,13 +226,13 @@ AbstractGCProtector_set_default (PyObject *null, PyObject *arguments)
 {
   PyObject *new_protector;
 
-  if (!PyArg_ParseTuple (arguments, "O!:notify.gc.AbstractGCProtector_set_default.set_default",
+  if (!PyArg_ParseTuple (arguments, "O!:notify.gc.AbstractGCProtector.set_default",
                          &AbstractGCProtector_Type, &new_protector))
     return NULL;
 
   PyDict_SetItemString (AbstractGCProtector_Type.tp_dict, "default", new_protector);
 
-  Py_XINCREF (Py_None);
+  Py_INCREF (Py_None);
   return Py_None;
 }
 
@@ -242,10 +254,10 @@ FastGCProtector_protect (FastGCProtector *self, PyObject *arguments)
   if (!PyArg_ParseTuple (arguments, "O:notify.gc.FastGCProtector.protect", &object))
     return NULL;
 
-  Py_XINCREF (object);
+  Py_INCREF (object);
   ++self->num_protected_objects;
 
-  Py_XINCREF (object);
+  Py_INCREF (object);
   return object;
 }
 
@@ -258,10 +270,10 @@ FastGCProtector_unprotect (FastGCProtector *self, PyObject *arguments)
   if (!PyArg_ParseTuple (arguments, "O:notify.gc.FastGCProtector.unprotect", &object))
     return NULL;
 
-  Py_XDECREF (object);
+  Py_DECREF (object);
   --self->num_protected_objects;
 
-  Py_XINCREF (object);
+  Py_INCREF (object);
   return object;
 }
 
@@ -300,7 +312,10 @@ initgc (void)
 
   default_protector = PyObject_New (PyObject, &FastGCProtector_Type);
   PyDict_SetItemString (AbstractGCProtector_Type.tp_dict, "default", default_protector);
-  Py_XDECREF (default_protector);
+  Py_DECREF (default_protector);
+
+  PyModule_AddStringConstant (module, "__doc__", MODULE_DOC);
+  PyModule_AddStringConstant (module, "__docformat__", "epytext en");
 }
 
 

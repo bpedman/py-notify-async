@@ -1,3 +1,58 @@
+2007-02-25  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/base.py: Improve documentation.
+	* notify/bind.py: Likewise.
+	* notify/gc.c: Likewise.
+	* notify/mediator.py: Likewise.
+	* notify/utils.py: Likewise.
+
+	* notify/bind.py (Binding.__eq__): Return `NotImplemented' in case
+	of a non-compatible `other' argument.
+	(Binding.__ne__): Reimplement, since `NotImplemented' can be now
+	returned.
+
+	* setup.py (build_ext.build_extension): Reimplement symlinking.
+
+	* notify/gc.c (AbstractGCProtector_protect): Pass `function_name'
+	to `raise_not_implemented_exception'.
+	(AbstractGCProtector_unprotect): Likewise.
+
+	* notify/utils.py (raise_not_implemented_exception): Add optional
+	`function_name' argument.
+
+2007-02-19  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/base.py (AbstractValueObject.__nonzero__): Remove.
+
+	* notify/variable.py (AbstractVariable): Remove all operation
+	methods, as they were quite different from `AbstractCondition'
+	methods.  Explicitly getting `value' beforehand is not that
+	difficult.
+
+	* setup.py: Bump development status to beta.  Mention C in
+	programming languages.
+
+2007-02-18  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/bind.py (Binding.wrap): Check that `callable_object' is
+	indeed callable.
+
+	* INSTALL: Mention C compiler requirement.
+
+	* notify/gc.c (AbstractGCProtector_set_default): Use non-checking
+	reference macros.
+	(FastGCProtector_protect): Likewise.
+	(FastGCProtector_unprotect): Likewise.
+	(initgc): Likewise.
+
+	* notify/base.py (AbstractValueObject.derive_type): Simplify a
+	little.
+
+2007-02-17  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/base.py (AbstractValueObject.desynchronize)
+	(AbstractValueObject.desynchronize_fully): New functions.
+
 2007-02-16  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* version: Release 0.1.4.

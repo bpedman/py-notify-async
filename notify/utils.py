@@ -23,7 +23,8 @@
 
 
 """
-A collection of utilities that can also be used from outside, if needed.
+A collection of utilities that can also be used from outside, if wanted.  Functions and
+classes here can be assumed public and won’t disappear in future Py-notify versions.
 """
 
 __docformat__ = 'epytext en'
@@ -33,11 +34,11 @@ __all__       = ('raise_not_implemented_exception',
 
 
 import re
+import sys
 
 
 
-def raise_not_implemented_exception (object = None):
-
+def raise_not_implemented_exception (object = None, function_name = None):
     """
     Raise C{NotImplementedError} for a method invoked with C{object} as C{self}.  The
     function determines object class and method declaration class(es) itself and that’s
@@ -47,37 +48,41 @@ def raise_not_implemented_exception (object = None):
         >>> raise_not_implemented_exception (self)
 
     And output might look like this::
-          File ".../foo.py", line # in ?
-            Foo ().bar ()
-          File ".../foo.py", line #, in bar
-            raise_not_implemented_exception (self)
-          File ".../notify/utils.py", line #, in raise_not_implemented_exception
-            raise exception
-        NotImplementedError: bar() not implemented in class Foo (declared in AbstractFoo)
+       File ".../foo.py", line # in ?
+         Foo ().bar ()
+       File ".../foo.py", line #, in bar
+         raise_not_implemented_exception (self)
+       File ".../notify/utils.py", line #, in raise_not_implemented_exception
+         raise exception
+     NotImplementedError: bar() not implemented in class Foo (declared in AbstractFoo)
+
+    Optionally, C{function_name} can be specified.  This argument mainly exists for C
+    extension, since function name cannot be detected automatically in this case.  In
+    Python code you should just leave this argument out.
 
     @raises NotImplementedError: always.
     """
 
-    import sys
-
-    function_name        = None
-    function_description = 'UNKNOWN FUNCTION'
-
-    try:
-        raise Exception
-    except:
+    if function_name is None:
         try:
-            traceback            = sys.exc_info () [2]
-            function_name        = traceback.tb_frame.f_back.f_code.co_name
-            function_description = '%s()' % function_name
+            raise Exception
         except:
-            # We can do nothing, ignore.
-            pass
+            try:
+                traceback     = sys.exc_info () [2]
+                function_name = traceback.tb_frame.f_back.f_code.co_name
+            except:
+                # We can do nothing, ignore.
+                pass
+
+    if function_name is not None:
+        function_description = '%s()' % function_name
+    else:
+        function_description = 'UNKNOWN FUNCTION'
 
     try:
         class_description = ' in class %s' % object.__class__.__name__
 
-        if function_name:
+        if function_name is not None:
             declaration_classes = _find_declaration_classes (object.__class__, function_name)
 
             if len (declaration_classes) == 1:
@@ -90,7 +95,7 @@ def raise_not_implemented_exception (object = None):
                                                         declaration_classes)))
 
     except:
-        class_description = ""
+        class_description = ''
 
     exception = NotImplementedError ('%s not implemented%s'
                                      % (function_description, class_description))
@@ -111,12 +116,27 @@ def _find_declaration_classes (_class, function_name):
 
 
 def is_valid_identifier (identifier):
+    """
+    Determine if C{identifier} is a valid Python identifier.  This function never raises
+    any exceptions.  If C{identifier} is not a string, it simply returns C{False}.
+
+    @rtype: bool
+    """
+
     return (isinstance (identifier, basestring)
             and re.match ('^[_a-zA-Z][_a-zA-Z0-9]*$', identifier) is not None)
 
 
 
 class DummyReference (object):
+
+    """
+    Simple class interface-compatible with C{weakref.WeakReference}.  In other words, its
+    constructor accepts only one parameter and its value is later returned from
+    C{__call__} method.  Unlike weak references, instances of this class don’t do anything
+    special.  They are only needed to avoid bothering about exact type of a reference
+    object.
+    """
 
     __slots__ = ('_DummyReference__object')
 

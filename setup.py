@@ -88,9 +88,10 @@ configure (version)
 classifiers = ['Topic :: Software Development :: Libraries :: Python Modules',
                'Intended Audience :: Developers',
                'License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)',
-               'Development Status :: 3 - Alpha',
+               'Development Status :: 4 - Beta',
                'Operating System :: OS Independent',
-               'Programming Language :: Python']
+               'Programming Language :: Python',
+               'Programming Language :: C']
 
 
 
@@ -105,17 +106,28 @@ class build_ext (_build_ext):
         _build_ext.build_extension (self, extension)
 
         if not self.inplace and os.name == 'posix':
-            filename = self.get_ext_filename (extension.name)
+            filename        = self.get_ext_filename (extension.name)
+            link_filename   = os.path.join ('py', filename)
+            target_filename = os.path.join (os.pardir, self.build_lib, filename)
+
+            recursion_scan  = os.path.split (filename) [0]
+
+            while recursion_scan:
+                recursion_scan  = os.path.split (recursion_scan) [0]
+                target_filename = os.path.join  (os.pardir, target_filename)
 
             try:
-                os.remove  (filename)
+                os.remove (link_filename)
             except:
                 # Ignore all errors.
                 pass
 
             try:
-                os.symlink (os.path.join (os.pardir, self.build_lib, filename),
-                            os.path.join ('notify', os.path.basename (filename)))
+                if hasattr (os, 'symlink'):
+                    os.symlink (target_filename, link_filename)
+                else:
+                    # FIXME: Copy the library then.
+                    pass
             except:
                 # Ignore all errors.
                 pass

@@ -1,8 +1,7 @@
 			 SYSTEM REQUIREMENTS
 
-Py-notify requires Python 2.3 or later.  It currently contains no C
-code, but that is expected to appear.  So, while a C compiler is not
-required at the moment, it will be required for later versions.
+Py-notify requires Python 2.3 or later and a C compiler supported by
+distutils (there is one module written in C for performance reasons.)
 
 
 

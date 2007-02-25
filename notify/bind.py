@@ -78,13 +78,25 @@ from notify.utils import *
 class Binding (object):
 
     """
-    Bindings are sort of callables with advanced comparing capabilities.
+    Bindings are a kind of callables with advanced comparing capabilities.
     """
 
     __slots__ = ('_object', '_function', '_class', '_arguments')
 
 
     def __init__(self, callable_object, arguments = ()):
+        """
+        Initialize a new binding which will call C{callable_object}, I{prepending} fixed
+        C{arguments} (if any) to those specified at call time.  Here, C{callable_object}
+        is usually a function or a method, but can in principle be anything callable,
+        including an already existing binding.
+
+        See also C{L{wrap}} class method for a different way of creating bindings.
+
+        @raises TypeError: if C{callable_object} is not callable or C{arguments} is not
+                           iterable.
+        """
+
         if not callable (callable_object):
             raise TypeError ("`callable_object' must be callable")
 
@@ -106,9 +118,29 @@ class Binding (object):
 
 
     def wrap (_class, callable_object, arguments = ()):
+        """
+        Return a callable with semantics of the binding class this method is called for.
+        I{If necessary} (e.g. if C{arguments} tuple is not empty), this method creates a
+        binding instance first.  In any case, you can assume that returned object will
+        I{behave} identically to an instance of this class with C{callable_object} and
+        C{arguments} passed to C{L{__init__}} method.  However, the returned object I{is
+        not required} to be an instance.
+
+        This is the preferred method of creating bindings.  It is generally more memory-
+        and call-time-efficient since in some cases no new objects are created at all.
+
+        @rtype:            callable
+
+        @raises TypeError: if C{callable_object} is not callable or C{arguments} is not
+                           iterable.
+        """
+
         if arguments is not ():
             return _class (callable_object, arguments)
         else:
+            if not callable (callable_object):
+                raise TypeError ("`callable_object' must be callable")
+
             return callable_object
 
 
@@ -116,23 +148,75 @@ class Binding (object):
 
 
     def get_object (self):
+        """
+        Return object associated with this binding.  It is not C{None} only if binding is
+        created for a bound method or another method with non-C{None} object.
+
+        This method is analogous to C{L{im_self}} property.  Method is slightly faster,
+        but the same property also exists for function and method objects, so the property
+        is “standard interface”.
+
+        @note:  Never override C{im_self} property, override this method instead.
+
+        @rtype: object
+        """
+
         return self._object
 
     def get_function (self):
+        """
+        Return raw function associated with this binding.
+
+        This method is analogous to C{L{im_func}} property.  Method is slightly faster,
+        but the same property also exists for function and method objects, so the property
+        is “standard interface”.
+
+        @note:  Never override C{im_func} property, override this method instead.
+
+        @rtype: function
+        """
+
         return self._function
 
     def get_class (self):
+        """
+        Return the class associated with this binding.
+
+        This method is analogous to C{L{im_class}} property.  Method is slightly faster,
+        but the same property also exists for function and method objects, so the property
+        is “standard interface”.
+
+        @note:  Never override C{im_class} property, override this method instead.
+
+        @rtype: class or type
+        """
+
         return self._class
 
     def get_arguments (self):
+        """
+        Get the arguments of this binding.  These are the arguments passed to
+        C{L{__init__}} or C{L{wrap}} method.  When calling the binding, they are
+        I{prepended} to arguments passed to C{L{__call__}}.
+
+        There also exists C{L{im_args}} property, completely analogous to this method.
+        Method is slightly faster, but the property is in line with standard C{L{im_self}}
+        and other properties.
+
+        @note:  Never override C{im_args} property, override this method instead.
+
+        @rtype: tuple
+        """
+
         return self._arguments
 
 
     def __call__(self, *arguments):
         """
-        Call the wrapped plain method or function and return whatever it returns.  If
-        binding was constructed with arguments, they are I{prepended} to arguments of this
-        function before being passed to wrapped method or function.
+        Call the wrapped callable (e.g. method or function) and return whatever it
+        returns.  If binding was constructed with L{arguments <im_args>}, they are
+        I{prepended} to arguments of this function before being passed to the wrapped
+        callable.
 
         @rtype:            object
         @raises exception: whatever wrapped method raises, if anything.
@@ -148,9 +232,9 @@ class Binding (object):
 
     def __eq__(self, other):
         """
-        Determine if C{self} is equal to C{other}.  Two weak methods wrapping are equal
-        only if they wrap equal methods.  A weak method is also equal to its wrapped plain
-        method.
+        Determine if C{self} is equal to C{other}.  Two bindings are equal only if they
+        wrap equal methods and have equal L{argument lists <im_args>}.  A binding with an
+        empty argument list is also equal to its wrapped method or function.
 
         @rtype: bool
         """
@@ -159,7 +243,7 @@ class Binding (object):
             return True
 
         if not isinstance (other, BindingCompatibleTypes):
-            return False
+            return NotImplemented
 
         if (   self.get_object   () is not other.im_self
             or self.get_function () is not other.im_func
@@ -179,14 +263,22 @@ class Binding (object):
         @rtype: bool
         """
 
-        return not self.__eq__(other)
+        equal = self.__eq__(other)
+
+        if equal is not NotImplemented:
+            return not equal
+        else:
+            return NotImplemented
 
 
     def __nonzero__(self):
         """
-        C{True} if method’s object hasn’t been garbage-collected.
+        C{True} if binding is in its initial and fully functional state.  This method
+        mainly exists for L{weak bindings <WeakBinding>}, for which it returns C{False}
+        if binding’s object has been garbage-collected.
 
-        @rtype: bool
+        @rtype:   bool
+        @returns: Always C{True} for this class.
         """
 
         return True
@@ -194,36 +286,49 @@ class Binding (object):
 
     im_self  = property (lambda self: self.get_object (),
                          doc = ("""
-                                The object of this weak method or C{None} if it has been
+                                The object of this binding or C{None} if it has been
                                 garbage-collected already.  This property is provided
-                                mainly for consistency with similar property of plain
-                                methods.
+                                for consistency with similar property of plain methods.
 
                                 @type: object
+
+                                @note: Never override this property, override
+                                       C{L{get_object}} method instead.
                                 """))
     im_func  = property (lambda self: self.get_function (),
                          doc = ("""
-                                Function of this weak method.  This property is provided
-                                mainly for consistency with similar property of plain
-                                methods.
+                                Function of this binding.  This property is provided for
+                                consistency with similar property of plain methods.
 
                                 @type: function
+
+                                @note: Never override this property, override
+                                       C{L{get_function}} method instead.
                                 """))
     im_class = property (lambda self: self.get_class (),
                          doc = ("""
-                                Class of this weak method.  This property is provided
+                                Class of this binding’s object.  This property is provided
                                 mainly for consistency with similar property of plain
                                 methods.
 
                                 @type: class or type
+
+                                @note: Never override this property, override
+                                       C{L{get_class}} method instead.
                                 """))
     im_args  = property (lambda self: self.get_arguments (),
                          doc = ("""
-                                Class of this weak method.  This property is provided
-                                mainly for consistency with similar property of plain
-                                methods.
+                                Arguments of this binding as passed to C{L{__init__}} or
+                                C{L{wrap}} method.  When calling the binding, they are
+                                I{prepended} to arguments passed to C{L{__call__}}
 
-                                @type: class or type
+                                This property is in line with standard C{L{im_self}} and
+                                other properties.
+
+                                @type: tuple
+
+                                @note: Never override this property, override
+                                       C{L{get_arguments}} method instead.
                                 """))
 
 
@@ -236,10 +341,47 @@ BindingCompatibleTypes = (types.MethodType, Binding)
 
 class WeakBinding (Binding):
 
+    """
+    A kind of L{binding <Binding>} which refers to its object weakly.  In other words,
+    existence of such a binding doesn’t prevent its object from being garbage-collected if
+    it is not strongly referenced somewhere else.
+
+    As long as object is not garbage-collected, such a binding behaves identically to an
+    instance of its superclass.  However, once object I{is} garbage-collected, things
+    change:
+
+        - C{L{__call__}} does nothing and returns C{None};
+
+        - C{L{get_object}} returns C{None} (and C{L{im_self}} is equal to C{None},
+          accordingly);
+
+        - boolean state (see C{L{__nonzero__}} method) of the binding becomes C{False}.
+
+    @see:  RaisingWeakBinding
+    """
+
     __slots__ = ('_WeakBinding__callback')
 
 
     def __init__(self, callable_object, arguments = (), callback = None):
+        """
+        Initialize a new weak binding which will call C{callable_object}, I{prepending}
+        fixed C{arguments} (if any) to those specified at call time.  Here,
+        C{callable_object} is usually a function or a method, but can in principle be
+        anything callable, including an already existing binding.
+
+        If C{callable_object} is a bound method, its object is referenced weakly.  It is
+        also legal to create weak bindings for other callables, but they will behave
+        identically to plain bindings in that case.
+
+        See also C{L{wrap}} class method for a different way of creating weak bindings.
+
+        @raises TypeError:                if C{callable_object} is not callable or
+                                          C{arguments} is not iterable.
+        @raises CannotWeakReferenceError: if C{callable_object} is a bound method, but
+                                          its object is not weakly referencable.
+        """
+
         super (WeakBinding, self).__init__(callable_object, arguments)
 
         if self._object is not None:
@@ -256,6 +398,7 @@ class WeakBinding (Binding):
 
 
     def wrap (_class, callable_object, arguments = (), callback = None):
+        # Inherit documentation somehow?
         if (arguments is not ()
             or (    isinstance (callable_object, BindingCompatibleTypes)
                 and not isinstance (callable_object, WeakBinding)
@@ -269,6 +412,20 @@ class WeakBinding (Binding):
 
 
     def get_object (self):
+        """
+        Return object associated with this binding.  It is not C{None} only if binding is
+        created for a bound method or another method with non-C{None} object I{or} the
+        object was not C{None}, but has been garbage-collected.
+
+        This method is analogous to C{L{im_self}} property.  Method is slightly faster,
+        but the same property also exists for function and method objects, so the property
+        is “standard interface”.
+
+        @note:  Never override C{im_self} property, override this method instead.
+
+        @rtype: object
+        """
+
         reference = self._object
 
         if reference is not None:
@@ -303,6 +460,18 @@ class WeakBinding (Binding):
 
 
     def _call_after_garbage_collecting (self):
+        """
+        Method called if the binding is called after its object has been
+        garbage-collected.  Default implementation just returns C{None}.  Note that the
+        return value is then returned from C{L{__call__}}.
+
+        Please note that the condition for calling above is precise.  In particular, if
+        the binding was created without an object (i.e. with C{None}) to begin with, this
+        method will never be called at all.
+
+        @rtype: object
+        """
+
         return None
 
 
@@ -317,7 +486,9 @@ class WeakBinding (Binding):
 
     def __nonzero__(self):
         """
-        C{True} if method’s object hasn’t been garbage-collected.
+        C{True} if method’s object hasn’t been garbage-collected.  More precisely, C{True}
+        if binding is in its initial and fully functional state, but for weak bindings it
+        means exactly what is stated in the previous statement.
 
         @rtype: bool
         """
@@ -332,6 +503,10 @@ _NONE_REFERENCE = DummyReference (None)
 class RaisingWeakBinding (WeakBinding):
 
     """
+    A variation of L{weak binding <WeakBinding>} which raises C{L{GarbageCollectedError}}
+    if called after its object has been garbage-collected.  There are no other difference
+    from common weak bindings.  In particular, if a binding is create without an object
+    (i.e. with C{None}) to begin with, it will never raise C{L{GarbageCollectedError}}.
     """
 
     __slots__    = ()
@@ -347,8 +522,8 @@ class RaisingWeakBinding (WeakBinding):
 class CannotWeakReferenceError (TypeError):
 
     """
-    Exception thrown when trying to create a weak binding for an object that doesn’t
-    support weak references.
+    Exception thrown when trying to create a L{weak binding <WeakBinding>} for an object
+    that doesn’t support weak references.
     """
 
     pass

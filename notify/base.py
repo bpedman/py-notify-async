@@ -32,6 +32,8 @@ __docformat__ = 'epytext en'
 __all__       = ('AbstractValueObject',)
 
 
+import types
+
 from notify.mediator import *
 from notify.signal   import *
 from notify.utils    import *
@@ -148,7 +150,9 @@ class AbstractValueObject (object):
         is no signal yet.  I.e. only for the first invocation at all or first invocation
         after a call to C{L{_remove_signal}}.
 
-        @rtype: AbstractSignal, object
+        @rtype:   AbstractSignal, object
+        @returns: A signal object I{or} a reference to one (i.e. object with C{__call__}
+                  method returning a signal.)
         """
 
         signal = Signal ()
@@ -268,7 +272,7 @@ class AbstractValueObject (object):
 
         else:
             if not isinstance (mediator, AbstractMediator):
-                raise TypeError ("second argument must be a mediator")
+                raise TypeError ('second argument must be a mediator')
 
             # Note: order is important!
             value_object.store (mediator.forward (self.set))
@@ -301,11 +305,126 @@ class AbstractValueObject (object):
 
         else:
             if not isinstance (mediator, AbstractMediator):
-                raise TypeError ("second argument must be a mediator")
+                raise TypeError ('second argument must be a mediator')
 
             # Note: order is important!
             value_object.store_safe (mediator.forward (self.set))
             self.signal_changed ().connect_safe (mediator.back (value_object.set))
+
+
+    def desynchronize (self, value_object, mediator = None):
+        """
+        Desynchronize own value with that of C{value_object}.  Note that values do not
+        start to differ immediately, actually, this method doesn’t change values at all.
+        Rather, values will not be synchronized anymore if any of the two changes.  If
+        C{mediator} is not C{None}, this method cancels effect of a call to
+        C{L{synchronize}} with the same or equal mediator only.
+
+        Note that C{desynchronize} must be called the same number of times as
+        C{synchronize} in order to cancel future synchronization.  If you need to do that
+        in one call and regardless of how many times the latter has been called, use
+        C{L{desynchronize_fully}} method instead.
+
+        @raises TypeError: if C{mediator} is neither C{None} nor an instance of
+                           C{L{AbstractMediator <mediator.AbstractMediator>}}.
+
+        @rtype:            bool
+        @returns:          Whether C{self} and C{value_object} have been synchronized
+                           before (using C{mediator} if it is not C{None}.)
+
+        @note:
+        If C{L{set}} method of one of the values has been connected to other value’s
+        ‘changed’ signal, but otherwise is not true, this method does nothing and returns
+        C{False}.  So, it should be safe unless C{L{synchronize}} has been called or its
+        effect has been emulated manually.
+        """
+
+        if not isinstance (mediator, (types.NoneType, AbstractMediator)):
+            raise TypeError ('second argument must be a mediator')
+
+        if (   not isinstance (value_object, AbstractValueObject)
+            or not value_object._is_mutable ()
+            or not self._has_signal ()
+            or not value_object._has_signal ()):
+            return False
+
+        if mediator is None:
+            forward = self.set
+            back    = value_object.set
+        else:
+            forward = mediator.forward (self.set)
+            back    = mediator.back    (value_object.set)
+
+        if (    value_object.signal_changed ().is_connected (forward)
+            and self.signal_changed ().is_connected (back)):
+
+            value_object.signal_changed ().disconnect (forward)
+            self.        signal_changed ().disconnect (back)
+
+            return True
+
+        else:
+            return False
+
+
+    def desynchronize_fully (self, value_object, mediator = None):
+        """
+        Desynchronize own value with that of C{value_object}.  Note that values do not
+        start to differ immediately, actually, this method doesn’t change values at all.
+        Rather, values will not be synchronized anymore if any of the two changes.  If
+        C{mediator} is not C{None}, this method cancels effect of a call to
+        C{L{synchronize}} with the same or equal mediator only.
+
+        Note that C{desynchronize_fully} cancels future synchronization regardless of how
+        many times C{synchronize} has been called.  If that is not what you want, use
+        C{L{desynchronize}} method instead.
+
+        @raises TypeError: if C{mediator} is neither C{None} nor an instance of
+                           C{L{AbstractMediator <mediator.AbstractMediator>}}.
+
+        @rtype:            bool
+        @returns:          Whether C{self} and C{value_object} have been synchronized
+                           before (using C{mediator} if it is not C{None}.)
+
+        @note:
+        If C{L{set}} method of one of the values has been connected to other value’s
+        ‘changed’ signal, but otherwise is not true, this method does nothing and returns
+        C{False}.  So, it should be safe unless C{L{synchronize}} has been called or its
+        effect has been emulated manually.
+
+        Also remember that calling this function is not always the same as calling
+        C{L{desynchronize}} until it starts to return C{False}.  These calls give
+        different results if values’ C{set} methods are connected to other value’s
+        ‘changed’ signal different number of times.  So, C{desynchronize_fully} may be
+        dangerous at times.
+        """
+
+        if not isinstance (mediator, (types.NoneType, AbstractMediator)):
+            raise TypeError ('second argument must be a mediator')
+
+        if (   not isinstance (value_object, AbstractValueObject)
+            or not value_object._is_mutable ()
+            or not self._has_signal ()
+            or not value_object._has_signal ()):
+            return False
+
+        if mediator is None:
+            forward = self.set
+            back    = value_object.set
+        else:
+            forward = mediator.forward (self.set)
+            back    = mediator.back    (value_object.set)
+
+        if (    value_object.signal_changed ().is_connected (forward)
+            and self.signal_changed ().is_connected (back)):
+
+            value_object.signal_changed ().disconnect_all (forward)
+            self.        signal_changed ().disconnect_all (back)
+
+            return True
+
+        else:
+            return False
 
 
     def _changed (self, new_value):
@@ -338,7 +457,7 @@ class AbstractValueObject (object):
         Generate list of additional descriptions for this object.  All description strings
         are put in parentheses after basic object description and are separated by
         semicolons.  Default description mentions number of handlers of ‘changed’ signal,
-        if there any at all.
+        if there are any at all.
 
         C{formatter} is either C{repr} or C{str} and should be used to format objects
         mentioned in list string(s).  Its use is not required but encouraged.
@@ -356,7 +475,8 @@ class AbstractValueObject (object):
         strings.
 
         This method is called by standard implementations of C{L{__repr__}} and
-        C{L{__str__}}.  If you use your own, you don’t need to override this method.
+        C{L{__str__}}.  If you use your own (and that is perfectly fine), you don’t need
+        to override this method.
 
         @rtype:   list
         @returns: List of description strings for this object.
@@ -398,17 +518,38 @@ class AbstractValueObject (object):
                                str (self.get ()), self.__to_string (False))
 
 
-    def __nonzero__(self):
-        """
-        Same as C{bool (self.get ())}.  This is a convenience method, especially useful
-        for L{conditions <condition>}.
-
-        @rtype: bool
-        """
-        return bool (self.get ())
-
-
     def derive_type (self_class, new_class_name, **options):
+        """
+        Derive and return a new type named C{new_class_name}.  Various C{options} define
+        behaviour of instances of the new type.  Their set and sometimes semantics are
+        defined by exact class this method is called for.
+
+        @newfield option:  Option, Options
+
+        @option:           C{object} — valid Python identifier.  If specified, derived
+                           type’s constructor will accept one parameter and store it
+                           inside the created instance.  It will be used for calling
+                           C{getter} and C{setter} functions.
+
+        @option:           C{getter} — a callable accepting one argument, whose return
+                           value will be used as C{L{get}} method result.  If C{object}
+                           option is specified, the only argument will be the one passed
+                           to instance constructor, else it will be C{self} as passed to
+                           C{get} method.
+
+        @option:           C{setter} — a callable accepting two argument, which will be
+                           called from C{L{get}} method.  The first argument is described
+                           in C{getter} option; the second is the C{value} as passed to
+                           C{L{set}} method.
+
+        @rtype:            type
+
+        @raises TypeError: if C{new_class_name} is not a string or is not a valid Python
+                           identifier.
+        @raises exception: whatever C{L{_generate_derived_type_dictionary}} raises, if
+                           anything.
+        """
+
         if not is_valid_identifier (new_class_name):
             raise TypeError ("`%s' is not a valid Python identifier" % new_class_name)
 
@@ -422,13 +563,10 @@ class AbstractValueObject (object):
             if value[0] != '__slots__':
                 dictionary[value[0]] = value[1]
             else:
-                if '__slots__' in dictionary:
-                    dictionary['__slots__'].extend (value[1])
-                else:
-                    dictionary['__slots__'] = list (value[1])
+                if not '__slots__' in dictionary:
+                    dictionary['__slots__'] = ()
 
-        if '__slots__' in dictionary:
-            dictionary['__slots__'] = tuple (dictionary['__slots__'])
+                dictionary['__slots__'] += tuple (value[1])
 
         try:
             # FIXME: I'm not sure this is not a hack.
@@ -438,6 +576,53 @@ class AbstractValueObject (object):
 
 
     def _generate_derived_type_dictionary (self_class, options):
+        """
+        Generate an iterable of pairs in the form (Python identifier, value) for a new
+        type created by C{L{derive_type}}.  Exact pairs should be influenced by
+        C{options}, which are C{options} as passed to C{derive_type} plus C{self_class}
+        (for convenience) and C{new_class_name}.
+
+        This method is not meant to be callable from outside, use C{L{derive_type}} for
+        that instead.
+
+        Overriden implementations of this method are recommended but not required to be
+        generator functions.  They should generally start like this:
+
+            >>> def _generate_derived_type_dictionary (self_class, options):
+            ...     for attribute in super (..., self_class)._generate_derived_type_dictionary (options):
+            ...         yield attribute
+            ...
+            ...     ...
+
+        That is only an approximation and you can, for instance, change or override
+        attributes returned by super-method.
+
+        C{options} dictionary is constructed in such a way you should be able to evaluate
+        all function-defining statements in it.  For instance, you can write own
+        C{_generate_derived_type_dictionary} like this:
+
+            >>> def _generate_derived_type_dictionary (self_class, options):
+            ...     ...
+            ...
+            ...     functions = {}
+            ...
+            ...     if 'foo_value' in options:
+            ...         exec 'def foo (self): return foo_value' in options, functions
+            ...
+            ...     ...
+            ...
+            ...     for function in functions.iteritems ():
+            ...         yield function
+
+        Returned value for C{__slots__} is treated specially.  While normally values
+        associated with the same name override previous values, values for C{__slots__}
+        are combined in to a tuple instead.
+
+        @rtype:           iterable
+        @returns:         Pairs of (Python identifier, value) for the new type.
+        @raise exception: if there is any error in C{options}.
+        """
+
         functions = {}
 
         if 'object' in options:
@@ -458,7 +643,7 @@ class AbstractValueObject (object):
         if 'getter' in options:
             getter = options['getter']
             if not callable (getter):
-                raise TypeError ("`get' must be a callable")
+                raise TypeError ("`getter' must be a callable")
 
             exec ('def get (self): return getter (%s)'
                   % AbstractValueObject._get_object (options))  in options, functions
@@ -466,7 +651,7 @@ class AbstractValueObject (object):
         if 'setter' in options:
             setter = options['setter']
             if not callable (setter):
-                raise TypeError ("`set' must be a callable")
+                raise TypeError ("`setter' must be a callable")
 
             exec ('def set (self, value): return setter (%s, value)'
                   % AbstractValueObject._get_object (options)) in options, functions
@@ -478,6 +663,18 @@ class AbstractValueObject (object):
 
 
     def _get_object (options):
+        """
+        Return Python expression for object that should be passed to various user
+        functions.  This is either C{"self"} or C{"self.some_attribute"} if C{options}
+        dictionary contains C{"object"} key.  In this case C{"some_attribute"} string is
+        evaluated to a private attribute name for the class being defined.
+
+        This is a helper for C{_generate_derived_type_dictionary} only.  It should not be
+        called from outside.
+
+        @rtype: str
+        """
+
         if 'object' in options:
             return 'self._%s__%s' % (options['new_class_name'].lstrip ('_'), options['object'])
         else:

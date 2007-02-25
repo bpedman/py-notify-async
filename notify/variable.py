@@ -66,55 +66,6 @@ class AbstractVariable (AbstractValueObject):
 
 
 
-    def __lt__(self, other):
-        return self.get () <  other
-
-    def __le__(self, other):
-        return self.get () <= other
-
-    def __ne__(self, other):
-        return self.get () != other
-
-    def __eq__(self, other):
-        return self.get () == other
-
-    def __gt__(self, other):
-        return self.get () >  other
-
-    def __ge__(self, other):
-        return self.get () >= other
-
-    def __cmp__(self, other):
-        return self.get ().__cmp__(other)
-
-
-    def __call__(self, callback):
-        return self.get () (callback)
-
-
-    def __len__(self):
-        return len (self.get ())
-
-    def __getitem__(self, key):
-        return self.get () [key]
-
-    def __setitem__(self, key, value):
-        self.get () [key] = value
-
-    def __delitem__(self, key):
-        del self.get () [key]
-
-    def __iter__(self):
-        return self.get ().__iter__()
-
-    def __contains__(self, item):
-        return item in self.get ()
-
-
-    # TODO: Emulate numeric types.
-
-
-
 class AbstractValueTrackingVariable (AbstractVariable):
 
     __slots__ = ('_AbstractValueTrackingVariable__value')

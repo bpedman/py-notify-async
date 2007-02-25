@@ -82,19 +82,70 @@ class AbstractMediator (object):
     """
 
     def forward_value (self, value):
+        """
+        Apply forward transformation to C{value} and return the result.  This function may
+        raise any exception if mediator imposes some restrictions on C{value} and it
+        doesn’t satisfy them.
+
+        @rtype: object
+        """
+
         raise_not_implemented_exception (self)
 
     def back_value (self, value):
+        """
+        Apply back transformation to C{value} and return the result.  This function may
+        raise any exception if mediator imposes some restrictions on C{value} and it
+        doesn’t satisfy them.
+
+        @rtype: object
+        """
+
         raise_not_implemented_exception (self)
 
 
     def forward (self, function):
+        """
+        Return a callable accepting one argument that applies forward transformation to it
+        and passes result to C{function}.  It holds that if C{m1} and C{m2} are two equal
+        mediators and C{f1} and C{f2} are two equal callables (e.g. functions), then:
+
+            >>> m1.forward (f1) == m2.forward (f2)
+
+        In addition to that, for any C{value} to which forward transformation can be
+        applied,
+
+            >>> m1.forward (f1) (value) == m2.forward (f2) (value) == m1.forward_value (value)
+
+
+        @rtype:            callable
+
+        @raises TypeError: if C{function} is not callable.
+        """
+
         if callable (function):
             return _Forward (self, function)
         else:
             raise TypeError ("`function' must be callable")
 
     def back (self, function):
+        """
+        Return a callable accepting one argument that applies back transformation to it
+        and passes result to C{function}.  It holds that if C{m1} and C{m2} are two equal
+        mediators and C{f1} and C{f2} are two equal callables (e.g. functions), then:
+
+            >>> m1.back (f1) == m2.back (f2)
+
+        In addition to that, for any C{value} to which back transformation can be applied,
+
+            >>> m1.back (f1) (value) == m2.back (f2) (value) == m1.back_value (value)
+
+
+        @rtype:            callable
+
+        @raises TypeError: if C{function} is not callable.
+        """
+
         if callable (function):
             return _Back (self, function)
         else:
@@ -112,6 +163,9 @@ class AbstractMediator (object):
             ... m1.back          (function) == m2.forward       (function)
 
         Additionaly, it holds that C{mediator.reverse ().reverse () == mediator}.
+        However, there are no guarantees on type (or even identity) of the returned value
+        except those mentioned above and that it is an instance of the C{AbstractMediator}
+        class.
 
         @rtype: AbstractMediator
         """
@@ -120,9 +174,25 @@ class AbstractMediator (object):
 
 
     def __eq__(self, other):
+        """
+        Determine if two mediators are equal.  This function is not required to catch all
+        possible cases of equal mediators, as, for instance, determine equality of
+        mediators of different classes is often very difficult, if not impossible.
+        However, it should—as much as (efficiently) possible—detect equal mediators of the
+        same class.
+
+        @rtype: bool
+        """
+
         return self is other
 
     def __ne__(self, other):
+        """
+        Determine if two mediators are not equal.  See C{L{__eq__}} for details.
+
+        @rtype: bool
+        """
+
         return not self.__eq__(other)
 
 
@@ -196,6 +266,11 @@ class BooleanMediator (AbstractMediator):
 
 class FunctionalMediator (AbstractMediator):
 
+    """
+    A mediator that delegates forward and back transformations to arbitrary functions
+    (actually, anything callable.)
+    """
+
     __slots__ = ('_FunctionalMediator__forward_function', '_FunctionalMediator__back_function',
                  '_FunctionalMediator__arguments')
 
@@ -228,7 +303,7 @@ class FunctionalMediator (AbstractMediator):
 
 
     def __eq__(self, other):
-        return (isinstance (other, FunctionalMediator)
+        return (    isinstance (other, FunctionalMediator)
                 and self.__forward_function == other.__forward_function
                 and self.__back_function    == other.__back_function
                 and self.__arguments        == other.__arguments)
@@ -266,15 +341,11 @@ class _ReverseMediator (AbstractMediator):
 
 
     def reverse (self):
-        """
-        Return a mediator that does exactly opposite transformations.
-        """
-
         return self.__wrapped_mediator
 
 
     def __eq__(self, other):
-        return (isinstance (other, _ReverseMediator)
+        return (    isinstance (other, _ReverseMediator)
                 and self.__wrapped_mediator == other.__wrapped_mediator)
 
 
