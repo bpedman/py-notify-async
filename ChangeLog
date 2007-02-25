@@ -1,5 +1,16 @@
 2007-02-25  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	* notify/bind.py (Binding.__eq__): Add a case for plain functional
+	`other'.
+
+	* test/bind.py (BindingTestCase.test_equality_1)
+	(BindingTestCase.test_equality_2)
+	(BindingTestCase.test_equality_3)
+	(BindingTestCase.test_equality_4): New tests.
+
+	* test/__common.py (NotifyTestCase.assert_equal_thoroughly)
+	(NotifyTestCase.assert_not_equal_thoroughly): New functions.
+
 	* notify/base.py: Improve documentation.
 	* notify/bind.py: Likewise.
 	* notify/gc.c: Likewise.

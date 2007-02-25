@@ -242,18 +242,26 @@ class Binding (object):
         if self is other:
             return True
 
-        if not isinstance (other, BindingCompatibleTypes):
-            return NotImplemented
+        if isinstance (other, BindingCompatibleTypes):
+            if (   self.get_object   () is not other.im_self
+                or self.get_function () is not other.im_func
+                or self.get_class    () is not other.im_class):
+                return False
 
-        if (   self.get_object   () is not other.im_self
-            or self.get_function () is not other.im_func
-            or self.get_class    () is not other.im_class):
-            return False
+            if isinstance (other, Binding):
+                return self.get_arguments () == other.get_arguments ()
+            else:
+                return self.get_arguments () is ()
 
-        if isinstance (other, Binding):
-            return self.get_arguments () == other.get_arguments ()
         else:
-            return self.get_arguments () is ()
+            if isinstance (other, types.FunctionType):
+                return (self.im_func is other
+                        and self.im_self is None
+                        and self.im_class is None
+                        and self.im_args is ())
+            else:
+                return NotImplemented
+
 
 
     def __ne__(self, other):

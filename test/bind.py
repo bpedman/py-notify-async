@@ -81,6 +81,72 @@ class BindingTestCase (NotifyTestCase):
         self.assertRaises (CannotWeakReferenceError, lambda: RaisingWeakBinding (Test ().test))
 
 
+    def test_equality_1 (self):
+        self.assert_equal_thoroughly (Binding (DUMMY.identity_function),
+                                      Binding (DUMMY.identity_function))
+        self.assert_equal_thoroughly (Binding (Dummy.static_identity),
+                                      Binding (Dummy.static_identity))
+
+        self.assert_not_equal_thoroughly (Binding (Dummy ().identity_function),
+                                          Binding (Dummy ().identity_function))
+
+        self.assert_not_equal_thoroughly (Binding (DUMMY.identity_function),
+                                          Binding (DUMMY.static_identity))
+
+
+    def test_equality_2 (self):
+        def f (x):
+            pass
+
+        class A (object):
+            test = f
+
+        class B (object):
+            test = f
+
+        self.assert_not_equal_thoroughly (Binding (A.test), Binding (B.test))
+
+
+    def test_equality_3 (self):
+        self.assert_equal_thoroughly (Binding (DUMMY.identity_function, ('a', 'b', 'c')),
+                                      Binding (DUMMY.identity_function, ('a', 'b', 'c')))
+        self.assert_equal_thoroughly (Binding (DUMMY.static_identity, ('a', 'b', 'c')),
+                                      Binding (DUMMY.static_identity, ('a', 'b', 'c')))
+
+        self.assert_not_equal_thoroughly (Binding (DUMMY.identity_function, ('a', 'b', 'c')),
+                                          Binding (DUMMY.identity_function, ('a', 'b', 'd')))
+        self.assert_not_equal_thoroughly (Binding (Dummy.static_identity, ('a', 'b', 'c')),
+                                          Binding (Dummy.static_identity, ('a', 'b', 'd')))
+
+
+    def test_equality_4 (self):
+        def plain_function ():
+            pass
+
+        a_lambda = lambda: None
+
+        self.assert_equal_thoroughly (DUMMY.identity_function, Binding (DUMMY.identity_function))
+        self.assert_equal_thoroughly (DUMMY.static_identity,   Binding (DUMMY.static_identity))
+        self.assert_equal_thoroughly (Dummy.static_identity,   Binding (Dummy.static_identity))
+        self.assert_equal_thoroughly (Dummy.static_identity,   Binding (Dummy.static_identity))
+        self.assert_equal_thoroughly (plain_function,          Binding (plain_function))
+        self.assert_equal_thoroughly (a_lambda,                Binding (a_lambda))
+
+        # Same as above, but with non-empty argument list.
+        self.assert_not_equal_thoroughly (DUMMY.identity_function,
+                                          Binding (DUMMY.identity_function, (0,)))
+        self.assert_not_equal_thoroughly (DUMMY.static_identity,
+                                          Binding (DUMMY.static_identity, (0,)))
+        self.assert_not_equal_thoroughly (Dummy.static_identity,
+                                          Binding (Dummy.static_identity, (0,)))
+        self.assert_not_equal_thoroughly (Dummy.static_identity,
+                                          Binding (Dummy.static_identity, (0,)))
+        self.assert_not_equal_thoroughly (plain_function,
+                                          Binding (plain_function, (0,)))
+        self.assert_not_equal_thoroughly (a_lambda,
+                                          Binding (a_lambda, (0,)))
+
+
     def test_garbage_collection_1 (self):
         object = Dummy ()
         method = WeakBinding (object.identity_function)

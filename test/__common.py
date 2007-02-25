@@ -37,6 +37,15 @@ class NotifyTestCase (unittest.TestCase):
         super (NotifyTestCase, self).setUp ()
 
 
+    def assert_equal_thoroughly (self, value1, value2):
+        self.assert_(    value1 == value2)
+        self.assert_(not value1 != value2)
+
+    def assert_not_equal_thoroughly (self, value1, value2):
+        self.assert_(    value1 != value2)
+        self.assert_(not value1 == value2)
+
+
     def assert_results (self, *results):
         valid_results = list (results)
 
