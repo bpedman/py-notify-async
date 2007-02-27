@@ -41,9 +41,13 @@ static PyObject *   AbstractGCProtector_protect     (PyObject *self, PyObject *a
 static PyObject *   AbstractGCProtector_unprotect   (PyObject *self, PyObject *arguments);
 static PyObject *   AbstractGCProtector_set_default (PyObject *null, PyObject *arguments);
 
+static int          FastGCProtector_init            (FastGCProtector *self,
+                                                     PyObject *arguments, PyObject *keywords);
 static void         FastGCProtector_dealloc         (FastGCProtector *self);
 static PyObject *   FastGCProtector_protect         (FastGCProtector *self, PyObject *arguments);
 static PyObject *   FastGCProtector_unprotect       (FastGCProtector *self, PyObject *arguments);
+static PyObject *   FastGCProtector_get_num_protected_objects
+                      (FastGCProtector *self);
 
 
 /*- Documentation --------------------------------------------------*/
@@ -82,14 +86,17 @@ some for debugging purposes."
 #define FAST_GC_PROTECTOR_UNPROTECT_DOC                                 \
   NULL
 
+#define FAST_GC_PROTECTOR_NUM_PROTECTED_OBJECTS_DOC                     \
+  NULL
+
 
 /*- Types ----------------------------------------------------------*/
 
 PyMethodDef  AbstractGCProtector_methods[]
   = { { "protect",     (PyCFunction)  AbstractGCProtector_protect,     METH_VARARGS,
-	GC_PROTECTOR_PROTECT_DOC },
+        GC_PROTECTOR_PROTECT_DOC },
       { "unprotect",   (PyCFunction)  AbstractGCProtector_unprotect,   METH_VARARGS,
-	GC_PROTECTOR_UNPROTECT_DOC },
+        GC_PROTECTOR_UNPROTECT_DOC },
       { "set_default", (PyCFunction)  AbstractGCProtector_set_default, METH_VARARGS | METH_STATIC,
         GC_PROTECTOR_SET_DEFAULT_DOC },
       { NULL, NULL, 0, NULL } };
@@ -142,10 +149,15 @@ PyTypeObject  AbstractGCProtector_Type
 
 PyMethodDef  FastGCProtector_methods[]
   = { { "protect",     (PyCFunction)  FastGCProtector_protect,         METH_VARARGS,
-	FAST_GC_PROTECTOR_PROTECT_DOC },
+        FAST_GC_PROTECTOR_PROTECT_DOC },
       { "unprotect",   (PyCFunction)  FastGCProtector_unprotect,       METH_VARARGS,
-	FAST_GC_PROTECTOR_UNPROTECT_DOC },
+        FAST_GC_PROTECTOR_UNPROTECT_DOC },
       { NULL, NULL, 0, NULL } };
+
+PyGetSetDef  FastGCProtector_properties[]
+  = { { "num_protected_objects", (getter) FastGCProtector_get_num_protected_objects, NULL,
+        FAST_GC_PROTECTOR_NUM_PROTECTED_OBJECTS_DOC, NULL },
+      { NULL, NULL, NULL, NULL, NULL } };
 
 PyTypeObject  FastGCProtector_Type
   = { PyObject_HEAD_INIT (NULL)
@@ -178,13 +190,13 @@ PyTypeObject  FastGCProtector_Type
       (iternextfunc)   0,                            /* tp_iternext       */
       FastGCProtector_methods,                       /* tp_methods        */
       0,                                             /* tp_members        */
-      0,                                             /* tp_getset         */
+      FastGCProtector_properties,                    /* tp_getset         */
       (PyTypeObject *) &AbstractGCProtector_Type,    /* tp_base           */
       (PyObject *)     0,                            /* tp_dict           */
       0,                                             /* tp_descr_get      */
       0,                                             /* tp_descr_set      */
       0,                                             /* tp_dictoffset     */
-      (initproc)       0,                            /* tp_init           */
+      (initproc)       FastGCProtector_init,         /* tp_init           */
       (allocfunc)      0,                            /* tp_alloc          */
       (newfunc)        0,                            /* tp_new            */
       (freefunc)       0,                            /* tp_free           */
@@ -239,6 +251,29 @@ AbstractGCProtector_set_default (PyObject *null, PyObject *arguments)
 
 /*- FastGCProtector type methods -----------------------------------*/
 
+static PyObject *
+FastGCProtector_new (void)
+{
+  FastGCProtector *protector = PyObject_New (FastGCProtector, &FastGCProtector_Type);
+
+  FastGCProtector_init (protector, PyTuple_New (0), NULL);
+  return (PyObject *) protector;
+}
+
+
+static int
+FastGCProtector_init (FastGCProtector *self, PyObject *arguments, PyObject *keywords)
+{
+  static char* supported_keywords[] = { NULL };
+
+  if (!PyArg_ParseTupleAndKeywords (arguments, keywords, ":FastGCProtector", supported_keywords))
+    return -1;
+
+  self->num_protected_objects = 0;
+  return 0;
+}
+
+
 static void
 FastGCProtector_dealloc (FastGCProtector *self)
 {
@@ -278,6 +313,13 @@ FastGCProtector_unprotect (FastGCProtector *self, PyObject *arguments)
 }
 
 
+static PyObject *
+FastGCProtector_get_num_protected_objects (FastGCProtector *self)
+{
+  return PyInt_FromLong (self->num_protected_objects);
+}
+
+
 /*- Module initialization ------------------------------------------*/
 
 #define REGISTER_TYPE(dictionary, type, name)                           \
@@ -310,7 +352,7 @@ initgc (void)
   REGISTER_TYPE (dictionary, AbstractGCProtector_Type, "AbstractGCProtector");
   REGISTER_TYPE (dictionary, FastGCProtector_Type,     "FastGCProtector");
 
-  default_protector = PyObject_New (PyObject, &FastGCProtector_Type);
+  default_protector = FastGCProtector_new ();
   PyDict_SetItemString (AbstractGCProtector_Type.tp_dict, "default", default_protector);
   Py_DECREF (default_protector);
 

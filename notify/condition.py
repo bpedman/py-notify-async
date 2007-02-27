@@ -146,7 +146,7 @@ class AbstractStateTrackingCondition (AbstractCondition):
 
         if self.get () is not state:
             self.__state = state
-            return self._changed (state)
+            return self._value_changed (state)
         else:
             return False
 
@@ -555,11 +555,11 @@ class _And (_Binary):
         if new_state:
             self._num_true_conditions += 1
             if self._num_true_conditions == 2:
-                self._changed (True)
+                self._value_changed (True)
         else:
             self._num_true_conditions -= 1
             if self._num_true_conditions == 1:
-                self._changed (False)
+                self._value_changed (False)
 
 
     def _get_operator_name (self):
@@ -579,11 +579,11 @@ class _Or (_Binary):
         if new_state:
             self._num_true_conditions += 1
             if self._num_true_conditions == 1:
-                self._changed (True)
+                self._value_changed (True)
         else:
             self._num_true_conditions -= 1
             if self._num_true_conditions == 0:
-                self._changed (False)
+                self._value_changed (False)
 
 
     def _get_operator_name (self):
@@ -605,7 +605,7 @@ class _Xor (_Binary):
         else:
             self._num_true_conditions -= 1
 
-        self._changed (self._num_true_conditions == 1)
+        self._value_changed (self._num_true_conditions == 1)
 
 
     def _get_operator_name (self):
@@ -647,7 +647,7 @@ class _IfElse (AbstractCondition):
         new_state         = _IfElse.__TERM_STATE_TO_SELF_STATE[self.__term_state]
 
         if  new_state != old_state:
-            self._changed (new_state)
+            self._value_changed (new_state)
 
 
     def _create_signal (self):

@@ -130,8 +130,8 @@ class AbstractSignal (object):
       - Blocking connected handlers from being invoked: C{L{is_blocked}}, C{L{block}} and
         C{L{unblock}}.
 
-      - Emission: C{L{emit}} (or just C{L{__call__}}), C{L{get_emission_level}} and
-        C{L{stop_emission}}.
+      - Emission: C{L{emit}} (or just C{L{__call__}}), C{L{get_emission_level}},
+        C{L{is_emission_stopped}} and C{L{stop_emission}}.
 
       - Rarely needed: C{L{_wrap_handler}} and C{L{collect_garbage}}.
     """
@@ -471,7 +471,29 @@ class AbstractSignal (object):
         If called from a handler, return value will be at least 1—more if in recursive
         emission.
 
+        Note that stopping an emission doesn’t cause emission level to change instantly.
+        Even though the latest emission will not invoke handlers anymore, it is still
+        considered ‘in progress’ until the call to C{L{emit}} returns.
+
         @rtype: int
+        """
+
+        raise_not_implemented_exception (self)
+
+    def is_emission_stopped (self):
+        """
+        Determine if the latest emission in progress has been stopped with
+        C{L{stop_emission}} method.  In particular, it returns C{False} if (but not only
+        if) the signal is not being emitted at all.
+
+        Note that this method only considers I{the latest} emission.  For instance,
+        immediately after a call to C{stop_emission} it would return C{True}, but if you
+        start another one—letting or not the stopped to finish—it will return C{False}.
+        In other words, C{False} doesn’t mean there is no stopped emission in progress, it
+        only means that the latest emission is not stopped, or the signal is not being
+        emitted at all.
+
+        @rtype: bool
         """
 
         raise_not_implemented_exception (self)
@@ -480,22 +502,18 @@ class AbstractSignal (object):
         """
         Stop the current emission of the signal.  If there is no emission in progress to
         begin with or if the current emission is already stopped with a call to this
-        method, do nothing and return C{False}, else return C{True}.  Note two significant
-        moments:
+        method, do nothing and return C{False}, else return C{True}.  This method only
+        stops the latest emission, earlier ones proceed normally (this is relevant only to
+        recursive emissions.)
 
-          1. This method only stops the latest emission, earlier ones proceed normally
-             (this is relevant only to recursive emissions.)
-
-          2. It is impossible to start a new emission before corresponding call to
-             C{L{emit}} returns.  In particular,
-                 >>> if signal.stop_emission ():
-                 ...     signal.emit ()
-
-             won’t cause new emission since current instance of C{emit} won’t have a
-             chance to finish.
+        Note that it is legal to stop the current emission and immediately start a new
+        one, without letting the previous call to C{L{emit}} return first.  One possible
+        use is to make the first handler check the emission arguments and, if needed,
+        ‘correct’ them, stop emission and immediately reemit signal with new, fixed
+        arguments.
 
         @rtype:   bool
-        @returns: C{True} if this method is a not yet stopped emission in progress.
+        @returns: C{True} if this method stopped anything.
         """
 
         raise_not_implemented_exception (self)
@@ -503,6 +521,10 @@ class AbstractSignal (object):
 
     def collect_garbage (self):
         pass
+
+
+    emission_level   = property (get_emission_level)
+    emission_stopped = property (is_emission_stopped)
 
 
 
@@ -564,7 +586,7 @@ class Signal (AbstractSignal):
     """
     Standard implementation of C{L{AbstractSignal}} interface.
 
-    Signals can have L{accumulators <AbstractAccumulator>} for values, returned by its
+    Signal can have an L{accumulator <AbstractAccumulator>} for values, returned by its
     handlers.  By default, these values are just ignored.
     """
 
@@ -586,6 +608,16 @@ class Signal (AbstractSignal):
         self._blocked_handlers = ()
         self.__accumulator     = accumulator
         self.__emission_level  = 0
+
+
+    accumulator = property (lambda self: self.__accumulator,
+                            doc = ("""
+                            The L{accumulator <AbstractAccumulator>} this signal was
+                            created with or C{None}.  Accumulator cannot be changed, it
+                            can only be specified at signal creation time.
+
+                            @type: AbstractAccumulator
+                            """))
 
 
     def has_handlers (self):
@@ -759,9 +791,10 @@ class Signal (AbstractSignal):
         else:
             value = accumulator.get_initial_value ()
 
-        if handlers is not None and self.__emission_level >= 0:
+        if handlers is not None:
             try:
-                self.__emission_level += 1
+                saved_emission_level  = self.__emission_level
+                self.__emission_level = abs (saved_emission_level) + 1
 
                 for index, handler in enumerate (handlers):
                     # Disconnected or garbage-collected handlers are temporary set to
@@ -792,7 +825,7 @@ class Signal (AbstractSignal):
                             break
 
             finally:
-                self.__emission_level -= 1
+                self.__emission_level = saved_emission_level
 
             self.collect_garbage ()
 
@@ -804,6 +837,9 @@ class Signal (AbstractSignal):
 
     def get_emission_level (self):
         return abs (self.__emission_level)
+
+    def is_emission_stopped (self):
+        return self.__emission_level < 0
 
     def stop_emission (self):
         # Check if we are in emission at all or if emission is not stopped already.
@@ -893,7 +929,7 @@ class CleanSignal (Signal):
         return WeakBinding.wrap (handler, arguments, self.__handler_garbage_collected)
 
     def __handler_garbage_collected (self, object):
-        self.collect_garbage ();
+        self.collect_garbage ()
 
 
     def collect_garbage (self):
@@ -901,6 +937,7 @@ class CleanSignal (Signal):
             super (CleanSignal, self).collect_garbage ()
             if self._handlers is None and self.__parent is not None:
                 AbstractGCProtector.default.unprotect (self)
+
 
 
 # Local variables:

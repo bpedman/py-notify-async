@@ -151,19 +151,38 @@ class SimpleSignalTestCase (NotifyTestCase):
         self.assert_results (1, 3)
 
 
-    def test_emission_stop (self):
+    def test_emission_stop_1 (self):
+        def stop_emission ():
+            signal.stop_emission ()
+
         signal       = Signal ()
         self.results = []
 
-        signal.connect (self.stop_emission)
+        signal.connect (stop_emission)
         signal.connect (self.simple_handler)
-        signal.emit (signal)
+        signal.emit    ()
 
         self.assert_results ()
 
 
-    def stop_emission (self, signal):
-        signal.stop_emission ()
+    def test_emission_stop_2 (self):
+        def reemit_signal (number):
+            signal.stop_emission ()
+            if number < 10:
+                signal (number + 1)
+
+        signal       = Signal ()
+        self.results = []
+
+        signal.connect (self.simple_handler)
+        signal.connect (reemit_signal)
+
+        # This must never be called since emission is stopped by the previous handler.
+        signal.connect (self.simple_handler)
+
+        signal.emit (0)
+
+        self.assert_results (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 
 
 

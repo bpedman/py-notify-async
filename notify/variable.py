@@ -88,7 +88,7 @@ class AbstractValueTrackingVariable (AbstractVariable):
                 raise ValueError ("`%s' is not allowed as value of the variable" % value)
 
             self.__value = value
-            return self._changed (value)
+            return self._value_changed (value)
 
         else:
             return False

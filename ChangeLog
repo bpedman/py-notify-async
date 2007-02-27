@@ -1,5 +1,22 @@
 2007-02-27  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	* notify/gc.c: Add `num_protected_objects' property to
+	`FastGCProtector' type.
+	(FastGCProtector_new, FastGCProtector_init)
+	(FastGCProtector_get_num_protected_objects): New functions.
+
+	* notify/base.py (AbstractValueObject): New property.
+	(AbstractValueObject._value_changed): Rename from _changed().
+
+	* notify/signal.py (Signal.emit): Make reemission work after
+	previous emission has been stopped but before previous call has
+	ended.
+	(AbstractSignal.stop_emission): Fix documentation accordingly.
+	(AbstractSignal.is_emission_stopped, Signal.is_emission_stopped):
+	New functions.
+	(AbstractSignal.emission_level, AbstractSignal.emission_stopped)
+	(Signal.accumulator): New properties.
+
 	* generate-reference.py: Output some helpful hints in the end.
 	Generate reference in `docs/reference', not in `html' by default.
 

@@ -115,14 +115,17 @@ class AbstractValueObject (object):
                                In other words, if object’s value can be changed by
                                C{L{set}} method, or if it is computed by some means and
                                not settable from outside.
+
+                               @type: bool
                                """))
 
 
     def signal_changed (self):
         """
-        Return the ‘changed’ signal for this object.  This signal is emitted if and only
-        if the current value is changed.  User of object must never emit the signal
-        herself, but may operate with its handlers.
+        Return the ‘changed’ signal for this object.  You can also get C{L{changed}}
+        property for the same effect.  ‘Changed’ signal is emitted if and only if the
+        current value is changed.  User of the object must never emit the signal herself,
+        but may operate with its handlers.
 
         Internally, this method creates the signal if it hasn’t been created yet.  Derived
         classes may assume this behaviour.
@@ -427,14 +430,14 @@ class AbstractValueObject (object):
             return False
 
 
-    def _changed (self, new_value):
+    def _value_changed (self, new_value):
         """
         Method that must be called every time object’s value changes.  Note that this
         method I{must not} be called from outside, it is for class descendants only.
 
         To follow general contract of the class, this method must be called only when the
         value indeed changes, i.e when C{new_value} is not equal to C{self.get()}.
-        C{_changed} itself does not check it and so this check (if needed) is up to
+        C{_value_changed} itself does not check it and so this check (if needed) is up to
         implementing descendant class.
 
         For convenience, this method always returns C{True}.
@@ -450,6 +453,18 @@ class AbstractValueObject (object):
                 self.__signal () (new_value)
 
         return True
+
+
+    changed = property (signal_changed,
+                        doc = ("""
+                        The ‘changed’ signal for this object.  User of the object must
+                        never emit the signal herself, but may operate with its handlers.
+                        Getting this read-only property is identical to calling
+                        C{L{signal_changed}} function, but is more convenient.
+
+                        @type: C{L{AbstractSignal}}
+                        """))
+
 
 
     def _additional_description (self, formatter):
