@@ -1,0 +1,397 @@
+Py-notify Tutorial
+==================
+
+.. contents::
+
+
+Overview
+********
+
+Py-notify is an unorthodox implementation of `Observer programming
+pattern`_.  Most important included concepts are *signals*,
+*conditions* and *variables*.
+
+At the core of the package are *signals*.  They are lists of
+callables, termed *handlers*.  Signals can be emitted in which case
+all connected handlers are called in turn.  The idea here is
+separation of event *notifier* and *listeners*: when you emit a
+signal, you needn’t know who listens to it, i.e. what handlers are
+connected to it.
+
+You may have encountered signals elsewhere, since they are quite a
+widespread construct.  Among others, there are signals in `GTK+`_ (and
+hence in PyGTK_), in Boost_, `sigc++`_ and so on.  They all have
+certain similarity and provide more or less the same functionality.
+Major distinction of Py-notify signals *are not typed*, following base
+Python design principle.  You can pass any argument to a function and
+so you can pass any arguments when emitting a signal.  However,
+function can fail with that argument, and so can signal handlers.
+
+On top of the signals two other main concepts of Py-notify are build:
+*conditions* and *variables*.
+
+Conditions are boolean values paired with one signal, which is emitted
+when condition *state* changes.  They can be mutable (settable by you)
+or not.  There is an all-purpose ``Condition`` class, instances of
+which are mutable.  But if you need special functionality, like
+retrieving state using certain function, you can easily derive a new
+condition type.
+
+Conditions of any type can be combined together using logic operators.
+The result is yet again a condition, with its own ‘changed’ signal.
+This way you can track states of compound logical expressions, like
+“number of frobnicators is at least 3 *and* there is a doodle.”
+
+Variables are much like conditions, but can hold arbitrary *value*
+instead of a boolean *state*.  Variables cannot be combined using
+logic operations, but have a different interesting feature:
+``predicate()`` method.  It returns a condition, which state is always
+the given predicate over variable’s value.  In other words, if
+variable’s value changes. condition state is automatically recomputed
+and might change as well.
+
+Main idea of both conditions and variables is similar to that of
+signals: separate provider of boolean state or arbitrary value from
+parties interested in it.
+
+
+
+Signals
+*******
+
+Without any further chit-chat, let’s create our first Py-notify
+program.
+
+.. parsed-literal::
+
+    from notify.all import *
+
+    def inform_of_frobnicator (frobnicator_type, num_tentacles):
+        print ("A frobnicator of type '%s' with %d tentacles has arrived"
+               % (frobnicator_type, num_tentacles))
+
+    total_tentacles = 0
+
+    def count_tentacles (frobnicator_type, num_tentacles):
+        global total_tentacles
+        total_tentacles += num_tentacles
+
+        print 'Total tentacles so far: %s' % total_tentacles
+
+    def run_if_scary (frobnicator_type, num_tentacles):
+        if frobnicator_type == 'Slimy':
+            print 'I panick'
+            import sys
+            sys.exit ()
+
+    new_frobnicator = Signal ()
+    new_frobnicator.connect (inform_of_frobnicator)
+    new_frobnicator.connect (count_tentacles)
+    new_frobnicator.connect (run_if_scary)
+
+    new_frobnicator ('Friendly', 8)
+    new_frobnicator ('Sleepy',   4)
+    new_frobnicator ('Slimy',    12)
+    new_frobnicator ('Hungry',   6)
+
+Now, that is pretty much for a first program, but let’s be bold.
+First line shows how you can avoid caring about specific modules in
+Py-notify package.  Or you can import from different modules, you
+decide.  Following are declarations of three functions.  They contain
+nothing specific to Py-notify and you can just skip over.  The only
+thing worth mentioning is the same signature.  We *expect* that those
+two arguments will be passed on each signal invocation.
+
+Now we come to interesting part.  First comes creation of the signal.
+Since Py-notify signals are not typed, there is really not much to
+pass to constructors (except for optional *accumulator* which is
+described belw.)  Next we connect our three functions as handlers to
+the signal.  Note that handlers only need to be callable, they all
+just happen to be functions in our case.
+
+Final four lines are the most interesting.  The four statements are
+nothing else than *emissions* of the signal.  You can as well call
+``emit()`` method, but just calling signal is absolutely the same.
+So, it is only matter of taste which way to choose.  Note that in each
+emission we pass two arguments.  These arguments mean nothing to
+signal itself and are simply passed on to handlers.
+
+Here is the output of the example:
+
+.. parsed-literal::
+
+    A frobnicator of type 'Friendly' with 8 tentacles has arrived
+    Total tentacles so far: 8
+    A frobnicator of type 'Sleepy' with 4 tentacles has arrived
+    Total tentacles so far: 12
+    A frobnicator of type 'Slimy' with 12 tentacles has arrived
+    Total tentacles so far: 24
+    I panick
+
+First thing to note is that the handlers are called in order of
+connection.  So that order can be important.  Next we note that
+handlers are completely independent of each other.  We could as well
+not connect some of them—it wouldn’t have any effect on the others.
+At emission time we don’t need to know what handlers there are either.
+
+So, part of the code that notes arrival of frobnicators doesn’t care
+how such arrival is treated and who—if anyone—listens for it.  That’s
+the whole point of signals or Observer programming pattern for that
+matter.
+
+There is certain notifier which provides a well-defined protocol for
+its notification—in our case, the ``Signal`` object.  There can be
+listeners for those notifications.  Notifier doesn’t even need to know
+about listeners, as well as listeners don’t need to know anything
+except the protocol.  In particular, notifier can reside in a library
+and listeners in client code.
+
+
+
+Handlers
+~~~~~~~~
+
+In our first example we connected a number of handlers to a signal.
+Now let’s consider what is possible to do with handlers closer.
+
+Sometimes, you want to connect a handler only for a limited time—not
+for the whole lifetime of the signal—and disconnect it later.  Of
+course that is possible to do with Py-notify.  The natural question
+is, of course, what identifies a handler?  Most signal libraries I
+know of assign a special identifier to a connection, for performance
+reasons.  Py-notify takes a different approach here: you just pass the
+handler again.
+
+Comparison of handlers done by signals is less efficient than
+comparison of handlers.  However, it is simpler to use (no need to
+store identifier around) and is more in line with Python ideology.
+Besides, handler disconnection should be quite rare to bother about
+efficiency anyway.
+
+Here is a simple example:
+
+.. parsed-literal::
+
+    from notify.all import *
+
+    def note (object):
+        print 'emitted with %s' % object
+
+    signal = Signal ()
+
+    signal.connect (note)
+    signal (1)
+
+    signal.disconnect (note)
+    signal (2)
+
+And the output is:
+
+.. parsed-literal::
+
+    emitted with 1
+
+Signal is emitted twice, but ``note()`` handler is only called during
+the first emission.  That is because it is disconnected right before
+the second one.
+
+Handlers can also be connected with arguments.  These arguments don’t
+mean anything special to the signal itself, instead they will be
+passed to the handler on each signal emission.  In case emission
+itself has some arguments, the two sets are combined: first are
+connection-time arguments, then emission argumens.
+
+Here is a simple illustration:
+
+.. parsed-literal::
+
+    from notify.all import *
+
+    def sum (a, b):
+        print '%d + %d = %d' % (a, b, a + b)
+
+    signal = Signal ()
+
+    signal.connect (sum, 5)
+    signal (10)
+
+This simple program gives:
+
+.. parsed-literal::
+
+    5 + 10 = 15
+
+Handlers with arguments can be disconnected as well.  You just need to
+pass the same (or *equal* in Python sense) arguments to
+``disconnect()`` method.  For instance, in the example above the only
+handler can be disconnected with ``disconnect (sum, 5)`` code.
+
+Also important is concept of *blocking* handlers.  Blocked handlers
+remain in the list of connected handlers, but are skipped when
+emission happens.  Of course, to make blocking useful, handler can be
+unblocked.  A handler can be blocked several times, but then it needs
+to be unblocked exactly the same number of times to become active
+again.
+
+Blocking is less common than connecting/disconnecting handlers, but
+can be used to e.g. prevent reentrance.  For this, the handler would
+just block itself, emit signal once more, and then unblock.
+
+
+.. TODO: More About Emissions
+
+
+
+Accumulators
+~~~~~~~~~~~~
+
+Typical signal emission discards handler return values completely.
+This is most often what you need: just inform the world about
+something.  However, sometimes you need a way to get feedback.  For
+instance, you may want to ask: “is this value acceptable, eh?”
+
+This is what accumulators are for.  Accumulators are objects specified
+to signals at construction time.  It can combine, alter or discard
+handler return values, post-process them or even stop emission.  There
+are some predefined accumulators as members of ``AbstractSignal``
+class, but you can define your own, if needed.
+
+Let’s consider our example with the question outlined above.  We will
+consider value acceptable if *all* connected handlers like it.  If it
+not deemed unacceptable by at least one handler, we will consider it
+unacceptable overall.  Here is the code:
+
+.. parsed-literal::
+
+    from notify.all import *
+
+    def only_even (number):
+        return number % 2 == 0
+
+    def only_positive (number):
+        return number > 0
+
+    def not_some (number):
+        return number not in (-2, 5, 6, 7, 8, 15)
+
+    is_fine = Signal (AbstractSignal.ALL_ACCEPT)
+    is_fine.connect (only_even)
+    is_fine.connect (only_positive)
+    is_fine.connect (not_some)
+
+    print '%d is fine: %s' % (-10, is_fine (-10))
+    print '%d is fine: %s' % (  4, is_fine (  4))
+    print '%d is fine: %s' % (  7, is_fine (  7))
+    print '%d is fine: %s' % (  8, is_fine (  8))
+    print '%d is fine: %s' % ( 20, is_fine ( 20))
+
+Here is the result:
+
+.. parsed-literal::
+
+    -10 is fine: False
+    4 is fine: True
+    7 is fine: False
+    8 is fine: False
+    20 is fine: True
+
+−10 is liked by the first handler, but is rejected by the second one.
+7 is dumped at the start, while 8 makes it to the last handler.
+Numbers 4 and 20 are considered acceptable by all handlers and so they
+are deemed fine overall.
+
+This example is of course trivial to overwrite without signals.  But
+consider that handler set has changed.  Removing line
+``is_fine.connect (only_positive)`` changes the result:
+
+.. parsed-literal::
+
+    -10 is fine: True
+    4 is fine: True
+    7 is fine: False
+    8 is fine: False
+    20 is fine: True
+
+Now −10 becomes fine too, since the other two handlers accept it.  As
+before, main idea of signals plays its role: emitter doesn’t need to
+know about way of handling.  Here, without changing emission part in
+any way, we have changed the result the program gives.
+
+Other predefined accumulators are:
+
+``ANY_ACCEPTS``
+    Makes emission statement return true value if any of the handlers
+    returns true.  In a sense, this is a reverse of ``ALL_ACCEPT``.
+
+``LAST_VALUE``
+    Emission statement returns the last handler’s return value.  Not
+    useful in most cases, but can be handy in a few specific ones.
+
+``VALUE_LIST``
+    Emission statement returns a list of all handlers’ return values.
+    This could make a sane default, but was dropped for performance
+    reasons.
+
+.. TODO: Describe custom accumulator creation somewhere later.
+
+
+
+Conditions and Variables
+************************
+
+Conditions and variables are pretty similar, so let’s have a look at
+both of them at once.  (In fact they even share common
+``AbstractValueObject`` base.)  Both concepts are really specific
+signal instances that are emitted *only* when the associated value (or
+boolean state) changes.
+
+Here is a simple example featuring variables:
+
+.. parsed-literal::
+
+    from notify.all import *
+
+    def welcome (user):
+        print 'Hello there, %s' % user
+
+    name = Variable ()
+    name.signal_changed ().connect (welcome)
+
+    import sys
+
+    while True:
+        sys.stdout.write ('What is your name? ')
+        line = sys.stdin.readline ()
+
+        if not line:
+            break
+
+        name.value = line.strip ()
+
+This simple program will read user names from stdin and welcome them.
+If you play with, you can notice that entering the same name twice in
+a row will not cause the welcoming message being printed twice.  So,
+despite two assignments to ``name.value``, the ‘changed’ signal is
+emitted the first time only in this case, since the second value is
+equal to the first.
+
+
+
+.. _Observer programming pattern:
+   http://en.wikipedia.org/wiki/Observer_pattern
+
+.. _GTK+: http://gtk.org/
+
+.. _PyGTK: http://pygtk.org/
+
+.. _Boost: http://boost.org/
+
+.. _sigc++: http://libsigc.sourceforge.net/
+
+
+
+.. Local variables:
+.. coding: utf-8
+.. mode: rst
+.. indent-tabs-mode: nil
+.. End:

@@ -27,6 +27,8 @@ import os
 import sys
 import re
 
+from urlparse import *
+
 
 try:
     import epydoc.cli
@@ -43,7 +45,8 @@ if not os.path.isfile (os.path.join ('notify', 'all.py')):
 sys.stdout.write ('Invoking epydoc...\n')
 
 
-fast_mode = 'fast' in sys.argv
+output_directory = os.path.join ('docs', 'reference')
+fast_mode        = 'fast' in sys.argv
 
 if fast_mode:
     sys.argv.remove ('fast')
@@ -52,7 +55,8 @@ sys.argv.extend (['--name=Py-notify',
                   '--url=http://home.gna.org/py-notify/',
                   '--inheritance=grouped',
                   '--no-sourcecode',
-                  '--css=%s' % os.path.join ('docs', 'epydoc.css')])
+                  '--css=%s'    % os.path.join ('docs', 'epydoc.css'),
+                  '--output=%s' % output_directory])
 
 if not fast_mode:
     sys.argv.append ('--graph=classtree')
@@ -74,7 +78,8 @@ def replace_prompt (match_object):
         return ''
 
 
-paren_regex_1 = re.compile ('class="summary-sig-name">[a-zA-Z_0-9]*[a-zA-Z0-9]</a>\\(')
+paren_regex_1 = re.compile ('class="summary-sig-name">'
+                            '([a-zA-Z_0-9]+\\.)*[a-zA-Z_0-9]*[a-zA-Z0-9]</a>\\(')
 paren_regex_2 = re.compile ('class="(summary-)?sig-name">[a-zA-Z_0-9]*[a-zA-Z0-9]</span>\\(')
 
 def replace_paren_1 (match_object):
@@ -87,7 +92,7 @@ def replace_paren_2 (match_object):
 hr_regex = re.compile ('<hr */>')
 
 
-for root, directories, filenames in os.walk ('html'):
+for root, directories, filenames in os.walk (output_directory):
     for filename in filenames:
         if not filename.endswith ('.html'):
             continue
@@ -120,6 +125,13 @@ for root, directories, filenames in os.walk ('html'):
             file.write (contents)
         finally:
             file.close ()
+
+
+sys.stdout.write ("Reference has been generated in `%s'\n" % output_directory)
+sys.stdout.write ("Point your browser to %s\n"
+                  % urlunsplit (('file', None,
+                                 os.path.join (os.path.abspath (output_directory), 'index.html'),
+                                 None, None)))
 
 
 
