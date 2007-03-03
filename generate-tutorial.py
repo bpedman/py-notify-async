@@ -38,9 +38,8 @@ if not os.path.isfile (os.path.join ('notify', 'all.py')):
 input_file_name  = os.path.join ('docs', 'tutorial.txt')
 output_file_name = os.path.join ('docs', 'tutorial.html')
 
-sys.argv.extend (['--template=%s'        % os.path.join ('docs', 'reST.template'),
-                  '--stylesheet-path=%s' % os.path.join ('docs', 'reST.css'),
-                  '--link-stylesheet',
+sys.argv.extend (['--stylesheet-path=%s' % os.path.join ('docs', 'reST.css'),
+                  '--embed-stylesheet',
                   '--no-source-link',
                   '--strip-comments',
                   '--language=en',

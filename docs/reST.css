@@ -1,4 +1,4 @@
-div.py-notify-contents
+div.document
 {
 	width:		90ex;
 }
@@ -65,23 +65,16 @@ a:hover
 
 div.topic
 {
-	float:		right;
-	background:	#f0f0f0;
-	border:		1px solid #dddddd;
-	padding:	0.3em 0.7em;
-	margin:		1.5em 0 1em 1.5em;
+	margin:		1.5em 2em 2em 2em;
 }
 
 p.topic-title
 {
 	font-weight:	bold;
-	font-size:	100%;
+	font-size:	110%;
 	text-align:	left;
 	color:		#000000;
-
-	display:	block;
 	margin:		0 0 0.3em 0;
-	border-bottom:	1px solid #dddddd;
 }
 
 div.topic ul
@@ -91,20 +84,15 @@ div.topic ul
 	padding:	0 0 0 0;
 }
 
-div.topic ul.simple
-{
-	font-size:	90%;
-}
-
 div.topic ul ul
 {
-	padding-left:	1em;
+	padding-left:	1.5em;
 }
 
 div.topic a, div.topic a:visited
 {
+	color:		#446da6 !important;
 	text-decoration: none !important;
-	color:		#000000 !important;
 }
 
 div.topic a:hover

@@ -62,7 +62,7 @@ Signals
 Without any further chit-chat, let’s create our first Py-notify
 program.
 
-.. parsed-literal::
+::
 
     from notify.all import *
 
@@ -116,9 +116,7 @@ So, it is only matter of taste which way to choose.  Note that in each
 emission we pass two arguments.  These arguments mean nothing to
 signal itself and are simply passed on to handlers.
 
-Here is the output of the example:
-
-.. parsed-literal::
+Here is the output of the example::
 
     A frobnicator of type 'Friendly' with 8 tentacles has arrived
     Total tentacles so far: 8
@@ -168,9 +166,7 @@ store identifier around) and is more in line with Python ideology.
 Besides, handler disconnection should be quite rare to bother about
 efficiency anyway.
 
-Here is a simple example:
-
-.. parsed-literal::
+Here is a simple example::
 
     from notify.all import *
 
@@ -185,9 +181,7 @@ Here is a simple example:
     signal.disconnect (note)
     signal (2)
 
-And the output is:
-
-.. parsed-literal::
+And the output is::
 
     emitted with 1
 
@@ -201,9 +195,7 @@ passed to the handler on each signal emission.  In case emission
 itself has some arguments, the two sets are combined: first are
 connection-time arguments, then emission argumens.
 
-Here is a simple illustration:
-
-.. parsed-literal::
+Here is a simple illustration::
 
     from notify.all import *
 
@@ -215,9 +207,7 @@ Here is a simple illustration:
     signal.connect (sum, 5)
     signal (10)
 
-This simple program gives:
-
-.. parsed-literal::
+This simple program gives::
 
     5 + 10 = 15
 
@@ -236,6 +226,7 @@ again.
 Blocking is less common than connecting/disconnecting handlers, but
 can be used to e.g. prevent reentrance.  For this, the handler would
 just block itself, emit signal once more, and then unblock.
+
 
 
 .. TODO: More About Emissions
@@ -259,9 +250,7 @@ class, but you can define your own, if needed.
 Let’s consider our example with the question outlined above.  We will
 consider value acceptable if *all* connected handlers like it.  If it
 not deemed unacceptable by at least one handler, we will consider it
-unacceptable overall.  Here is the code:
-
-.. parsed-literal::
+unacceptable overall.  Here is the code::
 
     from notify.all import *
 
@@ -285,9 +274,7 @@ unacceptable overall.  Here is the code:
     print '%d is fine: %s' % (  8, is_fine (  8))
     print '%d is fine: %s' % ( 20, is_fine ( 20))
 
-Here is the result:
-
-.. parsed-literal::
+Here is the result::
 
     -10 is fine: False
     4 is fine: True
@@ -302,9 +289,7 @@ are deemed fine overall.
 
 This example is of course trivial to overwrite without signals.  But
 consider that handler set has changed.  Removing line
-``is_fine.connect (only_positive)`` changes the result:
-
-.. parsed-literal::
+``is_fine.connect (only_positive)`` changes the result::
 
     -10 is fine: True
     4 is fine: True
@@ -345,9 +330,7 @@ both of them at once.  (In fact they even share common
 signal instances that are emitted *only* when the associated value (or
 boolean state) changes.
 
-Here is a simple example featuring variables:
-
-.. parsed-literal::
+Here is a simple example featuring variables::
 
     from notify.all import *
 
@@ -355,7 +338,7 @@ Here is a simple example featuring variables:
         print 'Hello there, %s' % user
 
     name = Variable ()
-    name.signal_changed ().connect (welcome)
+    name.changed.connect (welcome)
 
     import sys
 
@@ -374,6 +357,146 @@ a row will not cause the welcoming message being printed twice.  So,
 despite two assignments to ``name.value``, the ‘changed’ signal is
 emitted the first time only in this case, since the second value is
 equal to the first.
+
+
+
+‘Storing’ State or Value
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+A common idiom is to ‘store’ condition state or variable value using a
+handler.  Statement ``x.store (handler)`` is completely identical to
+
+::
+
+    handler (x.get ())
+    x.changed (handler)
+
+It is sometimes needed to call the handler with some initial state or
+value.  ``changed()`` provides a standard way to call a function with
+current state/value and arange to have it called again when
+state/value changes.
+
+As with normal handler connection, you can pass additional arguments
+to ``store()`` which will be passed to the handler.
+
+
+
+Compound Conditions
+~~~~~~~~~~~~~~~~~~~
+
+What makes conditions really powerful is the simple way to combine
+them in logical expressions.  Such expressions are conditions again
+and thus have the ‘changed’ signal, can be combined in turn and so on.
+Conditions also provide uniform support for combination, meaning that
+all condition types, including derived ones, support combination out
+of the box.
+
+::
+
+    from notify.all import *
+
+    have_foo = Condition (False)
+    have_bar = Condition (False)
+    compound = have_foo & ~have_bar
+
+    def print_states ():
+        print ('have foo and not have bar: %s (%s and not %s)'
+               % (compound.state, have_foo.state, have_bar.state))
+
+    def on_compound_state_changed (new_state):
+        print 'compound condition state changed to %s' % new_state
+
+    compound.changed.connect (on_compound_state_changed)
+
+    have_foo.state = False
+    have_bar.state = False
+    print_states ()
+
+    have_foo.state = True
+    have_bar.state = False
+    print_states ()
+
+    have_foo.state = False
+    have_bar.state = True
+    print_states ()
+
+    have_foo.state = True
+    have_bar.state = True
+    print_states ()
+
+To make a compound conditions you should just use bit operators
+(``~``, ``&``, ``|`` and ``^``) instead of logic operators, ``not``,
+``and``, ``or`` and ``xor`` correspondingly (last is missing from
+Python.)
+
+This gives the following result::
+
+    have foo and not have bar: False (False and not False)
+    compound condition state changed to True
+    have foo and not have bar: True (True and not False)
+    compound condition state changed to False
+    have foo and not have bar: False (False and not True)
+    have foo and not have bar: False (True and not True)
+
+Note that the ‘changed’ signal on compound condition is emitted only
+twice, despite the many changes in states of its *term* conditions.
+As for any other condition (or variable), it is only emitted when the
+state has indeed changed, not just when it might have changed.
+
+
+
+Predicates Over Variables
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Variables cannot be combined (see the previous sections), but support
+building *predicate conditions*.  Such a condition is true or false
+based on variable’s value and automatically recomputes its state when
+that value changes.
+
+The method is called ``predicate()``, as one would expect::
+
+    from notify.all import *
+
+    def print_state (is_over_5):
+        print ('have at least 5 frobnicators: %s (%d)'
+               % (is_over_5, num_frobnicators.value))
+
+    num_frobnicators = Variable (0)
+    num_frobnicators.predicate (lambda n: n > 5).store (print_state)
+
+    for n in range (0, 10):
+        num_frobnicators.value = n
+
+As one would expect, this gives the following output::
+
+    have at least 5 frobnicators: False (0)
+    have at least 5 frobnicators: True (6)
+
+Following the common conduct of conditions and variables, predicate
+conditions only emit their ‘changed’ signal when their state changes,
+not each time state is recomputed.
+
+
+
+Garbage-Collection magic
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Example in the previous section may look somewhat strange to you: the
+predicate condition is created and one handler is connected to it, but
+it is not referenced from anywhere.  Yet the example works.  In fact,
+conditions and variables do certain tricks ‘behind the scenes’ to
+ensure they are not garbage-collected while they are used.  For
+predicate conditions this means the variable is alive (in our case it
+is referenced) and at least one handler is connected (in our case it
+is ``print_state()``.)
+
+In general, you can be sure that conditions and variables will not be
+deleted as long as they are used in some common sense.  And they
+*will* be deleted when they become unused [#]_, so there is no memory
+leak here.
+
+.. [#] Deletion may happen in a garbage collector run, so it will not
+       necessarily happen instantly.
 
 
 
