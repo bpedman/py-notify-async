@@ -1,5 +1,9 @@
 2007-03-03  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	* version: Release 0.1.5.
+
+	* NEWS: Update.
+
 	* docs/tutorial.txt: Expand.
 
 	* docs/reST.css: Change appearance of contents list.

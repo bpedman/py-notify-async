@@ -1,3 +1,20 @@
+--- New in Py-notify 0.1.5 -------------------------------------------
+
+* Added a tutorial.
+
+* Improved or added documentation for many methods.
+
+* New functions to cancel effects of synchronize() for condiions and
+  variables.
+
+* Several more properties in different classes.  In general, use
+  properties instead of methods more.
+
+* Some bug-fixes.
+
+* 5 more unit tests (92 in total.)
+
+
 --- New in Py-notify 0.1.4 -------------------------------------------
 
 * New fast and generic GC-protector module (notify.gc) replaces
