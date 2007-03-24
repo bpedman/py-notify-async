@@ -1,3 +1,14 @@
+2007-03-24  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/variable.py
+	(AbstractValueTrackingVariable._generate_derived_type_dictionary):
+	Make it possible to specify a single type as
+	`allowed_value_types'.
+
+2007-03-04  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* README (Copyright and Licenses): Fix a filename.
+
 2007-03-03  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* version: Release 0.1.5.

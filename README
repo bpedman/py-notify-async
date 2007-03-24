@@ -25,7 +25,7 @@ Latest Py-notify versions can be found at the homepage:
 			RUNNING STANDARD TESTS
 
 Before installing Py-notify, please run the standard test cases.  It
-is very simple, just run
+is very simple, just execute
 
 	./run-tests.py
 
@@ -81,5 +81,6 @@ version 2.1 can be found in the file COPYING.
 
 * File `setup.py' is explicitly put in Public Domain.
 
-* File `benchmark/notify.py' is copyright (C) 2005-2006 Michael Foord,
-  Nicola Larosa and released under the terms of the BSD License.
+* File `benchmark/configobj.py' is copyright (C) 2005-2006 Michael
+  Foord, Nicola Larosa and released under the terms of the BSD
+  License.

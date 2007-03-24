@@ -103,6 +103,9 @@ class AbstractValueTrackingVariable (AbstractVariable):
         allowed_value_types = options.get ('allowed_value_types')
 
         if allowed_value_types is not None:
+            if not isinstance (allowed_value_types, tuple):
+                allowed_value_types = (allowed_value_types,)
+
             for allowed_type in allowed_value_types:
                 if not isinstance (allowed_type, (type, types.ClassType)):
                     raise TypeError ("`allowed_value_types' must be a tuple of types and classes")
