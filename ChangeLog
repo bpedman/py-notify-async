@@ -1,3 +1,7 @@
+2007-03-25  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* docs/tutorial.txt: Typo, style and other fixes.
+
 2007-03-24  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/variable.py

@@ -80,7 +80,7 @@ program.
 
     def run_if_scary (frobnicator_type, num_tentacles):
         if frobnicator_type == 'Slimy':
-            print 'I panick'
+            print 'I panic'
             import sys
             sys.exit ()
 
@@ -105,7 +105,7 @@ two arguments will be passed on each signal invocation.
 Now we come to interesting part.  First comes creation of the signal.
 Since Py-notify signals are not typed, there is really not much to
 pass to constructors (except for optional *accumulator* which is
-described belw.)  Next we connect our three functions as handlers to
+described below.)  Next we connect our three functions as handlers to
 the signal.  Note that handlers only need to be callable, they all
 just happen to be functions in our case.
 
@@ -124,13 +124,13 @@ Here is the output of the example::
     Total tentacles so far: 12
     A frobnicator of type 'Slimy' with 12 tentacles has arrived
     Total tentacles so far: 24
-    I panick
+    I panic
 
 First thing to note is that the handlers are called in order of
-connection.  So that order can be important.  Next we note that
-handlers are completely independent of each other.  We could as well
-not connect some of them—it wouldn’t have any effect on the others.
-At emission time we don’t need to know what handlers there are either.
+connection.  So, order can be important.  Next we note that handlers
+are completely independent of each other.  We could as well not
+connect some of them—it wouldn’t have any effect on the others.  At
+emission time we don’t need to know what handlers there are either.
 
 So, part of the code that notes arrival of frobnicators doesn’t care
 how such arrival is treated and who—if anyone—listens for it.  That’s
@@ -161,10 +161,10 @@ reasons.  Py-notify takes a different approach here: you just pass the
 handler again.
 
 Comparison of handlers done by signals is less efficient than
-comparison of handlers.  However, it is simpler to use (no need to
+comparison of identifiers.  However, it is simpler to use (no need to
 store identifier around) and is more in line with Python ideology.
-Besides, handler disconnection should be quite rare to bother about
-efficiency anyway.
+Besides, handler disconnection should be quite rare to not bother
+about efficiency anyway.
 
 Here is a simple example::
 
@@ -218,10 +218,10 @@ handler can be disconnected with ``disconnect (sum, 5)`` code.
 
 Also important is concept of *blocking* handlers.  Blocked handlers
 remain in the list of connected handlers, but are skipped when
-emission happens.  Of course, to make blocking useful, handler can be
-unblocked.  A handler can be blocked several times, but then it needs
-to be unblocked exactly the same number of times to become active
-again.
+emission happens.  Of course, to make blocking useful, handlers can be
+later unblocked.  A handler can be blocked several times, but then it
+needs to be unblocked exactly the same number of times to become
+active again.
 
 Blocking is less common than connecting/disconnecting handlers, but
 can be used to e.g. prevent reentrance.  For this, the handler would
@@ -242,14 +242,14 @@ something.  However, sometimes you need a way to get feedback.  For
 instance, you may want to ask: “is this value acceptable, eh?”
 
 This is what accumulators are for.  Accumulators are objects specified
-to signals at construction time.  It can combine, alter or discard
+to signals at construction time.  They can combine, alter or discard
 handler return values, post-process them or even stop emission.  There
 are some predefined accumulators as members of ``AbstractSignal``
 class, but you can define your own, if needed.
 
 Let’s consider our example with the question outlined above.  We will
 consider value acceptable if *all* connected handlers like it.  If it
-not deemed unacceptable by at least one handler, we will consider it
+is deemed unacceptable by at least one handler, we will consider it
 unacceptable overall.  Here is the code::
 
     from notify.all import *
@@ -283,7 +283,7 @@ Here is the result::
     20 is fine: True
 
 −10 is liked by the first handler, but is rejected by the second one.
-7 is dumped at the start, while 8 makes it to the last handler.
+7 is discarded at the start, while 8 makes it to the last handler.
 Numbers 4 and 20 are considered acceptable by all handlers and so they
 are deemed fine overall.
 
@@ -352,9 +352,9 @@ Here is a simple example featuring variables::
         name.value = line.strip ()
 
 This simple program will read user names from stdin and welcome them.
-If you play with, you can notice that entering the same name twice in
-a row will not cause the welcoming message being printed twice.  So,
-despite two assignments to ``name.value``, the ‘changed’ signal is
+If you play with it, you can notice that entering the same name twice
+in a row will not cause the welcoming message being printed twice.
+So, despite two assignments to ``name.value``, the ‘changed’ signal is
 emitted the first time only in this case, since the second value is
 equal to the first.
 
@@ -369,7 +369,7 @@ handler.  Statement ``x.store (handler)`` is completely identical to
 ::
 
     handler (x.get ())
-    x.changed (handler)
+    x.changed.connect (handler)
 
 It is sometimes needed to call the handler with some initial state or
 value.  ``changed()`` provides a standard way to call a function with
@@ -377,7 +377,7 @@ current state/value and arange to have it called again when
 state/value changes.
 
 As with normal handler connection, you can pass additional arguments
-to ``store()`` which will be passed to the handler.
+to ``store()`` which will be forwarded to the handler.
 
 
 
@@ -467,7 +467,7 @@ The method is called ``predicate()``, as one would expect::
     for n in range (0, 10):
         num_frobnicators.value = n
 
-As one would expect, this gives the following output::
+This gives the following output::
 
     have at least 5 frobnicators: False (0)
     have at least 5 frobnicators: True (6)
