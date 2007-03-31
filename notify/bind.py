@@ -347,6 +347,11 @@ BindingCompatibleTypes = (types.MethodType, Binding)
 
 #-- Weak binding classes ---------------------------------------------
 
+# Implementation note: self._object can contain a real WeakReference, a _NONE_REFERENCE or
+# None.  _NONE_REFERENCE is stored if the binding is created without an object at all
+# (i.e. not for a method, or for a static method.)  None indicates that the binding was
+# created with an object, but it has been garbage-collected.
+
 class WeakBinding (Binding):
 
     """

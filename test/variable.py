@@ -175,7 +175,7 @@ class WatcherVariableTestCase (NotifyTestCase):
 class VariableDerivationTestCase (NotifyTestCase):
 
     def test_derivation_1 (self):
-        IntVariable = Variable.derive_type ('IntVariable', allowed_value_types = (int,))
+        IntVariable = Variable.derive_type ('IntVariable', allowed_value_types = int)
 
         # Since None is not an allowed value, there must be no default constructor.
         self.assertRaises (TypeError, lambda: IntVariable ())
@@ -207,7 +207,7 @@ class VariableDerivationTestCase (NotifyTestCase):
 
     def test_derivation_3 (self):
         AbstractIntVariable = AbstractValueTrackingVariable.derive_type (
-            'AbstractIntVariable', allowed_value_types = (int,))
+            'AbstractIntVariable', allowed_value_types = int)
 
         self.assertEqual (AbstractIntVariable (-5).mutable, False)
 
@@ -237,8 +237,8 @@ class VariableDerivationTestCase (NotifyTestCase):
         # Derive two types and make sure they don't spoil each other's is_allowed_value()
         # method.
 
-        IntVariable = Variable.derive_type ('IntVariable', allowed_value_types = (int,))
-        StrVariable = Variable.derive_type ('StrVariable', allowed_value_types = (str,))
+        IntVariable = Variable.derive_type ('IntVariable', allowed_value_types = int)
+        StrVariable = Variable.derive_type ('StrVariable', allowed_value_types = str)
 
         integer = IntVariable (10)
         string  = StrVariable ('test')

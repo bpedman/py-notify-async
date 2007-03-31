@@ -1,3 +1,15 @@
+2007-03-31  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* test/variable.py (VariableDerivationTestCase.test_derivation_1):
+	Use simpler syntax as allowed by 24 March changes.
+	(VariableDerivationTestCase.test_derivation_3): Likewise.
+	(VariableDerivationTestCase.test_multiple_derivation): Likewise.
+
+	* notify/signal.py (Signal.emit): Optimize: variable `value' is
+	never used if `accumulator' is not set; don't track `index',
+	garbage-collected handlers will be removed by collect_garbage()
+	later.  Move collect_garbage() to `finally' clause.
+
 2007-03-25  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* docs/tutorial.txt: Typo, style and other fixes.

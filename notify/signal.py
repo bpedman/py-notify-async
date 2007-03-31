@@ -786,9 +786,7 @@ class Signal (AbstractSignal):
         handlers    = self._handlers
         accumulator = self.__accumulator
 
-        if accumulator is None:
-            value = None
-        else:
+        if accumulator is not None:
             value = accumulator.get_initial_value ()
 
         if handlers is not None:
@@ -796,14 +794,16 @@ class Signal (AbstractSignal):
                 saved_emission_level  = self.__emission_level
                 self.__emission_level = abs (saved_emission_level) + 1
 
-                for index, handler in enumerate (handlers):
-                    # Disconnected or garbage-collected handlers are temporary set to
-                    # None.
+                for handler in handlers:
+                    # Disconnected while in emission handlers are temporary set to None.
                     if handler is None or handler in self._blocked_handlers:
                         continue
 
-                    if isinstance (handler, WeakBinding) and not handler:
-                        handlers[index] = None
+                    # This somewhat illogical transposition of terms is for speed
+                    # optimization.  `not handler' must be side-effect free anyway, so it
+                    # doesn't matter which term is evaluated first.
+                    if not handler and isinstance (handler, WeakBinding):
+                        # Handler will be removed in collect_garbage(), don't bother now.
                         continue
 
                     if self.__emission_level < 0:
@@ -826,13 +826,12 @@ class Signal (AbstractSignal):
 
             finally:
                 self.__emission_level = saved_emission_level
+                self.collect_garbage ()
 
-            self.collect_garbage ()
-
-        if accumulator is not None:
-            value = accumulator.post_process_value (value)
-
-        return value
+        if accumulator is None:
+            return None
+        else:
+            return accumulator.post_process_value (value)
 
 
     def get_emission_level (self):
