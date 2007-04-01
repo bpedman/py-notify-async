@@ -107,8 +107,8 @@ class build_ext (_build_ext):
 
         if not self.inplace and os.name == 'posix':
             filename        = self.get_ext_filename (extension.name)
-            link_filename   = os.path.join ('py', filename)
-            target_filename = os.path.join (os.pardir, self.build_lib, filename)
+            link_filename   = filename
+            target_filename = os.path.join (self.build_lib, filename)
 
             recursion_scan  = os.path.split (filename) [0]
 

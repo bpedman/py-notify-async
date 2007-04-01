@@ -1,5 +1,7 @@
 2007-04-01  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	* setup.py (build_ext.build_extension): Fix symlink creation.
+
 	* notify/base.py: Improve and fix documentation.
 	* notify/bind.py: Likewise.
 	* notify/condition.py: Likewise.
