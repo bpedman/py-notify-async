@@ -43,19 +43,19 @@ class BaseConditionTestCase (NotifyTestCase):
 
     def test_mutable (self):
         # This also stresses usage algorithm, as a bonus.
-        mutable_condition = Condition (False)
-        not_condition     = ~mutable_condition
-        and_condition     = not_condition & mutable_condition
-        or_condition      = and_condition | not_condition
-        xor_condition     = or_condition  ^ and_condition
-        ifelse_condition  = or_condition.ifelse (mutable_condition, or_condition)
+        mutable_condition  = Condition (False)
+        not_condition      = ~mutable_condition
+        and_condition      = not_condition & mutable_condition
+        or_condition       = and_condition | not_condition
+        xor_condition      = or_condition  ^ and_condition
+        if_else_condition  = or_condition.if_else (mutable_condition, or_condition)
 
-        self.assert_(mutable_condition   .mutable)
-        self.assert_(not not_condition   .mutable)
-        self.assert_(not and_condition   .mutable)
-        self.assert_(not or_condition    .mutable)
-        self.assert_(not xor_condition   .mutable)
-        self.assert_(not ifelse_condition.mutable)
+        self.assert_(mutable_condition    .mutable)
+        self.assert_(not not_condition    .mutable)
+        self.assert_(not and_condition    .mutable)
+        self.assert_(not or_condition     .mutable)
+        self.assert_(not xor_condition    .mutable)
+        self.assert_(not if_else_condition.mutable)
 
 
 
@@ -131,48 +131,48 @@ class LogicConditionTestCase (NotifyTestCase):
         self.assertEqual (xor_condition.state, False)
 
 
-    def test_ifelse (self):
+    def test_if_else (self):
         condition1 = Condition (False)
         condition2 = Condition (False)
         condition3 = Condition (False)
 
-        ifelse_condition = condition1.ifelse (condition2, condition3)
-        self.assertEqual (ifelse_condition.state, False)
+        if_else_condition = condition1.if_else (condition2, condition3)
+        self.assertEqual (if_else_condition.state, False)
 
         condition1.state = False
         condition2.state = False
         condition3.state = True
-        self.assertEqual (ifelse_condition.state, True)
+        self.assertEqual (if_else_condition.state, True)
 
         condition1.state = False
         condition2.state = True
         condition3.state = False
-        self.assertEqual (ifelse_condition.state, False)
+        self.assertEqual (if_else_condition.state, False)
 
         condition1.state = False
         condition2.state = True
         condition3.state = True
-        self.assertEqual (ifelse_condition.state, True)
+        self.assertEqual (if_else_condition.state, True)
 
         condition1.state = True
         condition2.state = False
         condition3.state = False
-        self.assertEqual (ifelse_condition.state, False)
+        self.assertEqual (if_else_condition.state, False)
 
         condition1.state = True
         condition2.state = False
         condition3.state = True
-        self.assertEqual (ifelse_condition.state, False)
+        self.assertEqual (if_else_condition.state, False)
 
         condition1.state = True
         condition2.state = True
         condition3.state = False
-        self.assertEqual (ifelse_condition.state, True)
+        self.assertEqual (if_else_condition.state, True)
 
         condition1.state = True
         condition2.state = True
         condition3.state = True
-        self.assertEqual (ifelse_condition.state, True)
+        self.assertEqual (if_else_condition.state, True)
 
 
 
@@ -354,35 +354,35 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
             self.assert_results (*expected_results)
 
 
-    def test_garbage_collection_ifelse (self):
+    def test_garbage_collection_if_else (self):
         self.results     = []
 
-        condition1       = Condition (False)
-        condition2       = Condition (False)
-        condition3       = Condition (True)
-        ifelse_condition = condition1.ifelse (condition2, condition3)
+        condition1        = Condition (False)
+        condition2        = Condition (False)
+        condition3        = Condition (True)
+        if_else_condition = condition1.if_else (condition2, condition3)
 
-        ifelse_condition.store (self.simple_handler)
-        ifelse_condition = weakref.ref (ifelse_condition)
+        if_else_condition.store (self.simple_handler)
+        if_else_condition = weakref.ref (if_else_condition)
 
         del condition2
         self.collect_garbage (2)
 
-        self.assertNotEqual (ifelse_condition (), None)
+        self.assertNotEqual (if_else_condition (), None)
 
         condition3.state = False
 
         del condition1
         self.collect_garbage (2)
 
-        self.assertNotEqual (ifelse_condition (), None)
+        self.assertNotEqual (if_else_condition (), None)
 
         condition3.state = True
 
         del condition3
         self.collect_garbage (2)
 
-        self.assertEqual    (ifelse_condition (), None)
+        self.assertEqual    (if_else_condition (), None)
         self.assert_results (True, False, True)
 
 

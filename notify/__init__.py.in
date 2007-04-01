@@ -136,8 +136,8 @@ Finally, two just constructed conditions are combined into a third condition usi
 operator (C{&}).  This third condition will be true if and only if I{both} its term
 conditions are true.  Conditions support four logic operations: negation, conjunction,
 disjunction and xoring (with these operators: C{~}, C{&}, C{|} and C{^}.)  In addition,
-each condition has C{L{ifelse <condition.AbstractCondition.ifelse>}} method, which is much
-like Python’s C{if} operator.
+each condition has C{L{if_else <condition.AbstractCondition.if_else>}} method, which is
+much like Python’s C{if} operator.
 
 The next line introduces one more new method: C{L{store
 <base.AbstractValueObject.store>}}.  It is really just like connecting its only argument

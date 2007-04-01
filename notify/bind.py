@@ -78,7 +78,10 @@ from notify.utils import *
 class Binding (object):
 
     """
-    Bindings are a kind of callables with advanced comparing capabilities.
+    Bindings are a kind of callables with advanced comparing capabilities.  More
+    specifically, bindings can wrap any other callable, including functions and methods,
+    adding optional arguments specified at creation time.  Bindings, wrapping equal
+    callables and with equal argument lists, will be equal.
     """
 
     __slots__ = ('_object', '_function', '_class', '_arguments')

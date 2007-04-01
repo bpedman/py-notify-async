@@ -56,7 +56,8 @@ class AbstractValueObject (object):
         """
         Initialize new C{L{AbstractValueObject}}.  Base class only has (internal) field
         for ‘changed’ signal.  You may assume that the signal is only created when
-        C{L{signal_changed}} method is called for the first time.
+        C{L{signal_changed}} method is called for the first time or C{L{changed}} property
+        is accessed, which is the same.
         """
 
         super (AbstractValueObject, self).__init__()
@@ -200,7 +201,7 @@ class AbstractValueObject (object):
 
     def store (self, handler, *arguments):
         """
-        Make sure current value is ‘transmitted’ to C{handler} (with C{arguments}.  This
+        Make sure current value is ‘transmitted’ to C{handler} (with C{arguments}).  This
         means that the C{handler} is called once with the C{arguments} and the current
         value and afterwards each time the current value changes.  The only argument
         passed to C{handler} in addition to specified ones is the value as returned by the
@@ -633,9 +634,9 @@ class AbstractValueObject (object):
         associated with the same name override previous values, values for C{__slots__}
         are combined in to a tuple instead.
 
-        @rtype:           iterable
-        @returns:         Pairs of (Python identifier, value) for the new type.
-        @raise exception: if there is any error in C{options}.
+        @rtype:            iterable
+        @returns:          Pairs of (Python identifier, value) for the new type.
+        @raises exception: if there is any error in C{options}.
         """
 
         functions = {}
@@ -647,8 +648,8 @@ class AbstractValueObject (object):
 
             yield '__slots__', ('_%s__%s' % (options['new_class_name'].lstrip ('_'), object),)
 
-            exec (('def __init__ (self, %s):\n'
-                   '    self_class.__init__ (self)\n'
+            exec (('def __init__(self, %s):\n'
+                   '    self_class.__init__(self)\n'
                    '    %s = %s')
                   % (object, AbstractValueObject._get_object (options), object)) \
                   in options, functions

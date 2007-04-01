@@ -48,10 +48,23 @@ from notify.signal    import *
 
 class AbstractVariable (AbstractValueObject):
 
+    """
+    Abstract base class of variable hierarchy tree.  All variable derive from this class,
+    so you should use C{isinstance (..., AbstractVariable)}, not
+    C{isinstance (..., Variable)}.
+    """
+
     __slots__ = ()
 
 
-    value = property (lambda self: self.get (), lambda self, value: self.set (value))
+    value = property (lambda self: self.get (), lambda self, value: self.set (value),
+                      doc = ("""
+                             The current value of the variable.  This property is
+                             writable, but setting it for immutable variables will raise
+                             C{NotImplementedError}.
+
+                             @type: object
+                             """))
 
 
     def predicate (self, predicate):
@@ -68,10 +81,24 @@ class AbstractVariable (AbstractValueObject):
 
 class AbstractValueTrackingVariable (AbstractVariable):
 
+    """
+    A variable that stores its value instead of recomputing it each time.  Since there is
+    no public way to alter variable’s value, this class is still abstract.  For a generic
+    mutable variable implementation, see C{L{Variable}} class.
+    """
+
     __slots__ = ('_AbstractValueTrackingVariable__value')
 
 
     def __init__(self, initial_value = None):
+        """
+        Initialize a new variable with specified C{initial_value}.  The value must conform
+        to restrictions (if any) specified in C{L{is_allowed_value}} method.
+
+        @raises ValueError: if C{initial_value} is not suitable per C{L{is_allowed_value}}
+                            method.
+        """
+
         if not self.is_allowed_value (initial_value):
             raise ValueError ("`%s' is not allowed as value of the variable" % initial_value)
 
@@ -95,6 +122,15 @@ class AbstractValueTrackingVariable (AbstractVariable):
 
 
     def is_allowed_value (self, value):
+        """
+        Determine if C{value} is suitable for this variable.  Default implementation
+        always returns C{True}, regardless of its only argument.  So, to restrict
+        variable’s value set, you need to create a new variable type, either using
+        C{L{derive_type}} method or directly.
+
+        @rtype: bool
+        """
+
         return True
 
 
@@ -134,14 +170,14 @@ class AbstractValueTrackingVariable (AbstractVariable):
 
         if 'getter' in options:
             if object is not None:
-                exec (('def __init__ (self, %s):\n'
-                       '    self_class.__init__ (self, getter (%s))\n'
+                exec (('def __init__(self, %s):\n'
+                       '    self_class.__init__(self, getter (%s))\n'
                        '    %s = %s')
                       % (object, object, AbstractValueObject._get_object (options), object)) \
                       in options, functions
             else:
-                exec ('def __init__ (self):\n'
-                      '    self_class.__init__ (self, getter (self))\n') in options, functions
+                exec ('def __init__(self):\n'
+                      '    self_class.__init__(self, getter (self))\n') in options, functions
 
             exec (('def resynchronize_with_backend (self):\n'
                    '    self._set (getter (%s))')
@@ -156,15 +192,15 @@ class AbstractValueTrackingVariable (AbstractVariable):
                 initial_default = ''
 
             if object is not None:
-                exec (('def __init__ (self, %s, initial_value%s):\n'
-                       '    self_class.__init__ (self, initial_value)\n'
+                exec (('def __init__(self, %s, initial_value%s):\n'
+                       '    self_class.__init__(self, initial_value)\n'
                        '    %s = %s')
                       % (object, initial_default,
                          AbstractValueObject._get_object (options), object)) \
                       in options, functions
             else:
-                exec (('def __init__ (self, initial_value%s):\n'
-                       '    self_class.__init__ (self, initial_value)\n')
+                exec (('def __init__(self, initial_value%s):\n'
+                       '    self_class.__init__(self, initial_value)\n')
                       % initial_default) in options, functions
 
         for function in functions.iteritems ():

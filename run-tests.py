@@ -23,7 +23,21 @@
 #--------------------------------------------------------------------#
 
 
+import os
+import sys
 import unittest
+
+
+if not os.path.isfile (os.path.join ('notify', 'all.py')):
+    sys.exit ("%s: cannot find `%s', strange..."
+              % (sys.argv[0], os.path.join ('notify', 'all.py')))
+
+
+print 'Building extension...'
+
+# FIXME: Is that portable enough?
+if os.system ('./setup.py build_ext') != 0:
+    sys.exit (1)
 
 
 
@@ -41,7 +55,7 @@ class AllTests (object):
         setattr (self, 'everything', lambda: everything)
 
 
-print 'Note that most of the time is spent in gc.collect() calls, not in this package\n'
+print '\nNote that most of the time is spent in gc.collect() calls, not in this package\n'
 
 unittest.main (AllTests (), 'everything')
 

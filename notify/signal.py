@@ -89,11 +89,14 @@ Brief Comparison With GObject Signals
         implementation.  (PyGObject wraps C signals from U{GLib <http://gtk.org/>}.)
 
       - There are no connection IDs, handlers can be disconnected only by passing the same
-        handler to C{L{disconnect <AbstractSignal.disconnect>}} method.  This is somewhat
-        less efficient, but easier to use.
+        handler to C{L{disconnect <AbstractSignal.disconnect>}} method.  This is less
+        efficient, but easier to use.
+
+      - Py-notify signals are U{slower <http://home.gna.org/py-notify/benchmark.html>}.
+        This may be important in time-critical code if you use signals heavily.
 
     In general, you should use whatever suits your needs better.  GObject signals are
-    limited to C{GObject} class derivatives.
+    limited to C{gobject.GObject} class derivatives.
 
 G{classtree AbstractSignal}
 """
@@ -362,23 +365,87 @@ class AbstractSignal (object):
 
 
     def connect (self, handler, *arguments):
+        """
+        Connect C{handler} with C{arguments} to the signal.  This means that upon signal
+        emission the handler will be called with emission arguments I{appended} to the
+        connection-time C{arguments} (of couse, either or both of the tuples can be
+        empty.)  The handler can be later L{disconnected <disconnect>} if needed.  A
+        connected handler can also be L{blocked <block>} and later L{unblocked <unblock>}.
+        Note that it is legal to connect the same handler and with the same arguments
+        several times and the handler will be called that many times on signal emission.
+
+        All standard implementations of C{AbstractSignal} interface will automatically
+        disconnect method handlers of garbage-collected objects.  For details, please see
+        C{L{WeakBinding}} class documentation.
+
+        @note:
+        Descendant classes don’t normally need to override this method.  Override
+        C{L{do_connect}} and/or C{L{_wrap_handler}} instead.
+        """
+
         self.do_connect (self._wrap_handler (handler, *arguments))
 
     def connect_safe (self, handler, *arguments):
+        """
+        Connect C{handler} with C{arguments} to the signal unless it is connected already.
+        This method either behaves identically to C{L{connect}} (if the handler is not
+        connected yet), or does nothing.  See documentation of C{L{connect}} method for
+        details.
+
+        @rtype:   bool
+        @returns: C{True} if it has connected C{handler} with C{arguments}, C{False} if it
+                  had been connected already.
+        """
+
         if not self.is_connected (handler, *arguments):
             self.do_connect (self._wrap_handler (handler, *arguments))
             return True
         else:
             return False
 
+
     def _wrap_handler (self, handler, *arguments):
+        """
+        Wrap C{handler} with C{arguments} into a single internally-used object.  It is
+        legal to return C{handler} itself if C{arguments} tuple is empty and the class
+        doesn’t need any special behaviour from the returned object.
+
+        Normally, this method should call C{L{Binding.wrap}} or a similar method (e.g. of
+        a subclass.)  In any case, returned object I{must} compare equal to
+        C{Binding (handler, arguments)}.
+
+        This method I{must not} be called from outside.
+
+        @rtype: object
+        """
+
         return WeakBinding.wrap (handler, arguments)
 
 
     def do_connect (self, handler):
+        """
+        Connect C{handler} to the signal without any further modifications.  See
+        C{L{connect}} method for details.
+
+        This method I{may} be called from outside, but most of the time you should use
+        C{L{connect}} instead.  Note that since signal class will not do any handler
+        modification at this point, calling C{do_connect} directly I{may break} promises
+        of the signal class.
+        """
+
         raise_not_implemented_exception (self)
 
     def do_connect_safe (self, handler):
+        """
+        Connect C{handler} to the signal unless it is connected already, without any
+        further modifications.  See C{L{connect}} method for details.
+
+        This method I{may} be called from outside, but most of the time you should use
+        C{L{connect_safe}} instead.  Note that since signal class will not do any handler
+        modification at this point, calling C{do_connect} directly I{may break} promises
+        of the signal class.
+        """
+
         if not self.is_connected (handler):
             self.do_connect (handler)
             return True
@@ -387,9 +454,43 @@ class AbstractSignal (object):
 
 
     def disconnect (self, handler, *arguments):
+        """
+        Disconnect C{handler} with C{arguments} from the signal.  This means that upon
+        signal emission the handler will not be called anymore.  Note that it is legal to
+        connect the same handler and with the same arguments several times and this method
+        only cancels one connection.  If you need to remove all connected instances of the
+        C{handler}, use C{L{disconnect_all}}.
+
+        All standard implementations of C{AbstractSignal} interface will automatically
+        disconnect method handlers of garbage-collected objects.  Therefore, you don’t
+        need to call this method if the object is ‘thrown away’ already and handlers are
+        ‘harmless’.  For details, please see C{L{WeakBinding}} class documentation.
+
+        @rtype:   bool
+        @returns: C{True} if C{handler} has been disconnected; C{False} if it was not even
+                  connected or had more than one connection.
+        """
+
         raise_not_implemented_exception (self)
 
+
     def disconnect_all (self, handler, *arguments):
+        """
+        Disconnect all instances of C{handler} with C{arguments} from the signal.  This
+        means that upon signal emission the handler will not be called anymore.  Note that
+        it is legal to connect the same handler and with the same arguments several times
+        and this method cancels I{all} such connection.
+
+        All standard implementations of C{AbstractSignal} interface will automatically
+        disconnect method handlers of garbage-collected objects.  Therefore, you don’t
+        need to call this method if the object is ‘thrown away’ already and handlers are
+        ‘harmless’.  For details, please see C{L{WeakBinding}} class documentation.
+
+        @rtype:   bool
+        @returns: C{True} if C{handler} has been disconnected; C{False} if it was not even
+                  connected to begin with.
+        """
+
         if self.disconnect (handler, *arguments):
             while self.disconnect (handler, *arguments):
                 pass
@@ -520,6 +621,16 @@ class AbstractSignal (object):
 
 
     def collect_garbage (self):
+        """
+        Make the signal disconnect all handlers of garbage-collected objects.  Signal is
+        not required to do anything, this method is merely a ‘request’ to remove garbage.
+        For instance, C{L{Signal}} will remove garbage only when not emitting.
+
+        You rarely need to call this method explicitely, since standard signals call it
+        after any emission themselves.  For C{L{CleanSignal}} it doesn’t make sense at
+        all, since those signals will remove such handlers automatically.
+        """
+
         pass
 
 
@@ -866,13 +977,24 @@ class CleanSignal (Signal):
 
     """
     Subclass of C{L{Signal}} which wraps its handlers in such a way that garbage-collected
-    ones are detected instantly.
+    ones are detected instantly.  Clean signals also have a notion of I{parent}, which
+    they L{prevent from being garbage-collected <notify.gc>}, but only if there is at
+    least one handler.
     """
 
     __slots__ = ('_CleanSignal__parent', '__weakref__')
 
 
-    def __init__(self, parent, accumulator = None):
+    def __init__(self, parent = None, accumulator = None):
+        """
+        Create a new C{CleanSignal} with specified C{parent} and C{accumulator}.  If
+        C{parent} is not C{None}, it will be protected from garbage collection while the
+        signal has at least one handler (initially it doesn’t.)
+
+        @raises TypeError: if C{accumulator} is not C{None} and not an instance of
+                           C{L{AbstractAccumulator}}.
+        """
+
         super (CleanSignal, self).__init__(accumulator)
 
         if parent is not None:
@@ -882,6 +1004,12 @@ class CleanSignal (Signal):
 
 
     def orphan (self):
+        """
+        ‘Orphan’ the signal, i.e. set its parent to C{None}.  If the signal had a
+        non-C{None} parent before and protected it from being garbage-collected, this
+        protection is removed.
+        """
+
         if self.__parent is not None:
             if self._handlers is not None:
                 AbstractGCProtector.default.unprotect (self)

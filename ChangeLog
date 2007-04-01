@@ -1,3 +1,49 @@
+2007-04-01  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/base.py: Improve and fix documentation.
+	* notify/bind.py: Likewise.
+	* notify/condition.py: Likewise.
+	* notify/mediator.py: Likewise.
+	* notify/signal.py: Likewise.
+	* notify/variable.py: Likewise.
+
+	* notify/mediator.py (AbstractMediator.__ne__): Reimplement,
+	taking into account that __eq__() may return `NotImplemented'.
+	(BooleanMediator.__eq__): Return `NotImplemented' if `other' is
+	not a `BooleanMediator'.
+	(FunctionalMediator.__eq__): Likewise for `FunctionalMediator'.
+	(_ReverseMediator.__eq__): Likewise for `_ReverseMediator'.
+
+	* notify/signal.py (CleanSignal.__init__): Make `parent' argument
+	optional.
+
+	* notify/condition.py (AbstractCondition.__and__): Don't raise
+	TypeError right away, return NotImplemented instead.
+	(AbstractCondition.__or__): Likewise.
+	(AbstractCondition.__xor__): Likewise.
+	(_True.__and__): Likewise.
+	(_True.__or__): Likewise.
+	(_True.__xor__): Likewise.
+	(_False.__and__): Likewise.
+	(_False.__or__): Likewise.
+	(_False.__xor__): Likewise.
+
+	* test/condition.py (LogicConditionTestCase.test_if_else): Rename
+	from test_ifelse().
+	(GarbageCollectionConditionTestCase.test_garbage_collection_if_else):
+	Rename from test_garbage_collection_ifelse().
+
+	* notify/condition.py (AbstractCondition.if_else): Rename from
+	ifelse().
+	(_True.if_else): Likewise.
+	(_False.if_else): likewise.
+	(_Not.if_else): Likewise.
+
+	* generate-reference.py: Build extension first, otherwise
+	reference building gives warnings.
+	* run-tests.py: Likewise.
+	* benchmark.py: Likewise.
+
 2007-03-31  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* test/variable.py (VariableDerivationTestCase.test_derivation_1):

@@ -47,14 +47,35 @@ from notify.utils  import *
 
 class AbstractCondition (AbstractValueObject):
 
+    """
+    Abstract base class of condition hierarchy tree.  All conditions derive from this
+    class, so you should use C{isinstance (..., AbstractCondition)}, not
+    C{isinstance (..., Condition)}.
+    """
+
     __slots__ = ()
 
 
     # We won't use it internally for marginal optimization.
-    state = property (lambda self: self.get (), lambda self, state: self.set (state))
+    state = property (lambda self: self.get (), lambda self, state: self.set (state),
+                      doc = ("""
+                             The current state of the condition.  This property is
+                             writable, but setting it for immutable conditions will raise
+                             C{NotImplementedError}.
+
+                             @type: bool
+                             """))
 
 
     def to_constant (state):
+        """
+        Return either C{L{TRUE}} or C{L{FALSE}}, depending on C{state} argument.  In other
+        words, this static method returns a condition which is either always true or
+        always false.
+
+        @rtype: AbstractCondition
+        """
+
         if state:
             return AbstractCondition.TRUE
         else:
@@ -64,10 +85,36 @@ class AbstractCondition (AbstractValueObject):
 
 
     def __nonzero__(self):
+        """
+        Return the state of the condition.  Return value is the same as that of C{L{get}}
+        method.  Existance of C{__nonzero__} method simplifies condition usage in
+        C{if}-like statements.
+
+        @rtype:   bool
+        @returns: State of the condition.
+        """
+
         return self.get ()
 
 
     def __invert__(self):
+        """
+        Return a condition, whose state is always the negation of this condition’s state.
+
+        You don’t need this if you just want to test condition state: both
+        C{not condition} and C{~condition} have the same logical value, but former doesn’t
+        involve object creation.  However, the returned object has its own ‘changed’
+        signal.  So, you should use this method if you need a I{trackable} condition, not
+        one-time value.
+
+        @note:
+        There is no guarantee on the returned object except as noted above about its state
+        and that it is an instance of C{AbstractCondition} or a subclass.  In particular,
+        the returned object may or may not be identical to an existing one.
+
+        @rtype: AbstractCondition
+        """
+
         return _Not (self)
 
 
@@ -83,7 +130,7 @@ class AbstractCondition (AbstractValueObject):
                 else:
                     return other
         else:
-            raise TypeError ('can only conjunct with other conditions')
+            return NotImplemented
 
 
     def __or__(self, other):
@@ -98,7 +145,7 @@ class AbstractCondition (AbstractValueObject):
                 else:
                     return self
         else:
-            raise TypeError ('can only disjunct with other conditions')
+            return NotImplemented
 
 
     def __xor__(self, other):
@@ -113,10 +160,33 @@ class AbstractCondition (AbstractValueObject):
                 else:
                     return self
         else:
-            raise TypeError ('can only xor with other conditions')
+            return NotImplemented
 
 
-    def ifelse (self, true_condition, false_condition):
+    def if_else (self, true_condition, false_condition):
+        """
+        Return a condition, whose state is always that of C{true_condition} or
+        C{false_condition}, depending on this condition state.  In Python 2.5 it can be
+        written like this:
+
+            >>> (condition.if_else (true_condition, false_condition).state \\
+            ...  = (true_condition.state if condition else false_condition.state))
+
+        This will hold not only right after calling this method, but also later, even if
+        any of the involved conditions’ state changes.
+
+        You don’t need this if you just want to compute a logical expression value.
+        However, the returned object has its own ‘changed’ signal.  So, you should use
+        this method if you need a I{trackable} condition, not one-time value.
+
+        @note:
+        There is no guarantee on the returned object except as noted above about its state
+        and that it is an instance of C{AbstractCondition} or a subclass.  In particular,
+        the returned object may or may not be identical to an existing one.
+
+        @rtype: AbstractCondition
+        """
+
         if  (   isinstance (true_condition,  AbstractCondition)
              and isinstance (false_condition, AbstractCondition)):
             if true_condition is not false_condition:
@@ -130,10 +200,25 @@ class AbstractCondition (AbstractValueObject):
 
 class AbstractStateTrackingCondition (AbstractCondition):
 
+    """
+    A condition that stores its state (explicitly) instead of recomputing it each time.
+    Since there is no public way to alter condition’s state, this class is still abstract.
+    For a generic mutable condition implementation, see C{L{Condition}} class.
+
+    Not all standard condition classes derive from C{AbstractStateTrackingCondition}, some
+    internal ones inherit C{L{AbstractCondition}} directly instead.
+    """
+
     __slots__ = ('_AbstractStateTrackingCondition__state')
 
 
     def __init__(self, initial_state):
+        """
+        Initialize a new condition with specified C{initial_state}.  The state may be not
+        C{True} or C{False}, but it will be converted to either of these two values with
+        C{bool} standard function.
+        """
+
         super (AbstractStateTrackingCondition, self).__init__()
         self.__state = bool (initial_state)
 
@@ -163,13 +248,13 @@ class AbstractStateTrackingCondition (AbstractCondition):
         if 'getter' in options:
             if object is not None:
                 exec (('def __init__(self, %s):\n'
-                       '    self_class.__init__ (self, getter (%s))\n'
+                       '    self_class.__init__(self, getter (%s))\n'
                        '    %s = %s')
                       % (object, object, AbstractValueObject._get_object (options), object)) \
                       in options, functions
             else:
                 exec ('def __init__(self):\n'
-                      '    self_class.__init__ (self, getter (self))\n') in options, functions
+                      '    self_class.__init__(self, getter (self))\n') in options, functions
 
             exec (('def resynchronize_with_backend (self):\n'
                    '    self._set (getter (%s))')
@@ -178,13 +263,13 @@ class AbstractStateTrackingCondition (AbstractCondition):
         else:
             if object is not None:
                 exec (('def __init__(self, %s, initial_state):\n'
-                       '    self_class.__init__ (self, initial_state)\n'
+                       '    self_class.__init__(self, initial_state)\n'
                        '    %s = %s')
                       % (object, AbstractValueObject._get_object (options), object)) \
                       in options, functions
             else:
                 exec ('def __init__(self, initial_state):\n'
-                      '    self_class.__init__ (self, initial_state)\n') in options, functions
+                      '    self_class.__init__(self, initial_state)\n') in options, functions
 
         for function in functions.iteritems ():
             yield function
@@ -201,6 +286,14 @@ class AbstractStateTrackingCondition (AbstractCondition):
 
 class Condition (AbstractStateTrackingCondition):
 
+    """
+    Standard implementation of a mutable condition.  It is an all-purpose class suitable
+    for almost any use.  In particular, you may not derive new condition types and just
+    use mutable conditions everywhere.  Deriving new types is more ‘proper’ and can make
+    difference if you have some code that differentiates between mutable and immutable
+    conditions, but using this class is somewhat simpler.
+    """
+
     __slots__ = ()
 
 
@@ -210,6 +303,17 @@ class Condition (AbstractStateTrackingCondition):
 
 
 class PredicateCondition (AbstractStateTrackingCondition):
+
+    """
+    An immutable condition class, instances of which have state determined by some
+    predicate.  Instances of this class have no way to know when their state should be
+    recomputed, so you need to actively C{L{update}} it.  For an automated way, see
+    C{L{AbstractVariable.predicate <variable.AbstractVariable.predicate>}} method.
+
+    Advantage of using predicate conditions over all-purpose mutable ones and setting its
+    state to the same predicate over different objects is encapsulation.  Predicate
+    conditions remember the way to evaluate their state.
+    """
 
     __slots__ = ('_PredicateCondition__predicate')
 
@@ -234,10 +338,34 @@ class PredicateCondition (AbstractStateTrackingCondition):
 
 class WatcherCondition (AbstractStateTrackingCondition):
 
+    """
+    A condition that has changeable I{watched condition} and always has a state that
+    matches that condition’s one.
+
+    While it may seem redundant, watcher conditions are convenient at times.  Instead of
+    disconnecting your handler(s) from one condition’s ‘changed’ signal and connecting to
+    another, you can create a proxy watcher condition and connect the handlers to its
+    signal instead.  This is practically the same, but changing watched condition is one
+    operation, while reconnecting handlers to a different condition is 2 × (number of
+    handlers) ones.  Another advantage of a watcher is that when you change watched
+    condition from A to B and those have different states, watcher’s ‘changed’ signal will
+    get emitted.  With manual reconnecting you’d need to track that case specially.
+
+    Watcher condition that doesn’t watch anything at the moment always has state C{False}.
+
+    @see:  variable.WatcherVariable
+    """
+
+
     __slots__ = ('_WatcherCondition__watched_condition')
 
 
     def __init__(self, condition_to_watch = None):
+        """
+        Create a new wather condition, watching C{condition_to_watch} initially.  The only
+        argument is optional and can be omitted or set to C{None}.
+        """
+
         super (WatcherCondition, self).__init__(False)
 
         self.__watched_condition = None
@@ -323,24 +451,24 @@ class _True (AbstractCondition):
         if isinstance (other, AbstractCondition):
             return other
         else:
-            raise TypeError ('can only conjunct with other conditions')
+            return NotImplemented
 
 
     def __or__(self, other):
         if isinstance (other, AbstractCondition):
             return self
         else:
-            raise TypeError ('can only disjunct with other conditions')
+            return NotImplemented
 
 
     def __xor__(self, other):
         if isinstance (other, AbstractCondition):
             return ~other
         else:
-            raise TypeError ('can only xor with other conditions')
+            return NotImplemented
 
 
-    def ifelse (self, true_condition, false_condition):
+    def if_else (self, true_condition, false_condition):
         if  (    isinstance (true_condition,  AbstractCondition)
              and isinstance (false_condition, AbstractCondition)):
             return true_condition
@@ -375,24 +503,24 @@ class _False (AbstractCondition):
         if isinstance (other, AbstractCondition):
             return self
         else:
-            raise TypeError ('can only conjunct with other conditions')
+            return NotImplemented
 
 
     def __or__(self, other):
         if isinstance (other, AbstractCondition):
             return other
         else:
-            raise TypeError ('can only disjunct with other conditions')
+            return NotImplemented
 
 
     def __xor__(self, other):
         if isinstance (other, AbstractCondition):
             return other
         else:
-            raise TypeError ('can only xor with other conditions')
+            return NotImplemented
 
 
-    def ifelse (self, true_condition, false_condition):
+    def if_else (self, true_condition, false_condition):
         if  (    isinstance (true_condition,  AbstractCondition)
              and isinstance (false_condition, AbstractCondition)):
             return false_condition
@@ -470,8 +598,8 @@ class _Not (AbstractStateTrackingCondition):
             return _Xor (self.__get_negated_condition (), other.__get_negated_condition ())
 
 
-    def ifelse (self, true_condition, false_condition):
-        return self.__get_negated_condition ().ifelse (false_condition, true_condition)
+    def if_else (self, true_condition, false_condition):
+        return self.__get_negated_condition ().if_else (false_condition, true_condition)
 
 
 
@@ -622,7 +750,7 @@ class _IfElse (AbstractCondition):
 
 
     def __init__(self, _if, _then, _else):
-        super (_IfElse, self).__init__ ()
+        super (_IfElse, self).__init__()
 
         self.__if         = weakref.ref (_if,   self.__on_usage_change)
         self.__then       = weakref.ref (_then, self.__on_usage_change)

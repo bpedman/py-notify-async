@@ -193,7 +193,12 @@ class AbstractMediator (object):
         @rtype: bool
         """
 
-        return not self.__eq__(other)
+        equal = self.__eq__(other)
+
+        if equal is not NotImplemented:
+            return not equal
+        else:
+            return NotImplemented
 
 
 
@@ -205,8 +210,8 @@ class BooleanMediator (AbstractMediator):
     A mediator that transforms C{true_value} and C{false_value} to C{True} and C{False}
     correspondingly.  Other values are transformed using C{fallback} function to C{True}
     or C{False}, depending on C{bool} result over C{fallback}’s return value.  Back
-    transformation is like this: logically true values are transformed to C{True},
-    logically false ones—to C{False}.
+    transformation is like this: logically true values are transformed to C{true_value},
+    logically false ones—to C{false_value}.
 
     It may be more understandable from an example:
 
@@ -257,10 +262,12 @@ class BooleanMediator (AbstractMediator):
 
 
     def __eq__(self, other):
-        return (isinstance (other, BooleanMediator)
-                and self.__true_value  == other.__true_value
-                and self.__false_value == other.__false_value
-                and self.__fallback    == other.__fallback)
+        if isinstance (other, BooleanMediator):
+            return (    self.__true_value  == other.__true_value
+                    and self.__false_value == other.__false_value
+                    and self.__fallback    == other.__fallback)
+        else:
+            return NotImplemented
 
 
 
@@ -303,10 +310,13 @@ class FunctionalMediator (AbstractMediator):
 
 
     def __eq__(self, other):
-        return (    isinstance (other, FunctionalMediator)
-                and self.__forward_function == other.__forward_function
-                and self.__back_function    == other.__back_function
-                and self.__arguments        == other.__arguments)
+        if isinstance (other, FunctionalMediator):
+            return (    self.__forward_function == other.__forward_function
+                    and self.__back_function    == other.__back_function
+                    and self.__arguments        == other.__arguments)
+        else:
+            return NotImplemented
+
 
 
 def _identity (value, *ignored_arguments):
@@ -345,8 +355,10 @@ class _ReverseMediator (AbstractMediator):
 
 
     def __eq__(self, other):
-        return (    isinstance (other, _ReverseMediator)
-                and self.__wrapped_mediator == other.__wrapped_mediator)
+        if isinstance (other, _ReverseMediator):
+            return self.__wrapped_mediator == other.__wrapped_mediator
+        else:
+            return NotImplemented
 
 
 
