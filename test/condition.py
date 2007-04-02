@@ -306,7 +306,7 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
         self.collect_garbage ()
         variable.value = 10
 
-        condition2 ().signal_changed ().disconnect (self.simple_handler)
+        condition2 ().changed.disconnect (self.simple_handler)
 
         # FIXME: Invent a way to calculate times that is not dependent on implementation
         #        details.
@@ -389,7 +389,7 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
     def test_garbage_collection_signal_referenced_1 (self):
         condition1   = Condition (True)
         condition2   = ~condition1
-        signal       = condition2.signal_changed ()
+        signal       = condition2.changed
 
         condition2   = weakref.ref (condition2)
 
@@ -406,7 +406,7 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
     def test_garbage_collection_signal_referenced_2 (self):
         condition1   = Condition (True)
         condition2   = ~condition1
-        signal       = condition2.signal_changed ()
+        signal       = condition2.changed
 
         signal.connect (self.simple_handler)
 
@@ -434,11 +434,11 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
         condition1   = Condition (True)
         condition2   = ~condition1
 
-        condition2.signal_changed ().connect (self.simple_handler)
+        condition2.changed.connect (self.simple_handler)
 
         # We also assume that `Not's condition signal can be weakly referenced, but I
         # don't see other way...
-        signal = weakref.ref (condition2.signal_changed ())
+        signal = weakref.ref (condition2.changed)
 
         condition1.state = False
         self.assert_results (True)
@@ -460,7 +460,7 @@ class SignalConditionTestCase (NotifyTestCase):
         self.results = []
 
         condition = Condition (False)
-        signal    = (~condition).signal_changed ()
+        signal    = (~condition).changed
         signal.connect (self.simple_handler)
 
         condition.state = True

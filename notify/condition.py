@@ -380,7 +380,7 @@ class WatcherCondition (AbstractStateTrackingCondition):
 
         watched_condition = self.__get_watched_condition ()
         if watched_condition is not None:
-            watched_condition.signal_changed ().disconnect (self._set)
+            watched_condition.changed.disconnect (self._set)
 
         if condition_to_watch is not None:
             self.__watched_condition = weakref.ref (condition_to_watch, self.__on_usage_change)
@@ -552,7 +552,7 @@ class _Not (AbstractStateTrackingCondition):
         super (_Not, self).__init__(not negated_condition)
 
         self.__negated_condition = weakref.ref (negated_condition, self.__on_usage_change)
-        negated_condition.signal_changed ().connect (self.__on_negated_condition_change)
+        negated_condition.changed.connect (self.__on_negated_condition_change)
 
 
     def __on_negated_condition_change (self, new_state):
@@ -614,8 +614,8 @@ class _Binary (AbstractCondition):
         self.__condition1 = weakref.ref (condition1, self.__on_usage_change)
         self.__condition2 = weakref.ref (condition2, self.__on_usage_change)
 
-        condition1.signal_changed ().connect (self._on_term_change)
-        condition2.signal_changed ().connect (self._on_term_change)
+        condition1.changed.connect (self._on_term_change)
+        condition2.changed.connect (self._on_term_change)
 
         # Note: this doesn't allow for non-symmetric condition implementation, but we
         # don't need those anyway and this class is private.
@@ -757,9 +757,9 @@ class _IfElse (AbstractCondition):
         self.__else       = weakref.ref (_else, self.__on_usage_change)
         self.__term_state = (_if.get () * 4 + _then.get () * 2 + _else.get ())
 
-        _if  .signal_changed ().connect (self.__on_term_change)
-        _then.signal_changed ().connect (self.__on_term_change)
-        _else.signal_changed ().connect (self.__on_term_change)
+        _if  .changed.connect (self.__on_term_change)
+        _then.changed.connect (self.__on_term_change)
+        _else.changed.connect (self.__on_term_change)
 
 
     def get (self):

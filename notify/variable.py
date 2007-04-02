@@ -246,7 +246,7 @@ class WatcherVariable (AbstractValueTrackingVariable):
 
         watched_variable = self.__get_watched_variable ()
         if watched_variable is not None:
-            watched_variable.signal_changed ().disconnect (self._set)
+            watched_variable.changed.disconnect (self._set)
 
         if variable_to_watch is not None:
             self.__watched_variable = weakref.ref (variable_to_watch, self.__on_usage_change)
@@ -314,7 +314,7 @@ class _PredicateOverVariable (AbstractStateTrackingCondition):
         self.__predicate = predicate
         self.__variable  = weakref.ref (variable, self.__on_usage_change)
 
-        variable.signal_changed ().connect (self.__update)
+        variable.changed.connect (self.__update)
 
     def __get_variable (self):
         return self.__variable ()

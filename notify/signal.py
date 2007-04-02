@@ -133,8 +133,8 @@ class AbstractSignal (object):
       - Blocking connected handlers from being invoked: C{L{is_blocked}}, C{L{block}} and
         C{L{unblock}}.
 
-      - Emission: C{L{emit}} (or just C{L{__call__}}), C{L{get_emission_level}},
-        C{L{is_emission_stopped}} and C{L{stop_emission}}.
+      - Emission: C{L{emit}} (or just C{L{__call__}}), C{L{emission_level}},
+        C{L{emission_stopped}} and C{L{stop_emission}}.
 
       - Rarely needed: C{L{_wrap_handler}} and C{L{collect_garbage}}.
     """
@@ -565,34 +565,20 @@ class AbstractSignal (object):
         return self.emit (*arguments)
 
 
-    def get_emission_level (self):
+    def _get_emission_level (self):
         """
-        Get the number of unfinished calls to C{L{emit}} method of this signal.  For
-        instance, if this signal hasn’t been emitted at all, the return value will be 0.
-        If called from a handler, return value will be at least 1—more if in recursive
-        emission.
-
-        Note that stopping an emission doesn’t cause emission level to change instantly.
-        Even though the latest emission will not invoke handlers anymore, it is still
-        considered ‘in progress’ until the call to C{L{emit}} returns.
+        Internal getter for the C{L{emission_level}} property.  Outside code should use
+        that property, not the method directly.
 
         @rtype: int
         """
 
         raise_not_implemented_exception (self)
 
-    def is_emission_stopped (self):
+    def _is_emission_stopped (self):
         """
-        Determine if the latest emission in progress has been stopped with
-        C{L{stop_emission}} method.  In particular, it returns C{False} if (but not only
-        if) the signal is not being emitted at all.
-
-        Note that this method only considers I{the latest} emission.  For instance,
-        immediately after a call to C{stop_emission} it would return C{True}, but if you
-        start another one—letting or not the stopped to finish—it will return C{False}.
-        In other words, C{False} doesn’t mean there is no stopped emission in progress, it
-        only means that the latest emission is not stopped, or the signal is not being
-        emitted at all.
+        Internal getter for the C{L{emission_stopped}} property.  Outside code should use
+        that property, not the method directly.
 
         @rtype: bool
         """
@@ -634,27 +620,110 @@ class AbstractSignal (object):
         pass
 
 
-    emission_level   = property (get_emission_level)
-    emission_stopped = property (is_emission_stopped)
+    emission_level   = property (lambda self: self._get_emission_level (),
+                                 doc = ("""
+                                 The number of unfinished calls to C{L{emit}} method of
+                                 this signal.  For instance, if this signal hasn’t been
+                                 emitted at all, the return value will be 0.  If called
+                                 from a handler, return value will be at least 1—more if
+                                 in recursive emission.
+
+                                 Note that stopping an emission doesn’t cause emission
+                                 level to change instantly.  Even though the latest
+                                 emission will not invoke handlers anymore, it is still
+                                 considered ‘in progress’ until the call to C{L{emit}}
+                                 returns.
+
+                                 @type: int
+                                 """))
+
+    emission_stopped = property (lambda self: self._is_emission_stopped (),
+                                 doc = ("""
+                                 Flag indicating if the latest emission in progress has
+                                 been stopped with C{L{stop_emission}} method.  In
+                                 particular, it is C{False} if (but not only if) the
+                                 signal is not being emitted at all.
+
+                                 Note that this property only considers I{the latest}
+                                 emission.  For instance, immediately after a call to
+                                 C{stop_emission} it is C{True}, but if you start another
+                                 one—letting or not the stopped to finish—it will become
+                                 C{False}.  In other words, C{False} doesn’t mean there is
+                                 no stopped emission in progress, it only means that the
+                                 latest emission is not stopped, or the signal is not
+                                 being emitted at all.
+
+                                 @type: bool
+                                 """))
 
 
+    if sys.version_info[:3] >= (2, 5):
+        def default_exception_handler (signal, exception, handler):
+            if not isinstance (exception, Exception):
+                raise exception
+            else:
+                sys.excepthook (*sys.exc_info ())
 
-    def default_exception_handler (signal, exception, handler):
-        if isinstance (exception, (SystemExit, KeyboardInterrupt)):
-            raise exception
-        else:
-            sys.excepthook (*sys.exc_info ())
+    else:
+        def default_exception_handler (signal, exception, handler):
+            if isinstance (exception, (SystemExit, KeyboardInterrupt)):
+                raise exception
+            else:
+                sys.excepthook (*sys.exc_info ())
+
+
+    default_exception_handler.__doc__ = \
+    ("""
+     Default handler for exceptions occured in signal handlers.  If C{exception} is not
+     C{SystemExit} or C{KeyboardInterrupt}, it is printed to C{sys.stderr} or, more
+     exactly, passed to C{sys.excepthook}.  Otherwise it is reraised and so thrown out of
+     signal emission.  This is most often what you want: errors in handlers won’t break
+     unsuspecting signal emissions, while non-errors (C{SystemExit} and
+     C{KeyboardInterrupt}) will be propagated further.
+
+     On Python 2.5 C{default_exception_handler} is defined a little differently.
+     Specifically, instances of C{Exception} class will be passed to C{sys.excepthook} and
+     all other exceptions will be reraised.  For standard exceptions this is exactly the
+     same as described above.  There may be differences for custom exception types only,
+     but then you probably derived from C{BaseException} specifically for exception not to
+     be caught by default.
+
+     @see:  exception_handler
+     """)
 
 
     def ignoring_exception_handler (signal, exception, handler):
+        """
+        Handler for exceptions occured in signal handlers that ignores all exceptions.
+        This handler is just a simple C{pass}.  It ignores everything, including
+        C{SystemExit} and C{KeyboardInterrupt}.
+
+        @see:  exception_handler
+        """
+
         pass
 
 
     def printing_exception_handler (signal, exception, handler):
+        """
+        Handler for exceptions occured in signal handlers that passes all exceptions to
+        C{sys.excepthook}.  Otherwise, exceptions are ignored and never reraised (except
+        if reraised by C{sys.excepthook} itself.)
+
+        @see:  exception_handler
+        """
+
         sys.excepthook (*sys.exc_info ())
 
 
     def reraising_exception_handler (signal, exception, handler):
+        """
+        Handler for exceptions occured in signal handlers that reraises all exceptions.
+        Regardless of exception type it is always thrown out of the emission call.
+
+        @see:  exception_handler
+        """
+
         raise exception
 
 
@@ -665,6 +734,21 @@ class AbstractSignal (object):
 
 
     exception_handler           = default_exception_handler
+    """
+    Handler for exceptions occured in signal handlers.  When a signal handler doesn’t
+    return but raises an exception instead, C{AbstractSignal.exception_handler} is called.
+    It can be any function accepting three arguments: signal, exception and handler (in
+    that order.)  In addition, exception handler can use information in C{sys.exc_info},
+    if needed.
+
+    If exception handler returns, emission continues as normal and any returned value is
+    discarded.  However, if it raises any exception (e.g., it may reraise exception for
+    which it is called), the exception will be thrown out of the corresponding call to
+    C{L{emit}}.
+
+    Default value is C{L{default_exception_handler}}.  This method can be assigned any
+    appropriate value.
+    """
 
 
     def __repr__(self):
@@ -945,10 +1029,10 @@ class Signal (AbstractSignal):
             return accumulator.post_process_value (value)
 
 
-    def get_emission_level (self):
+    def _get_emission_level (self):
         return abs (self.__emission_level)
 
-    def is_emission_stopped (self):
+    def _is_emission_stopped (self):
         return self.__emission_level < 0
 
     def stop_emission (self):
@@ -1029,7 +1113,7 @@ class CleanSignal (Signal):
 
     def disconnect (self, handler, *arguments):
         if super (CleanSignal, self).disconnect (handler, *arguments):
-            if (    self.get_emission_level () == 0
+            if (    self._get_emission_level () == 0
                 and self._handlers is None
                 and self.__parent is not None):
                 AbstractGCProtector.default.unprotect (self)
@@ -1041,7 +1125,7 @@ class CleanSignal (Signal):
 
     def disconnect_all (self, handler, *arguments):
         if super (CleanSignal, self).disconnect_all (handler, *arguments):
-            if (    self.get_emission_level () == 0
+            if (    self._get_emission_level () == 0
                 and self._handlers is None
                 and self.__parent is not None):
                 AbstractGCProtector.default.unprotect (self)
@@ -1060,7 +1144,7 @@ class CleanSignal (Signal):
 
 
     def collect_garbage (self):
-        if self._handlers is not None and self.get_emission_level () == 0:
+        if self._handlers is not None and self._get_emission_level () == 0:
             super (CleanSignal, self).collect_garbage ()
             if self._handlers is None and self.__parent is not None:
                 AbstractGCProtector.default.unprotect (self)

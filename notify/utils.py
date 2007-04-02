@@ -131,20 +131,31 @@ def is_valid_identifier (identifier):
 class DummyReference (object):
 
     """
-    Simple class interface-compatible with C{weakref.WeakReference}.  In other words, its
-    constructor accepts only one parameter and its value is later returned from
-    C{__call__} method.  Unlike weak references, instances of this class don’t do anything
-    special.  They are only needed to avoid bothering about exact type of a reference
-    object.
+    Simple class that is interface-compatible with C{weakref.ReferenceType}.  In other
+    words, its constructor accepts only one parameter and this value is later returned
+    from C{L{__call__}} method.  Unlike weak references, instances of this class don’t do
+    anything special.  They are only needed to avoid special cases for non-references,
+    since you can treat instances of C{weakref.ReferenceType} and this class in the same
+    way.
     """
 
     __slots__ = ('_DummyReference__object')
 
 
-    def __init__ (self, object):
+    def __init__(self, object):
+        """
+        Create a new dummy reference that will return C{object} when called.
+        """
+
         self.__object = object
 
-    def __call__ (self):
+    def __call__(self):
+        """
+        Return the C{object} specified at construction time.
+
+        @rtype: object
+        """
+
         return self.__object
 
 

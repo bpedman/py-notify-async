@@ -56,8 +56,7 @@ class AbstractValueObject (object):
         """
         Initialize new C{L{AbstractValueObject}}.  Base class only has (internal) field
         for ‘changed’ signal.  You may assume that the signal is only created when
-        C{L{signal_changed}} method is called for the first time or C{L{changed}} property
-        is accessed, which is the same.
+        C{L{changed}} property is read for the first time.
         """
 
         super (AbstractValueObject, self).__init__()
@@ -102,7 +101,7 @@ class AbstractValueObject (object):
         instances are mutable.  This method should be overriden if that’s not the case.
 
         This method may be used from outside, but you should consider using C{L{mutable}}
-        property instead, as it should be more convenient.
+        property instead, as it is public and more convenient.
 
         @rtype: bool
         """
@@ -121,19 +120,7 @@ class AbstractValueObject (object):
                                """))
 
 
-    def signal_changed (self):
-        """
-        Return the ‘changed’ signal for this object.  You can also get C{L{changed}}
-        property for the same effect.  ‘Changed’ signal is emitted if and only if the
-        current value is changed.  User of the object must never emit the signal herself,
-        but may operate with its handlers.
-
-        Internally, this method creates the signal if it hasn’t been created yet.  Derived
-        classes may assume this behaviour.
-
-        @rtype: C{L{AbstractSignal}}
-        """
-
+    def __get_changed_signal (self):
         if self.__signal is not None:
             signal = self.__signal
             if not isinstance (signal, AbstractSignal):
@@ -146,13 +133,13 @@ class AbstractValueObject (object):
 
     def _create_signal (self):
         """
-        Create the signal that will be returned from C{L{signal_changed}}.  Default
+        Create the signal that will be returned by C{L{changed}} property.  Default
         implementation returns an instance of C{L{Signal <signal.Signal>}} class without
         accumulator, but derived classes may wish to override this.
 
-        Note that this method will be called only from C{signal_changed} and only if there
-        is no signal yet.  I.e. only for the first invocation at all or first invocation
-        after a call to C{L{_remove_signal}}.
+        Note that this method will be called only when getting C{changed} property and
+        only if there is no signal yet.  I.e. only for the first invocation at all or
+        first invocation after a call to C{L{_remove_signal}}.
 
         @rtype:   AbstractSignal, object
         @returns: A signal object I{or} a reference to one (i.e. object with C{__call__}
@@ -215,7 +202,7 @@ class AbstractValueObject (object):
         """
 
         handler (*(arguments + (self.get (),)))
-        self.signal_changed ().connect (handler, *arguments)
+        self.__get_changed_signal ().connect (handler, *arguments)
 
     def store_safe (self, handler, *arguments):
         """
@@ -229,9 +216,9 @@ class AbstractValueObject (object):
         @returns:          Whether C{handler} is connected to ‘changed’ signal.
         """
 
-        if not self.signal_changed ().is_connected (handler, *arguments):
+        if not self.__get_changed_signal ().is_connected (handler, *arguments):
             handler (*(arguments + (self.get (),)))
-            self.signal_changed ().connect (handler, *arguments)
+            self.__get_changed_signal ().connect (handler, *arguments)
 
             return True
 
@@ -272,7 +259,7 @@ class AbstractValueObject (object):
         if mediator is None:
             # Note: order is important!
             value_object.store (self.set)
-            self.signal_changed ().connect (value_object.set)
+            self.__get_changed_signal ().connect (value_object.set)
 
         else:
             if not isinstance (mediator, AbstractMediator):
@@ -280,7 +267,7 @@ class AbstractValueObject (object):
 
             # Note: order is important!
             value_object.store (mediator.forward (self.set))
-            self.signal_changed ().connect (mediator.back (value_object.set))
+            self.__get_changed_signal ().connect (mediator.back (value_object.set))
 
 
     def synchronize_safe (self, value_object, mediator = None):
@@ -305,7 +292,7 @@ class AbstractValueObject (object):
         if mediator is None:
             # Note: order is important!
             value_object.store_safe (self.set)
-            self.signal_changed ().connect_safe (value_object.set)
+            self.__get_changed_signal ().connect_safe (value_object.set)
 
         else:
             if not isinstance (mediator, AbstractMediator):
@@ -313,7 +300,7 @@ class AbstractValueObject (object):
 
             # Note: order is important!
             value_object.store_safe (mediator.forward (self.set))
-            self.signal_changed ().connect_safe (mediator.back (value_object.set))
+            self.__get_changed_signal ().connect_safe (mediator.back (value_object.set))
 
 
     def desynchronize (self, value_object, mediator = None):
@@ -359,11 +346,11 @@ class AbstractValueObject (object):
             forward = mediator.forward (self.set)
             back    = mediator.back    (value_object.set)
 
-        if (    value_object.signal_changed ().is_connected (forward)
-            and self.signal_changed ().is_connected (back)):
+        if (    value_object.__get_changed_signal ().is_connected (forward)
+            and self        .__get_changed_signal ().is_connected (back)):
 
-            value_object.signal_changed ().disconnect (forward)
-            self.        signal_changed ().disconnect (back)
+            value_object.__get_changed_signal ().disconnect (forward)
+            self.        __get_changed_signal ().disconnect (back)
 
             return True
 
@@ -419,11 +406,11 @@ class AbstractValueObject (object):
             forward = mediator.forward (self.set)
             back    = mediator.back    (value_object.set)
 
-        if (    value_object.signal_changed ().is_connected (forward)
-            and self.signal_changed ().is_connected (back)):
+        if (    value_object.__get_changed_signal ().is_connected (forward)
+            and self        .__get_changed_signal ().is_connected (back)):
 
-            value_object.signal_changed ().disconnect_all (forward)
-            self.        signal_changed ().disconnect_all (back)
+            value_object.__get_changed_signal ().disconnect_all (forward)
+            self.        __get_changed_signal ().disconnect_all (back)
 
             return True
 
@@ -456,12 +443,15 @@ class AbstractValueObject (object):
         return True
 
 
-    changed = property (signal_changed,
+    changed = property (__get_changed_signal,
                         doc = ("""
-                        The ‘changed’ signal for this object.  User of the object must
-                        never emit the signal herself, but may operate with its handlers.
-                        Getting this read-only property is identical to calling
-                        C{L{signal_changed}} function, but is more convenient.
+                        The ‘changed’ signal for this object.  ‘Changed’ signal is emitted
+                        if and only if the current value is changed.  User of the object
+                        must never emit the signal herself, but may operate with its
+                        handlers.
+                        
+                        Internally, reading this property creates the signal if it hasn’t
+                        been created yet.  Derived classes may assume this behaviour.
 
                         @type: C{L{AbstractSignal}}
                         """))
@@ -499,7 +489,7 @@ class AbstractValueObject (object):
         """
 
         if self._has_signal ():
-            num_handlers = self.signal_changed ().count_handlers ()
+            num_handlers = self.__get_changed_signal ().count_handlers ()
 
             if num_handlers > 1:
                 return ['%d handlers' % num_handlers]

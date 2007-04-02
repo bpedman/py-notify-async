@@ -1,3 +1,36 @@
+2007-04-02  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/base.py: Improve and fix documentation.
+	* notify/bind.py: Likewise.
+	* notify/signal.py: Likewise.
+	* notify/utils.py: Likewise.
+
+	* notify/base.py (AbstractValueObject.__get_changed_signal):
+	Rename from signal_changed(): adopt "Don't repeat yourself"
+	principle and make method private since there is an analoguous
+	public property.
+
+	* notify/signal.py (AbstractSignal._get_emission_level): Likewise,
+	rename from get_emission_level().
+	(AbstractSignal._is_emission_stopped): Likewise, rename from
+	is_emission_stopped().
+	(Signal._get_emission_level, Signal._is_emission_stopped):
+	Likewise.
+
+	* notify/bind.py (Binding._get_object): Likewise, rename from get_object().
+	(Binding._get_function): Likewise, rename from get_function().
+	(Binding._get_class): Likewise, rename from get_class().
+	(Binding._get_arguments): Likewise, rename from get_arguments().
+	(WeakBinding._get_object): Likewise.
+
+	* test/signal.py (SimpleSignalTestCase.test_emission_stop_3): New
+	test.
+
+	* notify/signal.py (AbstractSignal.default_exception_handler):
+	Split definition for Python 2.5+ and older Pythons.
+	(AbstractSignal.emission_level, AbstractSignal.emission_stopped):
+	Fix definition since getter functions are meant to be virtual.
+
 2007-04-01  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* setup.py (build_ext.build_extension): Fix symlink creation.

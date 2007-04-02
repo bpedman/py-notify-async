@@ -185,6 +185,18 @@ class SimpleSignalTestCase (NotifyTestCase):
         self.assert_results (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 
 
+    def test_emission_stop_3 (self):
+        def stop_emission ():
+            was_stopped = signal.emission_stopped
+            signal.stop_emission ()
+            return was_stopped, signal.emission_stopped
+
+        signal = Signal (Signal.VALUE_LIST)
+        signal.connect (stop_emission)
+
+        self.assertEqual (signal.emit (), [(False, True)])
+
+
 
 class RecursiveEmissionSignalTestCase (NotifyTestCase):
 

@@ -42,7 +42,7 @@ Here is a quick example:
     ... name = Variable ()
     ...
     ... import sys
-    ... name.signal_changed ().connect (
+    ... name.changed.connect (
     ...     lambda string: sys.stdout.write ('Hello there, %s!\\n' % string))
     ...
     ... name.value = 'Chuk'
@@ -65,7 +65,7 @@ Here is a little more elaborate example with the same functionality (it requires
     ...     dialog.run ()
     ...     dialog.destroy ()
     ...
-    ... name.signal_changed ().connect (welcome_user)
+    ... name.changed.connect (welcome_user)
     ...
     ... def set_name_from_entry (entry):
     ...     name.value = entry.get_text ()
@@ -99,9 +99,9 @@ Now a final, quite complicated, example introducing conditions and some other fe
     ...
     ... import sys
     ...
-    ... pilots.signal_changed ().connect (
+    ... pilots.changed.connect (
     ...     lambda pilots: sys.stdout.write ('Pilots are %s\\n' % pilots))
-    ... fuel.signal_changed ().connect (
+    ... fuel.changed.connect (
     ...     lambda amount: sys.stdout.write ('Got %d litres of fuel\\n' % amount))
     ...
     ... def ready_state_changed (ready):

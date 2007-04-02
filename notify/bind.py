@@ -150,14 +150,11 @@ class Binding (object):
     wrap = classmethod (wrap)
 
 
-    def get_object (self):
+    def _get_object (self):
         """
-        Return object associated with this binding.  It is not C{None} only if binding is
-        created for a bound method or another method with non-C{None} object.
-
-        This method is analogous to C{L{im_self}} property.  Method is slightly faster,
-        but the same property also exists for function and method objects, so the property
-        is “standard interface”.
+        Return object associated with this binding.  This is the internal getter method
+        for C{L{im_self}} property and outside code should use the property, not this
+        method directly.
 
         @note:  Never override C{im_self} property, override this method instead.
 
@@ -166,13 +163,11 @@ class Binding (object):
 
         return self._object
 
-    def get_function (self):
+    def _get_function (self):
         """
-        Return raw function associated with this binding.
-
-        This method is analogous to C{L{im_func}} property.  Method is slightly faster,
-        but the same property also exists for function and method objects, so the property
-        is “standard interface”.
+        Return raw function associated with this binding.  This is the internal getter
+        method for C{L{im_func}} property and outside code should use the property, not
+        this method directly.
 
         @note:  Never override C{im_func} property, override this method instead.
 
@@ -181,13 +176,11 @@ class Binding (object):
 
         return self._function
 
-    def get_class (self):
+    def _get_class (self):
         """
-        Return the class associated with this binding.
-
-        This method is analogous to C{L{im_class}} property.  Method is slightly faster,
-        but the same property also exists for function and method objects, so the property
-        is “standard interface”.
+        Return the class associated with this binding.  This is the internal getter method
+        for C{L{im_class}} property and outside code should use the property, not this
+        method directly.
 
         @note:  Never override C{im_class} property, override this method instead.
 
@@ -196,15 +189,11 @@ class Binding (object):
 
         return self._class
 
-    def get_arguments (self):
+    def _get_arguments (self):
         """
-        Get the arguments of this binding.  These are the arguments passed to
-        C{L{__init__}} or C{L{wrap}} method.  When calling the binding, they are
-        I{prepended} to arguments passed to C{L{__call__}}.
-
-        There also exists C{L{im_args}} property, completely analogous to this method.
-        Method is slightly faster, but the property is in line with standard C{L{im_self}}
-        and other properties.
+        Get the arguments of this binding.  This is the internal getter method for
+        C{L{im_args}} property and outside code should use the property, not this method
+        directly.
 
         @note:  Never override C{im_args} property, override this method instead.
 
@@ -227,10 +216,11 @@ class Binding (object):
 
         # NOTE: If, for some reason, you change this, don't forget to adjust
         #       `WeakBinding.__call__' accordingly.
-        if self.get_class () is not None:
-            return self.get_function () (self.get_object (), *(self.get_arguments () + arguments))
+        if self._get_class () is not None:
+            return self._get_function () (self._get_object (),
+                                          *(self._get_arguments () + arguments))
         else:
-            return self.get_function () (*(self.get_arguments () + arguments))
+            return self._get_function () (*(self._get_arguments () + arguments))
 
 
     def __eq__(self, other):
@@ -246,15 +236,15 @@ class Binding (object):
             return True
 
         if isinstance (other, BindingCompatibleTypes):
-            if (   self.get_object   () is not other.im_self
-                or self.get_function () is not other.im_func
-                or self.get_class    () is not other.im_class):
+            if (   self._get_object   () is not other.im_self
+                or self._get_function () is not other.im_func
+                or self._get_class    () is not other.im_class):
                 return False
 
             if isinstance (other, Binding):
-                return self.get_arguments () == other.get_arguments ()
+                return self._get_arguments () == other._get_arguments ()
             else:
-                return self.get_arguments () is ()
+                return self._get_arguments () is ()
 
         else:
             if isinstance (other, types.FunctionType):
@@ -295,51 +285,52 @@ class Binding (object):
         return True
 
 
-    im_self  = property (lambda self: self.get_object (),
+    im_self  = property (lambda self: self._get_object (),
                          doc = ("""
                                 The object of this binding or C{None} if it has been
-                                garbage-collected already.  This property is provided
-                                for consistency with similar property of plain methods.
+                                garbage-collected already.  The name of the property is
+                                kept identical to a similar property of method objects,
+                                therefore it is nonstandard.
 
                                 @type: object
 
                                 @note: Never override this property, override
-                                       C{L{get_object}} method instead.
+                                       C{L{_get_object}} method instead.
                                 """))
-    im_func  = property (lambda self: self.get_function (),
+    im_func  = property (lambda self: self._get_function (),
                          doc = ("""
-                                Function of this binding.  This property is provided for
-                                consistency with similar property of plain methods.
+                                Function of this binding.  The name of the property is
+                                kept identical to a similar property of method objects,
+                                therefore it is nonstandard.
 
                                 @type: function
 
                                 @note: Never override this property, override
-                                       C{L{get_function}} method instead.
+                                       C{L{_get_function}} method instead.
                                 """))
-    im_class = property (lambda self: self.get_class (),
+    im_class = property (lambda self: self._get_class (),
                          doc = ("""
-                                Class of this binding’s object.  This property is provided
-                                mainly for consistency with similar property of plain
-                                methods.
+                                Class of this binding’s object.  The name of the property
+                                is kept identical to a similar property of method objects,
+                                therefore it is nonstandard.
 
                                 @type: class or type
 
                                 @note: Never override this property, override
-                                       C{L{get_class}} method instead.
+                                       C{L{_get_class}} method instead.
                                 """))
-    im_args  = property (lambda self: self.get_arguments (),
+    im_args  = property (lambda self: self._get_arguments (),
                          doc = ("""
                                 Arguments of this binding as passed to C{L{__init__}} or
                                 C{L{wrap}} method.  When calling the binding, they are
-                                I{prepended} to arguments passed to C{L{__call__}}
-
-                                This property is in line with standard C{L{im_self}} and
-                                other properties.
+                                I{prepended} to arguments passed to C{L{__call__}}.  The
+                                name of the property is kept uniform with with
+                                C{L{im_self}} and friends, therefore it is nonstandard.
 
                                 @type: tuple
 
                                 @note: Never override this property, override
-                                       C{L{get_arguments}} method instead.
+                                       C{L{_get_arguments}} method instead.
                                 """))
 
 
@@ -368,8 +359,7 @@ class WeakBinding (Binding):
 
         - C{L{__call__}} does nothing and returns C{None};
 
-        - C{L{get_object}} returns C{None} (and C{L{im_self}} is equal to C{None},
-          accordingly);
+        - C{L{im_self}} becomes C{None};
 
         - boolean state (see C{L{__nonzero__}} method) of the binding becomes C{False}.
 
@@ -427,21 +417,7 @@ class WeakBinding (Binding):
     wrap = classmethod (wrap)
 
 
-    def get_object (self):
-        """
-        Return object associated with this binding.  It is not C{None} only if binding is
-        created for a bound method or another method with non-C{None} object I{or} the
-        object was not C{None}, but has been garbage-collected.
-
-        This method is analogous to C{L{im_self}} property.  Method is slightly faster,
-        but the same property also exists for function and method objects, so the property
-        is “standard interface”.
-
-        @note:  Never override C{im_self} property, override this method instead.
-
-        @rtype: object
-        """
-
+    def _get_object (self):
         reference = self._object
 
         if reference is not None:
@@ -467,10 +443,10 @@ class WeakBinding (Binding):
             #       improvement.  Since it makes no difference for derivatives, we
             #       sacrifice "do what is right" principle in this case.
 
-            if self.get_class () is not None:
-                return self.get_function () (reference (), *(self.get_arguments () + arguments))
+            if self._get_class () is not None:
+                return self._get_function () (reference (), *(self._get_arguments () + arguments))
             else:
-                return self.get_function () (*(self.get_arguments () + arguments))
+                return self._get_function () (*(self._get_arguments () + arguments))
         else:
             return self._call_after_garbage_collecting ()
 
