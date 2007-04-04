@@ -46,7 +46,7 @@ class AllTests (object):
     def __init__(self):
         everything = unittest.TestSuite ()
 
-        for module_name in ('all', 'bind', 'condition', 'mediator', 'signal', 'variable'):
+        for module_name in ('all', 'bind', 'condition', '_gc', 'mediator', 'signal', 'variable'):
             module = __import__('test.%s' % module_name, globals (), locals (), ('*',))
 
             setattr (self, module_name, module)

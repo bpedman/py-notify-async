@@ -1,3 +1,30 @@
+2007-04-04  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* test/_gc.py: New file.
+
+	* notify/gc.c: Add more documentation.
+	(FastGCProtector_properties): Rename `num_protected_objects' to
+	`num_active_protections'.
+	(FastGCProtector_new): Reimplement.
+	(FastGCProtector_init): Don't initialize `num_active_protections'
+	anymore: not needed with reimplemented FastGCProtector_new().
+	(FastGCProtector_protect): As a special case, do nothing for
+	`None'.
+	(FastGCProtector_unprotect): Likewise.
+	(FastGCProtector_unprotect): Don't decref/incref in succession, it
+	may well corrupt memory.
+	(FastGCProtector_get_num_active_protections): Rename from
+	FastGCProtector_get_num_protected_objects().
+	(DebugGCProtector_init, DebugGCProtector_dealloc)
+	(DebugGCProtector_protect, DebugGCProtector_unprotect)
+	(DebugGCProtector_get_num_object_protections)
+	(DebugGCProtector_get_num_protected_objects)
+	(DebugGCProtector_get_num_active_protections): New functions.
+	(initgc): Register new protector type.
+	(AbstractGCProtector_protect, AbstractGCProtector_unprotect)
+	(AbstractGCProtector_set_default, FastGCProtector_protect)
+	(FastGCProtector_unprotect): Turn to keyword-accepting functions.
+
 2007-04-02  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/base.py: Improve and fix documentation.
