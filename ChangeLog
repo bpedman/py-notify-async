@@ -1,5 +1,9 @@
 2007-04-04  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	* version: Release 0.1.6.
+
+	* NEWS: Update.
+
 	* test/_gc.py: New file.
 
 	* notify/gc.c: Add more documentation.

@@ -1,3 +1,22 @@
+--- New in Py-notify 0.1.6 -------------------------------------------
+
+* Adopted "Don't repeat yourself" principle, therefore most functions
+  that duplicate properties are renamed and made private.  This breaks
+  backward compatibility, but better now than never, since user base
+  is nonexistent.
+
+* Some bug-fixes and proper Pythonic __eq__, __ne__ and numeric
+  methods.
+
+* New DebugGCProtector class.
+
+* Improved or added documentation for many methods.
+
+* Infrastructure script improvements and fixes.
+
+* 6 more unit test (98 in total.)
+
+
 --- New in Py-notify 0.1.5 -------------------------------------------
 
 * Added a tutorial.
