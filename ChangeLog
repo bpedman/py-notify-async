@@ -1,3 +1,14 @@
+2007-04-05  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* test/variable.py (VariableDerivationTestCase.test_derivation_5):
+	New test for the added option.
+
+	* notify/variable.py
+	(AbstractValueTrackingVariable._generate_derived_type_dictionary):
+	Add `default_value' option.
+
+	* docs/tutorial.txt: Add one section.
+
 2007-04-04  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* version: Release 0.1.6.

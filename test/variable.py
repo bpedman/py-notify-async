@@ -233,6 +233,19 @@ class VariableDerivationTestCase (NotifyTestCase):
         self.assertRaises (ValueError, lambda: variable.set ([]))
 
 
+    def test_derivation_5 (self):
+        IntVariable = Variable.derive_type ('IntVariable',
+                                            allowed_value_types = int, default_value = 10)
+
+        variable = IntVariable ()
+        self.assertEqual (variable.value, 10)
+
+        variable = IntVariable (30)
+        self.assertEqual (variable.value, 30)
+
+        self.assertRaises (ValueError, lambda: variable.set ('string'))
+
+
     def test_multiple_derivation (self):
         # Derive two types and make sure they don't spoil each other's is_allowed_value()
         # method.

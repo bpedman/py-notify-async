@@ -47,7 +47,7 @@ instead of a boolean *state*.  Variables cannot be combined using
 logic operations, but have a different interesting feature:
 ``predicate()`` method.  It returns a condition, which state is always
 the given predicate over variable’s value.  In other words, if
-variable’s value changes. condition state is automatically recomputed
+variable’s value changes, condition state is automatically recomputed
 and might change as well.
 
 Main idea of both conditions and variables is similar to that of
@@ -287,7 +287,7 @@ Here is the result::
 Numbers 4 and 20 are considered acceptable by all handlers and so they
 are deemed fine overall.
 
-This example is of course trivial to overwrite without signals.  But
+This example is of course trivial to rewrite without signals.  But
 consider that handler set has changed.  Removing line
 ``is_fine.connect (only_positive)`` changes the result::
 
@@ -325,10 +325,10 @@ Conditions and Variables
 ************************
 
 Conditions and variables are pretty similar, so let’s have a look at
-both of them at once.  (In fact they even share common
-``AbstractValueObject`` base.)  Both concepts are really specific
-signal instances that are emitted *only* when the associated value (or
-boolean state) changes.
+both of them at once.  (In fact they even share a common
+``AbstractValueObject`` base.)  Both concepts are very similar to
+specific signal instances that are emitted *only* when the associated
+boolean state (or value) changes.
 
 Here is a simple example featuring variables::
 
@@ -372,7 +372,7 @@ handler.  Statement ``x.store (handler)`` is completely identical to
     x.changed.connect (handler)
 
 It is sometimes needed to call the handler with some initial state or
-value.  ``changed()`` provides a standard way to call a function with
+value.  ``store()`` provides a standard way to call a function with
 current state/value and arange to have it called again when
 state/value changes.
 
@@ -440,8 +440,9 @@ This gives the following result::
 
 Note that the ‘changed’ signal on compound condition is emitted only
 twice, despite the many changes in states of its *term* conditions.
-As for any other condition (or variable), it is only emitted when the
-state has indeed changed, not just when it might have changed.
+As for any other condition (or variable), the signal is only emitted
+when the state has indeed changed, not just when it might have
+changed.
 
 
 
@@ -478,7 +479,7 @@ not each time state is recomputed.
 
 
 
-Garbage-Collection magic
+Garbage-Collection Magic
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 Example in the previous section may look somewhat strange to you: the
@@ -487,8 +488,8 @@ it is not referenced from anywhere.  Yet the example works.  In fact,
 conditions and variables do certain tricks ‘behind the scenes’ to
 ensure they are not garbage-collected while they are used.  For
 predicate conditions this means the variable is alive (in our case it
-is referenced) and at least one handler is connected (in our case it
-is ``print_state()``.)
+is referenced, therefore it is alive) and at least one handler is
+connected (in our case it is ``print_state()``.)
 
 In general, you can be sure that conditions and variables will not be
 deleted as long as they are used in some common sense.  And they
@@ -497,6 +498,49 @@ leak here.
 
 .. [#] Deletion may happen in a garbage collector run, so it will not
        necessarily happen instantly.
+
+
+
+Deriving New Types
+~~~~~~~~~~~~~~~~~~
+
+Conditions and variables are good, but sometimes you need just some
+more functionality than the standard classes provide.  For instance,
+you may want a variable which value can only be a string or ``None``.
+Standard ``Variable`` class will accept any value, so we need a custom
+class for this.  Luckily, there is ``is_allowed_value()`` method
+specifically for this purpose, which can be overriden in our new
+class::
+
+    import types
+    from notify.all import *
+
+    class StringVariable (Variable):
+        def is_allowed_value (self, value):
+            return isinstance (value, (types.NoneType, basestring))
+
+    variable = StringVariable ()
+    variable.value = 'a string'
+    variable.value = 100
+
+The first assignment will work just fine, but second will raise a
+``ValueError``, allowing you to catch programming errors quickly.
+
+Now suppose we decide that ``None`` isn’t an acceptable value by new
+rules.  Removing ``NoneType`` from the call to ``isinstance()``,
+however, will make zero-argument constructor raise an exception,
+because no arguments for ``Variable`` means ``None`` value.  So, one
+idea is to override ``__init__()`` in our ``StringVariable`` class to
+make ``value`` argument non-optional.  However, there is a different
+way::
+
+    StringVariable = Variable.derive_type ('StringVariable',
+                                           allowed_value_types = basestring)
+
+Constructor function of the new type will have a non-optional argument
+automatically, because ``None`` is not of ``basestring`` type.
+Whether to use ``derive_type()`` or not is up to you—as you have seen,
+standard derivation is possible as well.
 
 
 

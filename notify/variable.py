@@ -184,10 +184,19 @@ class AbstractValueTrackingVariable (AbstractVariable):
                   % AbstractValueObject._get_object (options)) in options, functions
 
         else:
+            if 'default_value' in options:
+                if (    'is_allowed_value' in functions
+                    and not functions['is_allowed_value'] (None, options['default_value'])):
+                   raise ValueError ("`default_value' of `%s' is not within allowed value set"
+                                     % (options['default_value'],))
+
+                initial_default = ' = default_value'
+
             # Since our is_allowed_value() implementation never accesses `self', it is OK
             # to pass None as that.
-            if 'is_allowed_value' not in functions or functions['is_allowed_value'] (None, None):
+            elif 'is_allowed_value' not in functions or functions['is_allowed_value'] (None, None):
                 initial_default = ' = None'
+
             else:
                 initial_default = ''
 
