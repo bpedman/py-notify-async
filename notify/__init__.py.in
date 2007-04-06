@@ -110,7 +110,7 @@ Now a final, quite complicated, example introducing conditions and some other fe
     ...     else:
     ...         sys.stdout.write ('Missing pilots or fuel\\n')
     ...
-    ... ready = pilots.is_not_empty () & fuel.predicate (lambda amount: amount > 0)
+    ... ready = pilots.is_true () & fuel.predicate (lambda amount: amount > 0)
     ... ready.store (ready_state_changed)
     ...
     ... pilots.value = 'Jen and Jim'
@@ -122,15 +122,15 @@ First line of example shows a way to save typing by importing all package conten
 once.  Whether to use this technique is up to you.  Following lines up to C{ready = ...}
 should be familiar.
 
-Now let’s consider that assignment closer.  First, C{L{pilots.is_not_empty ()
-<variable.AbstractVariable.is_not_empty>}} code creates a condition that is true if
-C{pilots} value is a non-empty sequence.  It is just a convenience wrapper over
-C{L{AbstractVariable.predicate <variable.AbstractVariable.predicate>}} method.  Now, the
-latter is also used directly in this line of code.  It creates a condition that is true as
-long as variable’s value conforms to the passed in predicate.  In particular,
-C{fuel.predicate (lambda amount: amount > 0)} creates a condition that is true if
-C{fuel}’s value is greater than zero.  Predicate conditions will recompute their state
-each time variable’s value changes and that’s the point in using them.
+Now let’s consider that assignment closer.  First, C{L{pilots.is_true ()
+<variable.AbstractVariable.is_true>}} code creates a condition that is true depending on
+C{pilots} value (true for non-empty sequences in our case.)  It is just a convenience
+wrapper over C{L{AbstractVariable.predicate <variable.AbstractVariable.predicate>}}
+method.  Now, the latter is also used directly in this line of code.  It creates a
+condition that is true as long as variable’s value conforms to the passed in predicate.
+In particular, C{fuel.predicate (lambda amount: amount > 0)} creates a condition that is
+true if C{fuel}’s value is greater than zero.  Predicate conditions will recompute their
+state each time variable’s value changes and that’s the point in using them.
 
 Finally, two just constructed conditions are combined into a third condition using ‘and’
 operator (C{&}).  This third condition will be true if and only if I{both} its term

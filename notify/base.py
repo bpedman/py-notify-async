@@ -72,7 +72,7 @@ class AbstractValueObject (object):
         Get the current value of the object.  Note that the default implementation just
         raises C{NotImplementedError}, since the current value is not stored by default.
 
-        @rtype: object
+        @rtype: C{object}
         """
 
         raise_not_implemented_exception (self)
@@ -85,7 +85,7 @@ class AbstractValueObject (object):
         @raises NotImplementedError: if the object is not mutable.
         @raises ValueError:          if C{value} is not suitable for some reason.
 
-        @rtype:                      bool
+        @rtype:                      C{bool}
         @returns:                    Whether setting value had any effect, i.e. C{True}
                                      if C{value} is not equal to result of C{L{get}}
                                      method.
@@ -103,7 +103,7 @@ class AbstractValueObject (object):
         This method may be used from outside, but you should consider using C{L{mutable}}
         property instead, as it is public and more convenient.
 
-        @rtype: bool
+        @rtype: C{bool}
         """
 
         return self.set.im_func is not AbstractValueObject.set.im_func
@@ -138,12 +138,17 @@ class AbstractValueObject (object):
         accumulator, but derived classes may wish to override this.
 
         Note that this method will be called only when getting C{changed} property and
-        only if there is no signal yet.  I.e. only for the first invocation at all or
-        first invocation after a call to C{L{_remove_signal}}.
+        only if there is no signal yet.  I.e. only for the first reading at all or first
+        reading after a call to C{L{_remove_signal}}.
 
-        @rtype:   AbstractSignal, object
-        @returns: A signal object I{or} a reference to one (i.e. object with C{__call__}
-                  method returning a signal.)
+        Return value of this method is a little bit tricky.  It must return a tuple of two
+        objects, first being an instance of C{L{AbstractSignal}}.  The second object must
+        be either the same signal object I{or} a reference to it, i.e. object with
+        C{__call__} method returning the signal.  In the second case, you will most likely
+        want to return a weak reference, but there is no restriction.
+
+        @rtype:   C{L{AbstractSignal}}, C{object}
+        @returns: See method description for details.
         """
 
         signal = Signal ()
@@ -159,7 +164,7 @@ class AbstractValueObject (object):
         This method I{can} be called from outside, but should normally be left to
         subclasses of C{AbstractValueObject}.
 
-        @rtype: bool
+        @rtype: C{bool}
         """
 
         return self.__signal is not None
@@ -175,7 +180,7 @@ class AbstractValueObject (object):
         This function I{must not} be called from outside.  It is only for descendant
         classes’ use.
 
-        @rtype:   bool
+        @rtype:   C{bool}
         @returns: Whether ‘changed’ signal is removed.
         """
 
@@ -212,7 +217,7 @@ class AbstractValueObject (object):
 
         @raises TypeError: if C{handler} is not callable or cannot be called with
                            C{arguments} and current object value.
-        @rtype:            bool
+        @rtype:            C{bool}
         @returns:          Whether C{handler} is connected to ‘changed’ signal.
         """
 
@@ -319,7 +324,7 @@ class AbstractValueObject (object):
         @raises TypeError: if C{mediator} is neither C{None} nor an instance of
                            C{L{AbstractMediator <mediator.AbstractMediator>}}.
 
-        @rtype:            bool
+        @rtype:            C{bool}
         @returns:          Whether C{self} and C{value_object} have been synchronized
                            before (using C{mediator} if it is not C{None}.)
 
@@ -373,7 +378,7 @@ class AbstractValueObject (object):
         @raises TypeError: if C{mediator} is neither C{None} nor an instance of
                            C{L{AbstractMediator <mediator.AbstractMediator>}}.
 
-        @rtype:            bool
+        @rtype:            C{bool}
         @returns:          Whether C{self} and C{value_object} have been synchronized
                            before (using C{mediator} if it is not C{None}.)
 
@@ -430,7 +435,7 @@ class AbstractValueObject (object):
 
         For convenience, this method always returns C{True}.
 
-        @rtype:   bool
+        @rtype:   C{bool}
         @returns: Always C{True}.
         """
 
@@ -484,7 +489,7 @@ class AbstractValueObject (object):
         C{L{__str__}}.  If you use your own (and that is perfectly fine), you don’t need
         to override this method.
 
-        @rtype:   list
+        @rtype:   C{list}
         @returns: List of description strings for this object.
         """
 
@@ -548,7 +553,7 @@ class AbstractValueObject (object):
                            in C{getter} option; the second is the C{value} as passed to
                            C{L{set}} method.
 
-        @rtype:            type
+        @rtype:            C{type}
 
         @raises TypeError: if C{new_class_name} is not a string or is not a valid Python
                            identifier.
@@ -678,7 +683,7 @@ class AbstractValueObject (object):
         This is a helper for C{_generate_derived_type_dictionary} only.  It should not be
         called from outside.
 
-        @rtype: str
+        @rtype: C{str}
         """
 
         if 'object' in options:

@@ -1,4 +1,26 @@
+2007-04-06  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/base.py: Improve and expand documentation.
+	* notify/bind.py: Likewise.
+	* notify/condition.py: Likewise.
+	* notify/mediator.py: Likewise.
+	* notify/signal.py: Likewise.
+	* notify/utils.py: Likewise.
+	* notify/variable.py: Likewise.
+
 2007-04-05  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/condition.py (Condition.set): Return _set() value.
+	* notify/variable.py (Variable.set): Likewise.
+
+	* notify/variable.py (AbstractVariable.is_not_empty): Remove
+	function, since it is equal to is_true() except it raises on
+	non-sequence values.
+
+	* test/variable.py (BaseVariableTestCase.test_is_not_empty):
+	Remove test.
+
+	* MANIFEST.in: Include several forgotten files.
 
 	* test/variable.py (VariableDerivationTestCase.test_derivation_5):
 	New test for the added option.

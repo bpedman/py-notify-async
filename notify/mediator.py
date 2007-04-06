@@ -87,7 +87,7 @@ class AbstractMediator (object):
         raise any exception if mediator imposes some restrictions on C{value} and it
         doesn’t satisfy them.
 
-        @rtype: object
+        @rtype: C{object}
         """
 
         raise_not_implemented_exception (self)
@@ -98,7 +98,7 @@ class AbstractMediator (object):
         raise any exception if mediator imposes some restrictions on C{value} and it
         doesn’t satisfy them.
 
-        @rtype: object
+        @rtype: C{object}
         """
 
         raise_not_implemented_exception (self)
@@ -167,7 +167,7 @@ class AbstractMediator (object):
         except those mentioned above and that it is an instance of the C{AbstractMediator}
         class.
 
-        @rtype: AbstractMediator
+        @rtype: C{AbstractMediator}
         """
 
         return _ReverseMediator (self)
@@ -181,7 +181,7 @@ class AbstractMediator (object):
         However, it should—as much as (efficiently) possible—detect equal mediators of the
         same class.
 
-        @rtype: bool
+        @rtype: C{bool}
         """
 
         return self is other
@@ -190,7 +190,7 @@ class AbstractMediator (object):
         """
         Determine if two mediators are not equal.  See C{L{__eq__}} for details.
 
-        @rtype: bool
+        @rtype: C{bool}
         """
 
         equal = self.__eq__(other)

@@ -120,7 +120,7 @@ def is_valid_identifier (identifier):
     Determine if C{identifier} is a valid Python identifier.  This function never raises
     any exceptions.  If C{identifier} is not a string, it simply returns C{False}.
 
-    @rtype: bool
+    @rtype: C{bool}
     """
 
     return (isinstance (identifier, basestring)
@@ -153,7 +153,7 @@ class DummyReference (object):
         """
         Return the C{object} specified at construction time.
 
-        @rtype: object
+        @rtype: C{object}
         """
 
         return self.__object

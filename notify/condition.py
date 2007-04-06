@@ -51,6 +51,12 @@ class AbstractCondition (AbstractValueObject):
     Abstract base class of condition hierarchy tree.  All conditions derive from this
     class, so you should use C{isinstance (..., AbstractCondition)}, not
     C{isinstance (..., Condition)}.
+
+    @cvar TRUE:
+    A condition that is always true and never changes its state.
+
+    @cvar FALSE:
+    A condition that is always false and never changes its state.
     """
 
     __slots__ = ()
@@ -73,7 +79,7 @@ class AbstractCondition (AbstractValueObject):
         words, this static method returns a condition which is either always true or
         always false.
 
-        @rtype: AbstractCondition
+        @rtype: C{AbstractCondition}
         """
 
         if state:
@@ -90,7 +96,7 @@ class AbstractCondition (AbstractValueObject):
         method.  Existance of C{__nonzero__} method simplifies condition usage in
         C{if}-like statements.
 
-        @rtype:   bool
+        @rtype:   C{bool}
         @returns: State of the condition.
         """
 
@@ -112,13 +118,31 @@ class AbstractCondition (AbstractValueObject):
         and that it is an instance of C{AbstractCondition} or a subclass.  In particular,
         the returned object may or may not be identical to an existing one.
 
-        @rtype: AbstractCondition
+        @rtype: C{AbstractCondition}
         """
 
         return _Not (self)
 
 
     def __and__(self, other):
+        """
+        Return a condition, whose state is always logical ‘and’ function of this condition
+        state and C{other} state.
+
+        You don’t need this if you just want to test condition state: both
+        C{condition1 and condition2} and C{condition1 & condition2} have the same logical
+        value, but former doesn’t involve object creation.  However, the returned object
+        has its own ‘changed’ signal.  So, you should use this method if you need a
+        I{trackable} condition, not one-time value.
+
+        @note:
+        There is no guarantee on the returned object except as noted above about its state
+        and that it is an instance of C{AbstractCondition} or a subclass.  In particular,
+        the returned object may or may not be identical to an existing one.
+
+        @rtype: C{AbstractCondition}
+        """
+
         if isinstance (other, AbstractCondition):
             # Note: similar checks for `self' are performed in appropriate classes.
 
@@ -134,6 +158,24 @@ class AbstractCondition (AbstractValueObject):
 
 
     def __or__(self, other):
+        """
+        Return a condition, whose state is always logical ‘or’ function of this condition
+        state and C{other} state.
+
+        You don’t need this if you just want to test condition state: both
+        C{condition1 or condition2} and C{condition1 | condition2} have the same logical
+        value, but former doesn’t involve object creation.  However, the returned object
+        has its own ‘changed’ signal.  So, you should use this method if you need a
+        I{trackable} condition, not one-time value.
+
+        @note:
+        There is no guarantee on the returned object except as noted above about its state
+        and that it is an instance of C{AbstractCondition} or a subclass.  In particular,
+        the returned object may or may not be identical to an existing one.
+
+        @rtype: C{AbstractCondition}
+        """
+
         if isinstance (other, AbstractCondition):
             # Note: similar checks for `self' are performed in appropriate classes.
 
@@ -149,6 +191,23 @@ class AbstractCondition (AbstractValueObject):
 
 
     def __xor__(self, other):
+        """
+        Return a condition, whose state is always logical ‘xor’ function of this condition
+        state and C{other} state.
+
+        The returned object has its own ‘changed’ signal, so primary use of this method is
+        to receive a I{trackable} condition, not one-time value.  However, since there is
+        no logical ‘xor’ function in Python, you may use it to compute a one-time value,
+        though it is not efficient.
+
+        @note:
+        There is no guarantee on the returned object except as noted above about its state
+        and that it is an instance of C{AbstractCondition} or a subclass.  In particular,
+        the returned object may or may not be identical to an existing one.
+
+        @rtype: C{AbstractCondition}
+        """
+
         if isinstance (other, AbstractCondition):
             # Note: similar checks for `self' are performed in appropriate classes.
 
@@ -184,7 +243,7 @@ class AbstractCondition (AbstractValueObject):
         and that it is an instance of C{AbstractCondition} or a subclass.  In particular,
         the returned object may or may not be identical to an existing one.
 
-        @rtype: AbstractCondition
+        @rtype: C{AbstractCondition}
         """
 
         if  (   isinstance (true_condition,  AbstractCondition)
@@ -298,7 +357,12 @@ class Condition (AbstractStateTrackingCondition):
 
 
     def set (self, value):
-        self._set (value)
+        """
+        Set the state of the condition to C{value}.  Value is first converted using
+        C{bool} function, so it doesn’t need to be either C{True} or C{False}.
+        """
+
+        return self._set (value)
 
 
 
@@ -351,7 +415,7 @@ class WatcherCondition (AbstractStateTrackingCondition):
     condition from A to B and those have different states, watcher’s ‘changed’ signal will
     get emitted.  With manual reconnecting you’d need to track that case specially.
 
-    Watcher condition that doesn’t watch anything at the moment always has state C{False}.
+    Watcher condition that doesn’t watch anything at the moment always has C{False} state.
 
     @see:  variable.WatcherVariable
     """
@@ -364,6 +428,8 @@ class WatcherCondition (AbstractStateTrackingCondition):
         """
         Create a new wather condition, watching C{condition_to_watch} initially.  The only
         argument is optional and can be omitted or set to C{None}.
+
+        @see:  C{L{watch}}
         """
 
         super (WatcherCondition, self).__init__(False)
@@ -373,6 +439,16 @@ class WatcherCondition (AbstractStateTrackingCondition):
 
 
     def watch (self, condition_to_watch):
+        """
+        Watch C{condition_to_watch} instead of whatever is watched now.  This method
+        disconnects internal handler from the old condition and connects it to the new
+        one, if new is not C{None}.  Watching a different condition might change own
+        state, in which case ‘changed’ signal will get emitted.
+
+        @raises TypeError: if C{condition_to_watch} is not an instance of
+                           C{L{AbstractCondition}} and not C{None}.
+        """
+
         if (condition_to_watch is not None
             and (   not isinstance (condition_to_watch, AbstractCondition)
                  or condition_to_watch is self)):

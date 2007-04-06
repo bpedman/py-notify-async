@@ -1,5 +1,5 @@
 include            COPYING
-include		   AUTHORS INSTALL README
+include		   AUTHORS INSTALL README NEWS
 include		   HACKING TODO
 include		   MANIFEST MANIFEST.in
 
@@ -13,3 +13,6 @@ exclude		   notify/__init__.py
 
 recursive-include  test      *.py
 recursive-include  benchmark *.py
+
+include            docs/tutorial.txt
+include            docs/*.css

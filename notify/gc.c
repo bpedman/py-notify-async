@@ -117,7 +117,7 @@ nothing.\n\
 \n\
 For convenience, this function always returns C{object} itself.\n\
 \n\
-@rtype: object"
+@rtype: C{object}"
 
 #define ABSTRACT_GC_PROTECTOR_UNPROTECT_DOC "\
 unprotect(self, object) \
@@ -132,7 +132,7 @@ C{None} without having protected it first, because it will be a no-op and not le
 \n\
 For convenience, this function always returns C{object} itself.\n\
 \n\
-@rtype: object"
+@rtype: C{object}"
 
 #define ABSTRACT_GC_PROTECTOR_SET_DEFAULT_DOC "\
 set_default(protector) \

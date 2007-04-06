@@ -80,25 +80,6 @@ class BaseVariableTestCase (NotifyTestCase):
         self.assert_(is_true)
 
 
-    def test_is_not_empty (self):
-        variable     = Variable ()
-        is_not_empty = variable.is_not_empty ()
-
-        self.assert_(not is_not_empty)
-
-        variable.value = (1, 2, 3)
-        self.assert_(is_not_empty)
-
-        variable.value = 'a string'
-        self.assert_(is_not_empty)
-
-        variable.value = []
-        self.assert_(not is_not_empty)
-
-        variable.value = ''
-        self.assert_(not is_not_empty)
-
-
     def test_is_allowed_value (self):
 
         class PositiveVariable (Variable):

@@ -158,7 +158,7 @@ class Binding (object):
 
         @note:  Never override C{im_self} property, override this method instead.
 
-        @rtype: object
+        @rtype: C{object}
         """
 
         return self._object
@@ -184,7 +184,7 @@ class Binding (object):
 
         @note:  Never override C{im_class} property, override this method instead.
 
-        @rtype: class or type
+        @rtype: C{types.ClassType} or C{type}
         """
 
         return self._class
@@ -197,7 +197,7 @@ class Binding (object):
 
         @note:  Never override C{im_args} property, override this method instead.
 
-        @rtype: tuple
+        @rtype: C{tuple}
         """
 
         return self._arguments
@@ -210,7 +210,7 @@ class Binding (object):
         I{prepended} to arguments of this function before being passed to the wrapped
         callable.
 
-        @rtype:            object
+        @rtype:            C{object}
         @raises exception: whatever wrapped method raises, if anything.
         """
 
@@ -229,7 +229,7 @@ class Binding (object):
         wrap equal methods and have equal L{argument lists <im_args>}.  A binding with an
         empty argument list is also equal to its wrapped method or function.
 
-        @rtype: bool
+        @rtype: C{bool}
         """
 
         if self is other:
@@ -261,7 +261,7 @@ class Binding (object):
         """
         Determine if C{self} is not equal to C{other}.  See L{__eq__} for details.
 
-        @rtype: bool
+        @rtype: C{bool}
         """
 
         equal = self.__eq__(other)
@@ -278,7 +278,7 @@ class Binding (object):
         mainly exists for L{weak bindings <WeakBinding>}, for which it returns C{False}
         if binding’s object has been garbage-collected.
 
-        @rtype:   bool
+        @rtype:   C{bool}
         @returns: Always C{True} for this class.
         """
 
@@ -336,6 +336,13 @@ class Binding (object):
 
 
 BindingCompatibleTypes = (types.MethodType, Binding)
+"""
+Types ‘compatible’ with C{L{Binding}} to certain extent.  These include
+C{types.MethodType} and C{Binding} itself.  Both have C{im_self}, C{im_class} and
+C{im_func} properties (though C{im_args} is unique to C{Binding}.)  Rationale to have this
+variable is similar to that of C{weakref.ProxyTypes}.  In particular, implementation
+itself uses the variable several times in calls to C{isinstance} function.
+"""
 
 
 
@@ -431,7 +438,7 @@ class WeakBinding (Binding):
         Like L{Binding.__call__}, but account for garbage-collected objects.  If object
         has been garbage-collected, then do nothing and return C{None}.
 
-        @rtype:            object
+        @rtype:            C{object}
         @raises exception: whatever wrapped method raises, if anything.
         """
 
@@ -461,7 +468,7 @@ class WeakBinding (Binding):
         the binding was created without an object (i.e. with C{None}) to begin with, this
         method will never be called at all.
 
-        @rtype: object
+        @rtype: C{object}
         """
 
         return None
@@ -482,7 +489,7 @@ class WeakBinding (Binding):
         if binding is in its initial and fully functional state, but for weak bindings it
         means exactly what is stated in the previous statement.
 
-        @rtype: bool
+        @rtype: C{bool}
         """
 
         return self._object is not None

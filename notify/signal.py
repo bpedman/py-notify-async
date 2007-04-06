@@ -166,7 +166,7 @@ class AbstractSignal (object):
             first invocation of C{L{accumulate_value}} method.  Default implementation
             returns C{None}.
 
-            @rtype: object
+            @rtype: C{object}
             """
 
             return None
@@ -176,7 +176,7 @@ class AbstractSignal (object):
             Accumulate C{value_to_add} into C{accumulated_value} and return the result.
             Result will be passed to next invocation of this method, if any.
 
-            @rtype: object
+            @rtype: C{object}
             """
 
             raise_not_implemented_exception (self)
@@ -186,7 +186,7 @@ class AbstractSignal (object):
             Examine C{accumulated_value} and decide if signal emission should continue.
             Default implementation always returns C{True}.
 
-            @rtype:   bool
+            @rtype:   C{bool}
             @returns: Whether signal emission should continue.
             """
 
@@ -200,7 +200,7 @@ class AbstractSignal (object):
             C{L{AbstractSignal.stop_emission}} method.  Default implementation does
             nothing and returns C{accumulated_value} unchanged.
 
-            @rtype: object
+            @rtype: C{object}
             """
 
             return accumulated_value
@@ -309,7 +309,7 @@ class AbstractSignal (object):
         completely: if no one is listening, why emit at all?  This can be handy if
         computing emission arguments is not cheap.
 
-        @rtype:   bool
+        @rtype:   C{bool}
         @returns: C{True} if there are handlers or if there I{might} be handlers.
         """
 
@@ -319,7 +319,7 @@ class AbstractSignal (object):
         """
         Same as C{L{has_handlers}} method.
 
-        @rtype:   bool
+        @rtype:   C{bool}
         @returns: C{True} if there are handlers or if there I{might} be handlers.
         """
 
@@ -334,7 +334,7 @@ class AbstractSignal (object):
         when creating string representation of a signal or L{value
         <base.AbstractValueObject>} based on it.
 
-        @rtype:   int
+        @rtype:   C{int}
         @returns: Total number of connected handlers.
         """
 
@@ -347,7 +347,7 @@ class AbstractSignal (object):
         this method doesn’t detect if there are several handlers equal to C{handler}
         connected.
 
-        @rtype: bool
+        @rtype: C{bool}
         """
 
         raise_not_implemented_exception (self)
@@ -358,7 +358,7 @@ class AbstractSignal (object):
         Note that if there are several handlers equal to C{handler} connected, all are
         either blocked or non-blocked.
 
-        @rtype: bool
+        @rtype: C{bool}
         """
 
         raise_not_implemented_exception (self)
@@ -392,7 +392,7 @@ class AbstractSignal (object):
         connected yet), or does nothing.  See documentation of C{L{connect}} method for
         details.
 
-        @rtype:   bool
+        @rtype:   C{bool}
         @returns: C{True} if it has connected C{handler} with C{arguments}, C{False} if it
                   had been connected already.
         """
@@ -416,7 +416,7 @@ class AbstractSignal (object):
 
         This method I{must not} be called from outside.
 
-        @rtype: object
+        @rtype: C{object}
         """
 
         return WeakBinding.wrap (handler, arguments)
@@ -466,7 +466,7 @@ class AbstractSignal (object):
         need to call this method if the object is ‘thrown away’ already and handlers are
         ‘harmless’.  For details, please see C{L{WeakBinding}} class documentation.
 
-        @rtype:   bool
+        @rtype:   C{bool}
         @returns: C{True} if C{handler} has been disconnected; C{False} if it was not even
                   connected or had more than one connection.
         """
@@ -486,7 +486,7 @@ class AbstractSignal (object):
         need to call this method if the object is ‘thrown away’ already and handlers are
         ‘harmless’.  For details, please see C{L{WeakBinding}} class documentation.
 
-        @rtype:   bool
+        @rtype:   C{bool}
         @returns: C{True} if C{handler} has been disconnected; C{False} if it was not even
                   connected to begin with.
         """
@@ -513,7 +513,7 @@ class AbstractSignal (object):
         the same number of times as this method for a handler to be considered
         non-blocked.  This is usually what you want.
 
-        @rtype:   bool
+        @rtype:   C{bool}
         @returns: C{True} if C{handler} has been blocked, C{False} if it is not connected
                   to begin with.
         """
@@ -528,7 +528,7 @@ class AbstractSignal (object):
         must be unblocked exactly the same number of times as blocked, to become
         non-blocked again.
 
-        @rtype:   bool
+        @rtype:   C{bool}
         @returns: C{True} if C{handler} becomes non-blocked; C{False} if it is not even
                   connected or still remains blocked.
         """
@@ -547,7 +547,7 @@ class AbstractSignal (object):
         Note that if a given handler was connected to this signal with any arguments,
         C{arguments} to this method are I{appended} to those specified at connection time.
 
-        @rtype:   object
+        @rtype:   C{object}
         @returns: Value, determined by subclass and, possibly, by its
                   L{accumulator <AbstractAccumulator>}.
         """
@@ -558,7 +558,7 @@ class AbstractSignal (object):
         """
         Same as C{L{emit}} method.
 
-        @rtype:   object
+        @rtype:   C{object}
         @returns: Value, determined by subclass and, possibly, by its
                   L{accumulator <AbstractAccumulator>}.
         """
@@ -570,7 +570,7 @@ class AbstractSignal (object):
         Internal getter for the C{L{emission_level}} property.  Outside code should use
         that property, not the method directly.
 
-        @rtype: int
+        @rtype: C{int}
         """
 
         raise_not_implemented_exception (self)
@@ -580,7 +580,7 @@ class AbstractSignal (object):
         Internal getter for the C{L{emission_stopped}} property.  Outside code should use
         that property, not the method directly.
 
-        @rtype: bool
+        @rtype: C{bool}
         """
 
         raise_not_implemented_exception (self)
@@ -599,7 +599,7 @@ class AbstractSignal (object):
         ‘correct’ them, stop emission and immediately reemit signal with new, fixed
         arguments.
 
-        @rtype:   bool
+        @rtype:   C{bool}
         @returns: C{True} if this method stopped anything.
         """
 

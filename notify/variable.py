@@ -68,14 +68,27 @@ class AbstractVariable (AbstractValueObject):
 
 
     def predicate (self, predicate):
+        """
+        Construct a condition, whose state is always given C{predicate} over this variable
+        value.
+
+        @raises TypeError: if C{predicate} is not callable.
+        @rtype:            C{L{AbstractCondition}}
+        """
+
         return _PredicateOverVariable (predicate, self)
 
 
     def is_true (self):
-        return self.predicate (bool)
+        """
+        Identical to C{L{predicate} (bool)}.  It was decided to have a separate function
+        rather than provide default value for the only argument of C{predicate} only for a
+        better name.
 
-    def is_not_empty (self):
-        return self.predicate (lambda sequence: sequence is not None and len (sequence) > 0)
+        @rtype: C{L{AbstractCondition}}
+        """
+
+        return self.predicate (bool)
 
 
 
@@ -128,7 +141,7 @@ class AbstractValueTrackingVariable (AbstractVariable):
         variable’s value set, you need to create a new variable type, either using
         C{L{derive_type}} method or directly.
 
-        @rtype: bool
+        @rtype: C{bool}
         """
 
         return True
@@ -227,20 +240,55 @@ class AbstractValueTrackingVariable (AbstractVariable):
 
 class Variable (AbstractValueTrackingVariable):
 
+    """
+    Standard implementation of a mutable variable.  It is an all-purpose class suitable
+    for almost any use.  In particular, you may not derive new variable types and just use
+    mutable variables everywhere.  Deriving new types is more ‘proper’ and can make
+    difference if you have some code that differentiates between mutable and immutable
+    variables, but using this class is somewhat simpler.  Additionally, you need new types
+    if you want to restrict the set of possible variable values.
+    """
+
     __slots__ = ()
 
 
     def set (self, value):
-        self._set (value)
+        return self._set (value)
 
 
 
 class WatcherVariable (AbstractValueTrackingVariable):
 
+    """
+    A variable that has changeable I{watched variable} and always has a value that matches
+    that variable’s one.
+
+    While it may seem redundant, watcher variables are convenient at times.  Instead of
+    disconnecting your handler(s) from one variable’s ‘changed’ signal and connecting to
+    another, you can create a proxy watcher variable and connect the handlers to its
+    signal instead.  This is practically the same, but changing watched variable is one
+    operation, while reconnecting handlers to a different variable is 2 × (number of
+    handlers) ones.  Another advantage of a watcher is that when you change watched
+    variable from A to B and those have different values, watcher’s ‘changed’ signal will
+    get emitted.  With manual reconnecting you’d need to track that case specially.
+
+    Watcher variable that doesn’t watch anything at the moment always has value of
+    C{None}.
+
+    @see:  condition.WatcherCondition
+    """
+
     __slots__ = ('_WatcherVariable__watched_variable')
 
 
     def __init__(self, variable_to_watch = None):
+        """
+        Create a new wather variable, watching C{variable_to_watch} initially.  The only
+        argument is optional and can be omitted or set to C{None}.
+
+        @see:  C{L{watch}}
+        """
+
         super (WatcherVariable, self).__init__(None)
 
         self.__watched_variable = None
@@ -248,6 +296,16 @@ class WatcherVariable (AbstractValueTrackingVariable):
 
 
     def watch (self, variable_to_watch):
+        """
+        Watch C{variable_to_watch} instead of whatever is watched now.  This method
+        disconnects internal handler from the old variable and connects it to the new one,
+        if new is not C{None}.  Watching a different variable might change own state, in
+        which case ‘changed’ signal will get emitted.
+
+        @raises TypeError: if C{variable_to_watch} is not an instance of
+                           C{L{AbstractVariable}} and not C{None}.
+        """
+
         if (variable_to_watch is not None
             and (   not isinstance (variable_to_watch, AbstractVariable)
                  or variable_to_watch is self)):
