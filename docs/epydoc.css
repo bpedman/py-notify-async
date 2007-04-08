@@ -304,6 +304,10 @@ td.metadata-index
 {
 	font-family:	monospace;
 }
+.summary-name
+{
+	font-family:	monospace;
+}
 .summary-sig-name
 {
 	color:		#006080;

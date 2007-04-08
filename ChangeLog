@@ -1,5 +1,14 @@
 2007-04-08  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	* benchmark/benchmarking.py: Modify to allow executing only some
+	benchmarks by their names,
+
+	* benchmark/logical.py: New file.
+
+	* docs/epydoc.css: Make more names monospace.
+
+	* generate-reference.py: More post-processing.
+
 	* test/condition.py
 	(WatcherConditionTestCase.test_watcher_condition_1): Test new
 	`watched_condition' property too.

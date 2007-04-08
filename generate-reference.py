@@ -90,10 +90,16 @@ paren_regex_1 = re.compile ('class="summary-sig-name">'
 paren_regex_2 = re.compile ('class="(summary-)?sig-name">[a-zA-Z_0-9]*[a-zA-Z0-9]</span>\\(')
 
 def replace_paren_1 (match_object):
-    return match_object.group (0) [:-1] + ' ('
+    return match_object.group (0) [:-1] + ' ('
 
 def replace_paren_2 (match_object):
-    return match_object.group (0) [:-1] + ' ('
+    return match_object.group (0) [:-1] + ' ('
+
+
+default_value_regex = re.compile ('>=<span class="(summary-)?sig-default">')
+
+def replace_default_value (match_object):
+    return '> = ' + match_object.group (0) [2:]
 
 
 hr_regex = re.compile ('<hr */>')
@@ -117,6 +123,8 @@ for root, directories, filenames in os.walk (output_directory):
 
         contents = paren_regex_1.sub (replace_paren_1, contents)
         contents = paren_regex_2.sub (replace_paren_2, contents)
+
+        contents = default_value_regex.sub (replace_default_value, contents)
 
         # There is no charset name...
         contents = contents.replace ('</head>',

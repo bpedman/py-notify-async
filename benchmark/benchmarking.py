@@ -44,23 +44,39 @@ _NUM_RUNS = 5
 
 
 
-def load_benchmarks (source):
-    if isinstance (source, FunctionType):
-        source = source ()
+def load_benchmarks (source, *benchmark_names):
+    toplevel_names = {}
 
-    if isinstance (source, (Benchmark, BenchmarkSuite)):
-        return source
+    for name in benchmark_names:
+        parts = name.split ('.', 2)
 
+        if len (parts) == 1:
+            toplevel_names[parts[0]] = ()
+        else:
+            if parts[0] in toplevel_names:
+                if toplevel_names[parts[0]]:
+                    toplevel_names[parts[0]].append (parts[1])
+            else:
+                toplevel_names[parts[0]] = [parts[1]]
+                
     suite = BenchmarkSuite ()
 
-    if isinstance (source, ModuleType):
-        for name in dir (source):
+    if isinstance (source, ModuleType) or toplevel_names:
+        if toplevel_names:
+            subobjects = toplevel_names.keys ()
+        else:
+            subobjects = dir (source)
+
+        for name in subobjects:
             object = getattr (source, name)
 
             if isinstance (object, (ClassType, TypeType)) and issubclass (object, Benchmark):
                 suite.append (object ())
             elif isinstance (object, BenchmarkSuite):
                 suite.append (object)
+            elif isinstance (object, ModuleType):
+                if toplevel_names:
+                    suite.append (load_benchmarks (object, *toplevel_names[name]))
 
     else:
         raise TypeError ("unsupported `source' type (%s)" % type (source))
@@ -160,7 +176,7 @@ class BenchmarkSuite (object):
 
 class BenchmarkProgram (object):
 
-    def __init__(self, object = '__main__', benchmark_name = None):
+    def __init__(self, object = '__main__', default_benchmark_name = None):
         if isinstance (object, basestring):
             self.__object = __import__(object)
             for name_part in object.split ('.') [1:]:
@@ -168,8 +184,8 @@ class BenchmarkProgram (object):
         else:
             self.__object = object
 
-        self.__benchmark_name = benchmark_name
-        self.__options        = None
+        self.__default_benchmark_name = default_benchmark_name
+        self.__options                = None
 
         self.load_benchmarks ()
         self.run ()
@@ -178,12 +194,11 @@ class BenchmarkProgram (object):
     def load_benchmarks (self):
         self.__options, benchmark_names = self.__build_parser ().parse_args ()
 
-        if self.__benchmark_name is None:
-            self.__suite = load_benchmarks (self.__object)
+        if not benchmark_names and self.__default_benchmark_name:
+            benchmark_names = (self.__default_benchmark_name,)
 
-        else:
-            self.__suite = BenchmarkSuite ()
-            self.__suite.append (load_benchmarks (getattr (self.__object, self.__benchmark_name)))
+        self.__suite = BenchmarkSuite ()
+        self.__suite.append (load_benchmarks (self.__object, *benchmark_names))
 
 
     def run (self):

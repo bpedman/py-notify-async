@@ -49,13 +49,13 @@ class AllBenchmarks (object):
     def __init__(self):
         everything = benchmarking.BenchmarkSuite ()
 
-        for module_name in ('emission',):
+        for module_name in ('emission', 'logical'):
             module = __import__('benchmark.%s' % module_name, globals (), locals (), ('*',))
 
             setattr (self, module_name, module)
             everything.append (benchmarking.load_benchmarks (module))
 
-        setattr (self, 'everything', lambda: everything)
+        setattr (self, 'everything', everything)
 
 
 benchmarking.main (AllBenchmarks (), 'everything')
