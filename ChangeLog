@@ -1,5 +1,9 @@
 2007-04-08  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	* examples/README: New file.
+
+	* examples/conditions_pygtk.py: New file.
+
 	* notify/condition.py (_IfElse.__on_term_change): Remove method.
 	(_IfElse.__on_if_term_change, _IfElse.__on_then_term_change)
 	(_IfElse.__on_else_term_change): New methods.

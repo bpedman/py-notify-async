@@ -13,6 +13,9 @@ exclude		   notify/__init__.py
 
 recursive-include  test      *.py
 recursive-include  benchmark *.py
+recursive-include  examples  *.py
 
 include            docs/tutorial.txt
 include            docs/*.css
+
+include            examples/README

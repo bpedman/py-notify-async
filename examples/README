@@ -1,0 +1,7 @@
+The only example at the moment requires PyGTK to run.  If it is not
+yet installed on your system, you can grab it at
+
+		   http://pygtk.org/downloads.html
+
+Example in Tkinter would be welcome, but I don't plan to create one
+myself, as I don't know the toolkit.
