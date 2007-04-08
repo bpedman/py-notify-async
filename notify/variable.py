@@ -283,10 +283,14 @@ class WatcherVariable (AbstractValueTrackingVariable):
 
     def __init__(self, variable_to_watch = None):
         """
-        Create a new wather variable, watching C{variable_to_watch} initially.  The only
+        Create a new watcher variable, watching C{variable_to_watch} initially.  The only
         argument is optional and can be omitted or set to C{None}.
 
-        @see:  C{L{watch}}
+        @raises TypeError:  if C{variable_to_watch} is not an instance of
+                            C{L{AbstractVariable}} and not C{None}.
+        @raises ValueError: if C{variable_to_watch} is this variable.
+
+        @see:               C{L{watch}}
         """
 
         super (WatcherVariable, self).__init__(None)
@@ -302,14 +306,17 @@ class WatcherVariable (AbstractValueTrackingVariable):
         if new is not C{None}.  Watching a different variable might change own state, in
         which case ‘changed’ signal will get emitted.
 
-        @raises TypeError: if C{variable_to_watch} is not an instance of
-                           C{L{AbstractVariable}} and not C{None}.
+        @raises TypeError:  if C{variable_to_watch} is not an instance of
+                            C{L{AbstractVariable}} and not C{None}.
+        @raises ValueError: if C{variable_to_watch} is this variable.
         """
 
-        if (variable_to_watch is not None
-            and (   not isinstance (variable_to_watch, AbstractVariable)
-                 or variable_to_watch is self)):
-            raise TypeError ('can only watch other variables')
+        if variable_to_watch is not None:
+            if isinstance (variable_to_watch, AbstractVariable):
+                if variable_to_watch is self:
+                    raise ValueError ('cannot watch self')
+            else:
+                raise TypeError ('can only watch other variables')
 
         watched_variable = self.__get_watched_variable ()
         if watched_variable is not None:
@@ -334,6 +341,20 @@ class WatcherVariable (AbstractValueTrackingVariable):
             return self.__watched_variable ()
         else:
             return None
+
+
+    watched_variable = property (__get_watched_variable,
+                                 lambda self, variable: self.watch (variable),
+                                 doc = ("""
+                                        The currently watched variable or C{None} if
+                                        nothing is being watched.  Setting this property
+                                        is identical to calling C{L{watch}}; this
+                                        duplication of functionality is intentional, since
+                                        you cannot perform assignments in lambda
+                                        functions.
+
+                                        @type:  C{L{AbstractVariable}} or C{None}
+                                        """))
 
 
     def _create_signal (self):

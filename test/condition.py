@@ -187,6 +187,8 @@ class WatcherConditionTestCase (NotifyTestCase):
         condition = Condition (True)
         watcher.watch (condition)
 
+        self.assert_(watcher.watched_condition is condition)
+
         condition.state = False
 
         self.assert_results (False, True, False)
@@ -206,6 +208,8 @@ class WatcherConditionTestCase (NotifyTestCase):
         watcher.watch (condition3)
         watcher.watch (None)
 
+        self.assert_(watcher.watched_condition is None)
+
         # Later two watch() calls must not change watcher's state.
         self.assert_results (True, False)
 
@@ -223,7 +227,8 @@ class WatcherConditionTestCase (NotifyTestCase):
         condition = Condition (True)
         watcher   = WatcherCondition (condition)
 
-        self.assertRaises (TypeError, lambda: watcher.watch (watcher))
+        self.assertRaises (ValueError, lambda: watcher.watch (watcher))
+        self.assert_      (watcher.watched_condition is condition)
 
 
 

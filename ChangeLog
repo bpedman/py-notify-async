@@ -1,3 +1,28 @@
+2007-04-08  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* test/condition.py
+	(WatcherConditionTestCase.test_watcher_condition_1): Test new
+	`watched_condition' property too.
+	(WatcherConditionTestCase.test_watcher_condition_2): Likewise.
+	(WatcherConditionTestCase.test_watcher_condition_error_3):
+	Likewise.  Expect another exception type when trying to watch
+	self.
+
+	* test/variable.py
+	(WatcherVariableTestCase.test_watcher_variable_1): Test new
+	`watched_variable' property too.
+	(WatcherVariableTestCase.test_watcher_variable_2): Likewise.
+	(WatcherVariableTestCase.test_watcher_variable_error_3): Likewise.
+	Expect another exception type when trying to watch self.
+
+	* notify/condition.py (WatcherCondition.watch): Raise `ValueError'
+	if trying to watch self.
+	(WatcherCondition.watched_condition): New property.
+
+	* notify/variable.py (WatcherVariable.watch): Raise `ValueError'
+	if trying to watch self.
+	(WatcherVariable.watched_variable): New property.
+
 2007-04-06  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/base.py: Improve and expand documentation.

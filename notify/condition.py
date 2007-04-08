@@ -426,10 +426,14 @@ class WatcherCondition (AbstractStateTrackingCondition):
 
     def __init__(self, condition_to_watch = None):
         """
-        Create a new wather condition, watching C{condition_to_watch} initially.  The only
-        argument is optional and can be omitted or set to C{None}.
+        Create a new watcher condition, watching C{condition_to_watch} initially.  The
+        only argument is optional and can be omitted or set to C{None}.
 
-        @see:  C{L{watch}}
+        @raises TypeError:  if C{condition_to_watch} is not an instance of
+                            C{L{AbstractCondition}} and not C{None}.
+        @raises ValueError: if C{condition_to_watch} is this condition.
+
+        @see:               C{L{watch}}
         """
 
         super (WatcherCondition, self).__init__(False)
@@ -445,14 +449,17 @@ class WatcherCondition (AbstractStateTrackingCondition):
         one, if new is not C{None}.  Watching a different condition might change own
         state, in which case ‘changed’ signal will get emitted.
 
-        @raises TypeError: if C{condition_to_watch} is not an instance of
-                           C{L{AbstractCondition}} and not C{None}.
+        @raises TypeError:  if C{condition_to_watch} is not an instance of
+                            C{L{AbstractCondition}} and not C{None}.
+        @raises ValueError: if C{condition_to_watch} is this condition.
         """
 
-        if (condition_to_watch is not None
-            and (   not isinstance (condition_to_watch, AbstractCondition)
-                 or condition_to_watch is self)):
-            raise TypeError ('can only watch other conditions')
+        if condition_to_watch is not None:
+            if isinstance (condition_to_watch, AbstractCondition):
+                if condition_to_watch is self:
+                    raise ValueError ('cannot watch self')
+            else:
+                raise TypeError ('can only watch other conditions')
 
         watched_condition = self.__get_watched_condition ()
         if watched_condition is not None:
@@ -477,6 +484,20 @@ class WatcherCondition (AbstractStateTrackingCondition):
             return self.__watched_condition ()
         else:
             return None
+
+
+    watched_condition = property (__get_watched_condition,
+                                  lambda self, condition: self.watch (condition),
+                                  doc = ("""
+                                         The currently watched condition or C{None} if
+                                         nothing is being watched.  Setting this property
+                                         is identical to calling C{L{watch}}; this
+                                         duplication of functionality is intentional,
+                                         since you cannot perform assignments in lambda
+                                         functions.
+
+                                         @type:  C{L{AbstractCondition}} or C{None}
+                                         """))
 
 
     def _create_signal (self):

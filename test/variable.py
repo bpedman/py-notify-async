@@ -113,6 +113,8 @@ class WatcherVariableTestCase (NotifyTestCase):
         variable = Variable ('abc')
         watcher.watch (variable)
 
+        self.assert_(watcher.watched_variable is variable)
+
         variable.value = 60
 
         self.assert_results (None, 'abc', 60)
@@ -132,6 +134,8 @@ class WatcherVariableTestCase (NotifyTestCase):
         watcher.watch (variable3)
         watcher.watch (None)
 
+        self.assert_(watcher.watched_variable is None)
+
         # Later two watch() calls must not change watcher's value.
         self.assert_results ([], 'string', None)
 
@@ -149,7 +153,8 @@ class WatcherVariableTestCase (NotifyTestCase):
         variable = Variable ()
         watcher  = WatcherVariable (variable)
 
-        self.assertRaises (TypeError, lambda: watcher.watch (watcher))
+        self.assertRaises (ValueError, lambda: watcher.watch (watcher))
+        self.assert_      (watcher.watched_variable is variable)
 
 
 
