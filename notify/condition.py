@@ -838,6 +838,10 @@ class _Xor (_Binary):
 
 
 
+# Implementation note: `self.__term_state' is computed by a peculiar formula and many
+# functions depend on this way.  If you change the formula or `self.__term_state'
+# otherwise, you need to make adjustments in many places.
+
 class _IfElse (AbstractCondition):
 
     __slots__ = ('_IfElse__if', '_IfElse__then', '_IfElse__else', '_IfElse__term_state')
@@ -854,24 +858,34 @@ class _IfElse (AbstractCondition):
         self.__else       = weakref.ref (_else, self.__on_usage_change)
         self.__term_state = (_if.get () * 4 + _then.get () * 2 + _else.get ())
 
-        _if  .changed.connect (self.__on_term_change)
-        _then.changed.connect (self.__on_term_change)
-        _else.changed.connect (self.__on_term_change)
+        _if  .changed.connect (self.__on_if_term_change)
+        _then.changed.connect (self.__on_then_term_change)
+        _else.changed.connect (self.__on_else_term_change)
 
 
     def get (self):
         return _IfElse.__TERM_STATE_TO_SELF_STATE[self.__term_state]
 
 
-    def __on_term_change (self, new_state):
-        # FIXME: Is it efficient enough?
-        old_state         = _IfElse.__TERM_STATE_TO_SELF_STATE[self.__term_state]
-        self.__term_state = (  self.__if   ().get () * 4
-                             + self.__then ().get () * 2
-                             + self.__else ().get ())
-        new_state         = _IfElse.__TERM_STATE_TO_SELF_STATE[self.__term_state]
+    def __on_if_term_change (self, new_state):
+        self.__term_state ^= 4
+        state              = _IfElse.__TERM_STATE_TO_SELF_STATE[self.__term_state]
 
-        if  new_state != old_state:
+        if state != _IfElse.__TERM_STATE_TO_SELF_STATE[self.__term_state ^ 4]:
+            self._value_changed (state)
+
+
+    def __on_then_term_change (self, new_state):
+        self.__term_state ^= 2
+
+        if self.__term_state >= 4:
+            self._value_changed (new_state)
+
+
+    def __on_else_term_change (self, new_state):
+        self.__term_state ^= 1
+
+        if self.__term_state < 4:
             self._value_changed (new_state)
 
 
@@ -914,11 +928,17 @@ class _IfElse (AbstractCondition):
                     AbstractGCProtector.default.unprotect (self)
 
 
+    def __invert__(self):
+        # We don't create an object directly to include whatever optimizations might be
+        # there in if_else() method of `self.__if()'.
+        return self.__if ().if_else (self.__else (), self.__then ())
+
+
     def __repr__(self):
-        return '<%r if %r else %r>' % (self.__then, self.__if, self.__else)
+        return '<%r if %r else %r>' % (self.__then (), self.__if (), self.__else ())
 
     def __str__(self):
-        return '<%s if %s else %s>' % (self.__then, self.__if, self.__else)
+        return '<%s if %s else %s>' % (self.__then (), self.__if (), self.__else ())
 
 
 

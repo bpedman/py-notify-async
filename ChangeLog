@@ -1,5 +1,20 @@
 2007-04-08  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	* notify/condition.py (_IfElse.__on_term_change): Remove method.
+	(_IfElse.__on_if_term_change, _IfElse.__on_then_term_change)
+	(_IfElse.__on_else_term_change): New methods.
+	(_IfElse.__invert__): New method.
+	(_IfElse.__repr__): Don't print references, get the referred
+	conditions.
+	(_IfElse.__str__): Likewise.
+
+	* test/condition.py (LogicConditionTestCase.test_not): Also assert
+	that state changes as it should.
+	(LogicConditionTestCase.test_and): Likewise.
+	(LogicConditionTestCase.test_or): Likewise.
+	(LogicConditionTestCase.test_xor): Likewise.
+	(LogicConditionTestCase.test_if_else): Likewise.
+
 	* benchmark/benchmarking.py: Modify to allow executing only some
 	benchmarks by their names,
 

@@ -62,20 +62,28 @@ class BaseConditionTestCase (NotifyTestCase):
 class LogicConditionTestCase (NotifyTestCase):
 
     def test_not (self):
+        self.results = []
+
         condition = Condition (False)
 
         not_condition = ~condition
+        not_condition.store (self.simple_handler)
         self.assertEqual (not_condition.state, True)
 
         condition.state = True
         self.assertEqual (not_condition.state, False)
 
+        self.assert_results (True, False)
+
 
     def test_and (self):
+        self.results = []
+
         condition1 = Condition (False)
         condition2 = Condition (False)
 
         and_condition = condition1 & condition2
+        and_condition.store (self.simple_handler)
         self.assertEqual (and_condition.state, False)
 
         condition1.state = True
@@ -90,12 +98,17 @@ class LogicConditionTestCase (NotifyTestCase):
         condition2.state = True
         self.assertEqual (and_condition.state, True)
 
+        self.assert_results (False, True)
+
 
     def test_or (self):
+        self.results = []
+
         condition1 = Condition (False)
         condition2 = Condition (False)
 
         or_condition = condition1 | condition2
+        or_condition.store (self.simple_handler)
         self.assertEqual (or_condition.state, False)
 
         condition1.state = True
@@ -110,12 +123,17 @@ class LogicConditionTestCase (NotifyTestCase):
         condition2.state = True
         self.assertEqual (or_condition.state, True)
 
+        self.assert_results (False, True, False, True)
+
 
     def test_xor (self):
+        self.results = []
+
         condition1 = Condition (False)
         condition2 = Condition (False)
 
         xor_condition = condition1 ^ condition2
+        xor_condition.store (self.simple_handler)
         self.assertEqual (xor_condition.state, False)
 
         condition1.state = True
@@ -130,13 +148,18 @@ class LogicConditionTestCase (NotifyTestCase):
         condition2.state = True
         self.assertEqual (xor_condition.state, False)
 
+        self.assert_results (False, True, False, True, False)
+
 
     def test_if_else (self):
+        self.results = []
+
         condition1 = Condition (False)
         condition2 = Condition (False)
         condition3 = Condition (False)
 
         if_else_condition = condition1.if_else (condition2, condition3)
+        if_else_condition.store (self.simple_handler)
         self.assertEqual (if_else_condition.state, False)
 
         condition1.state = False
@@ -173,6 +196,8 @@ class LogicConditionTestCase (NotifyTestCase):
         condition2.state = True
         condition3.state = True
         self.assertEqual (if_else_condition.state, True)
+
+        self.assert_results (False, True, False, True, False, True)
 
 
 
