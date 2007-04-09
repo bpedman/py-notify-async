@@ -60,17 +60,24 @@ def raise_not_implemented_exception (object = None, function_name = None):
     extension, since function name cannot be detected automatically in this case.  In
     Python code you should just leave this argument out.
 
+    @param  object:              the object for which a non-implemented method is called.
+    @type   object:              C{object}
+
+    @param  function_name:       name of the unimplemented function or method (inferred
+                                 automatically for non-extension functions).
+    @type   function_name:       C{basestring} or C{None}
+
     @raises NotImplementedError: always.
     """
 
     if function_name is None:
         try:
             raise Exception
-        except:
+        except Exception:
             try:
                 traceback     = sys.exc_info () [2]
                 function_name = traceback.tb_frame.f_back.f_code.co_name
-            except:
+            except Exception:
                 # We can do nothing, ignore.
                 pass
 
@@ -91,10 +98,10 @@ def raise_not_implemented_exception (object = None, function_name = None):
 
             elif len (declaration_classes) > 1:
                 class_description += (' (declared in %s)'
-                                      % ', '.join (map (lambda _class: _class.__name__,
-                                                        declaration_classes)))
+                                      % ', '.join ([_class.__name__
+                                                    for _class in declaration_classes]))
 
-    except:
+    except Exception:
         class_description = ''
 
     exception = NotImplementedError ('%s not implemented%s'
@@ -103,12 +110,12 @@ def raise_not_implemented_exception (object = None, function_name = None):
 
 
 def _find_declaration_classes (_class, function_name):
-    declaring_bases = filter (lambda base: hasattr (base, function_name), _class.__bases__)
+    declaring_bases = [base for base in _class.__bases__ if hasattr (base, function_name)]
 
     if declaring_bases:
         return reduce (lambda list1, list2: list1 + list2,
-                       map (_find_declaration_classes,
-                            declaring_bases, (function_name,) * len (declaring_bases)),
+                       [_find_declaration_classes (base, function_name)
+                        for base in declaring_bases],
                        [])
     else:
         return [_class]
@@ -120,7 +127,10 @@ def is_valid_identifier (identifier):
     Determine if C{identifier} is a valid Python identifier.  This function never raises
     any exceptions.  If C{identifier} is not a string, it simply returns C{False}.
 
-    @rtype: C{bool}
+    @param identifier: identifier to determin if it is valid
+    @type  identifier: C{basestring}
+
+    @rtype:            C{bool}
     """
 
     return (isinstance (identifier, basestring)
@@ -145,6 +155,9 @@ class DummyReference (object):
     def __init__(self, object):
         """
         Create a new dummy reference that will return C{object} when called.
+
+        @param object: the object that will be returned by this reference.
+        @type  object: C{object}
         """
 
         self.__object = object

@@ -32,13 +32,23 @@
 # condition/variable support into PyGTK or Kiwi at the moment, but I would welcome any
 # such development.
 
+# Implementation note: this example is written to work even with very old PyGTK versions.
+# For instance, it doesn't use do_*() methods and connects handlers (for gobject signals,
+# that is) instead.
+
+
+if __name__ == '__main__':
+    import os
+    import sys
+
+    sys.path.insert (0, os.path.join (sys.path[0], os.pardir))
+
 
 from notify.all import *
 
 import pygtk
 pygtk.require ('2.0')
 
-import gobject
 import gtk
 
 
@@ -50,19 +60,14 @@ class CheckButton (gtk.CheckButton):
                                                            setter = gtk.ToggleButton.set_active)
 
 
-    def __init__(self, label = None, use_underline = True):
-        gtk.ToggleButton.__init__(self, label, use_underline)
+    def __init__(self, label = None):
+        gtk.CheckButton.__init__(self, label)
         self.active = CheckButton.__Active (self)
-
-
-    def do_toggled (self):
-        self.active.resynchronize_with_backend ()
+        self.connect ('toggled', lambda button: button.active.resynchronize_with_backend ())
 
 
 
 class Entry (gtk.Entry):
-
-    __gsignals__   = { 'changed': 'override' }
 
     __Text = AbstractValueTrackingVariable.derive_type ('__Text', object = 'entry',
                                                         getter = gtk.Entry.get_text,
@@ -72,14 +77,7 @@ class Entry (gtk.Entry):
     def __init__(self):
         gtk.Entry.__init__(self)
         self.text = Entry.__Text (self)
-
-
-    def do_changed (self):
-        self.text.resynchronize_with_backend ()
-
-
-gobject.type_register (CheckButton)
-gobject.type_register (Entry)
+        self.connect ('changed', lambda entry: entry.text.resynchronize_with_backend ())
 
 
 
@@ -240,15 +238,10 @@ class ExampleWindow (gtk.Window):
         self.__watcher.watch (self.__pages[page_index].condition)
 
 
-    def do_destroy (self):
-        gtk.main_quit ()
-
-
-gobject.type_register (ExampleWindow)
-
-
 
 example = ExampleWindow ()
+example.connect ('destroy', lambda window: gtk.main_quit ())
+
 example.add_page ('Condition', ConditionPage)
 example.add_page ('Not',       NotConditionPage)
 example.add_page ('And',       AndConditionPage)

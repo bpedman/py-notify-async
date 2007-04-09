@@ -1,3 +1,31 @@
+2007-04-09  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* examples/conditions_pygtk.py: Make it find the non-installed
+	`notify' module in the parent directory.  Make it work with old
+	PyGTK versions.
+
+	* notify/base.py: Don't use `import *'.
+	* notify/bind.py: Likewise.
+	* notify/condition.py: Likewise.
+	* notify/mediator.py: Likewise.
+	* notify/signal.py: Likewise.
+	* notify/variable.py: Likewise.
+
+	* notify/base.py: Improve and expand documentation.
+	* notify/bind.py: Likewise.
+	* notify/condition.py: Likewise.
+	* notify/signal.py: Likewise.
+	* notify/utils.py: Likewise.
+
+	* notify/condition.py (PredicateCondition.update): Return whether
+	the state has changed.
+
+	* notify/base.py (AbstractValueObject.synchronize): Raise
+	`ValueError' if trying to synchronize with self.
+	(AbstractValueObject.synchronize_safe): Likewise.
+	(AbstractValueObject.derive_type): Rename `self_class' to
+	`cls' (also affects related functions), as recommended.
+
 2007-04-08  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* examples/README: New file.

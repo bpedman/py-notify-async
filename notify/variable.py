@@ -37,10 +37,10 @@ __all__       = ('AbstractVariable', 'AbstractValueTrackingVariable',
 import types
 import weakref
 
-from notify.base      import *
-from notify.condition import *
-from notify.gc        import *
-from notify.signal    import *
+from notify.base      import AbstractValueObject
+from notify.condition import AbstractStateTrackingCondition
+from notify.gc        import AbstractGCProtector
+from notify.signal    import CleanSignal
 
 
 
@@ -72,8 +72,9 @@ class AbstractVariable (AbstractValueObject):
         Construct a condition, whose state is always given C{predicate} over this variable
         value.
 
-        @raises TypeError: if C{predicate} is not callable.
         @rtype:            C{L{AbstractCondition}}
+
+        @raises TypeError: if C{predicate} is not callable.
         """
 
         return _PredicateOverVariable (predicate, self)
@@ -147,7 +148,7 @@ class AbstractValueTrackingVariable (AbstractVariable):
         return True
 
 
-    def _generate_derived_type_dictionary (self_class, options):
+    def _generate_derived_type_dictionary (cls, options):
         allowed_values      = options.get ('allowed_values')
         allowed_value_types = options.get ('allowed_value_types')
 
@@ -159,7 +160,7 @@ class AbstractValueTrackingVariable (AbstractVariable):
                 if not isinstance (allowed_type, (type, types.ClassType)):
                     raise TypeError ("`allowed_value_types' must be a tuple of types and classes")
 
-        for attribute in (super (AbstractValueTrackingVariable, self_class)
+        for attribute in (super (AbstractValueTrackingVariable, cls)
                           ._generate_derived_type_dictionary (options)):
             if attribute[0] != 'get':
                 yield attribute
@@ -184,13 +185,13 @@ class AbstractValueTrackingVariable (AbstractVariable):
         if 'getter' in options:
             if object is not None:
                 exec (('def __init__(self, %s):\n'
-                       '    self_class.__init__(self, getter (%s))\n'
+                       '    cls.__init__(self, getter (%s))\n'
                        '    %s = %s')
                       % (object, object, AbstractValueObject._get_object (options), object)) \
                       in options, functions
             else:
                 exec ('def __init__(self):\n'
-                      '    self_class.__init__(self, getter (self))\n') in options, functions
+                      '    cls.__init__(self, getter (self))\n') in options, functions
 
             exec (('def resynchronize_with_backend (self):\n'
                    '    self._set (getter (%s))')
@@ -215,14 +216,14 @@ class AbstractValueTrackingVariable (AbstractVariable):
 
             if object is not None:
                 exec (('def __init__(self, %s, initial_value%s):\n'
-                       '    self_class.__init__(self, initial_value)\n'
+                       '    cls.__init__(self, initial_value)\n'
                        '    %s = %s')
                       % (object, initial_default,
                          AbstractValueObject._get_object (options), object)) \
                       in options, functions
             else:
                 exec (('def __init__(self, initial_value%s):\n'
-                       '    self_class.__init__(self, initial_value)\n')
+                       '    cls.__init__(self, initial_value)\n')
                       % initial_default) in options, functions
 
         for function in functions.iteritems ():

@@ -66,10 +66,10 @@ __all__       = ('Binding', 'WeakBinding', 'RaisingWeakBinding',
                  'CannotWeakReferenceError', 'GarbageCollectedError')
 
 
-import types
+from types        import FunctionType, MethodType
 import weakref
 
-from notify.utils import *
+from notify.utils import DummyReference
 
 
 
@@ -96,8 +96,16 @@ class Binding (object):
 
         See also C{L{wrap}} class method for a different way of creating bindings.
 
-        @raises TypeError: if C{callable_object} is not callable or C{arguments} is not
-                           iterable.
+        @param  callable_object: the callable object that will be invoked by this binding
+                                 from C{L{__call__}} method.
+        @type   callable_object: callable
+
+        @param  arguments:       optional list of argument for C{callable_object} that
+                                 will be prepended to call arguments.
+        @type   arguments:       iterable
+
+        @raises TypeError:       if C{callable_object} is not callable or C{arguments} is
+                                 not iterable.
         """
 
         if not callable (callable_object):
@@ -120,7 +128,7 @@ class Binding (object):
         self._arguments = arguments
 
 
-    def wrap (_class, callable_object, arguments = ()):
+    def wrap (cls, callable_object, arguments = ()):
         """
         Return a callable with semantics of the binding class this method is called for.
         I{If necessary} (e.g. if C{arguments} tuple is not empty), this method creates a
@@ -132,6 +140,14 @@ class Binding (object):
         This is the preferred method of creating bindings.  It is generally more memory-
         and call-time-efficient since in some cases no new objects are created at all.
 
+        @param  callable_object: the callable object that will be invoked by this binding
+                                 from C{L{__call__}} method.
+        @type   callable_object: callable
+
+        @param  arguments:       optional list of argument for C{callable_object} that
+                                 will be prepended to call arguments.
+        @type   arguments:       iterable
+
         @rtype:            callable
 
         @raises TypeError: if C{callable_object} is not callable or C{arguments} is not
@@ -139,7 +155,7 @@ class Binding (object):
         """
 
         if arguments is not ():
-            return _class (callable_object, arguments)
+            return cls (callable_object, arguments)
         else:
             if not callable (callable_object):
                 raise TypeError ("`callable_object' must be callable")
@@ -210,7 +226,10 @@ class Binding (object):
         I{prepended} to arguments of this function before being passed to the wrapped
         callable.
 
+        @param  arguments: optional call arguments.
+
         @rtype:            C{object}
+
         @raises exception: whatever wrapped method raises, if anything.
         """
 
@@ -247,7 +266,7 @@ class Binding (object):
                 return self._get_arguments () is ()
 
         else:
-            if isinstance (other, types.FunctionType):
+            if isinstance (other, FunctionType):
                 return (self.im_func is other
                         and self.im_self is None
                         and self.im_class is None
@@ -335,7 +354,7 @@ class Binding (object):
 
 
 
-BindingCompatibleTypes = (types.MethodType, Binding)
+BindingCompatibleTypes = (MethodType, Binding)
 """
 Types ‘compatible’ with C{L{Binding}} to certain extent.  These include
 C{types.MethodType} and C{Binding} itself.  Both have C{im_self}, C{im_class} and
@@ -389,6 +408,18 @@ class WeakBinding (Binding):
 
         See also C{L{wrap}} class method for a different way of creating weak bindings.
 
+        @param  callable_object: the callable object that will be invoked by this binding
+                                 from C{L{__call__}} method.
+        @type   callable_object: callable
+
+        @param  arguments:       optional list of argument for C{callable_object} that
+                                 will be prepended to call arguments.
+        @type   arguments:       iterable
+
+        @param  callback:        optional callable that will be called if binding’s object
+                                 is garbage-collected.
+        @type   callback:        callable or C{None}
+
         @raises TypeError:                if C{callable_object} is not callable or
                                           C{arguments} is not iterable.
         @raises CannotWeakReferenceError: if C{callable_object} is a bound method, but
@@ -410,13 +441,13 @@ class WeakBinding (Binding):
             self._object = _NONE_REFERENCE
 
 
-    def wrap (_class, callable_object, arguments = (), callback = None):
+    def wrap (cls, callable_object, arguments = (), callback = None):
         # Inherit documentation somehow?
         if (arguments is not ()
             or (    isinstance (callable_object, BindingCompatibleTypes)
                 and not isinstance (callable_object, WeakBinding)
                 and callable_object.im_self is not None)):
-            return _class (callable_object, arguments, callback)
+            return cls (callable_object, arguments, callback)
         else:
             return callable_object
 
@@ -438,7 +469,10 @@ class WeakBinding (Binding):
         Like L{Binding.__call__}, but account for garbage-collected objects.  If object
         has been garbage-collected, then do nothing and return C{None}.
 
+        @param  arguments: optional call arguments.
+
         @rtype:            C{object}
+
         @raises exception: whatever wrapped method raises, if anything.
         """
 
@@ -532,7 +566,7 @@ class CannotWeakReferenceError (TypeError):
 class GarbageCollectedError (RuntimeError):
 
     """
-    Exception thrown when calling an instance of L{RaisingWeakBinding} with a
+    Exception thrown when calling an instance of C{L{RaisingWeakBinding}} with a
     garbage-collected object.
     """
 

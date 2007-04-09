@@ -32,11 +32,11 @@ __docformat__ = 'epytext en'
 __all__       = ('AbstractValueObject',)
 
 
-import types
+from types           import NoneType
 
-from notify.mediator import *
-from notify.signal   import *
-from notify.utils    import *
+from notify.mediator import AbstractMediator
+from notify.signal   import AbstractSignal, Signal
+from notify.utils    import is_valid_identifier, raise_not_implemented_exception
 
 
 
@@ -82,13 +82,15 @@ class AbstractValueObject (object):
         Set the current value to C{value}, if possible.  Default implementation always
         raises C{NotImplementedError} as it is not mutable.
 
-        @raises NotImplementedError: if the object is not mutable.
-        @raises ValueError:          if C{value} is not suitable for some reason.
+        @param value:                new value for C{AbstractValueObject}.
 
         @rtype:                      C{bool}
         @returns:                    Whether setting value had any effect, i.e. C{True}
                                      if C{value} is not equal to result of C{L{get}}
                                      method.
+
+        @raises NotImplementedError: if the object is not mutable.
+        @raises ValueError:          if C{value} is not suitable for some reason.
         """
 
         raise_not_implemented_exception (self)
@@ -180,8 +182,11 @@ class AbstractValueObject (object):
         This function I{must not} be called from outside.  It is only for descendant
         classes’ use.
 
-        @rtype:   C{bool}
-        @returns: Whether ‘changed’ signal is removed.
+        @param  signal: the signal object or a reference to signal to remove (the same as
+                        C{L{_create_signal}} returned.)
+
+        @rtype:         C{bool}
+        @returns:       Whether ‘changed’ signal is removed.
         """
 
         if self.__signal is signal:
@@ -202,6 +207,12 @@ class AbstractValueObject (object):
         See C{L{AbstractSignal.connect}} method description for details how C{arguments}
         are handled.
 
+        @param  handler:   the object to store value with.
+        @type   handler:   callable
+
+        @param  arguments: optional arguments prepended to the current value when invoking
+                           C{handler}.
+
         @raises TypeError: if C{handler} is not callable or cannot be called with
                            C{arguments} and current object value.
         """
@@ -215,10 +226,17 @@ class AbstractValueObject (object):
         ‘changed’ signal, this method does nothing.  See C{L{Signal.connect_safe}} method
         for details.
 
-        @raises TypeError: if C{handler} is not callable or cannot be called with
-                           C{arguments} and current object value.
+        @param  handler:   the object to store value with.
+        @type   handler:   callable
+
+        @param  arguments: optional arguments prepended to the current value when invoking
+                           C{handler}.
+
         @rtype:            C{bool}
         @returns:          Whether C{handler} is connected to ‘changed’ signal.
+
+        @raises TypeError: if C{handler} is not callable or cannot be called with
+                           C{arguments} and current object value.
         """
 
         if not self.__get_changed_signal ().is_connected (handler, *arguments):
@@ -244,16 +262,27 @@ class AbstractValueObject (object):
         passed through its ‘forward’ transformation, the way round—through ‘back’
         transformation.  See L{mediators description <mediator>} for details.
 
-        @raises TypeError:  if C{value_object} is not an C{AbstractValueObject} or
-                            C{mediator} is neither C{None} nor an instance of
-                            C{L{AbstractMediator <mediator.AbstractMediator>}}.
-        @raises ValueError: if either C{self} or C{value_object} is not mutable.
-        @raises ValueError: if current value of C{value_object} is not suitable for
-                            C{self}.
+        @param  value_object: other value object to synchronize with.
+        @type   value_object: C{AbstractValueObject}
+
+        @param  mediator:     optional mediator to transform values between C{self} and
+                              C{value_object}.
+        @type   mediator:     C{L{AbstractMediator}} or C{None}
+
+        @raises TypeError:    if C{value_object} is not an C{AbstractValueObject} or
+                              C{mediator} is neither C{None} nor an instance of
+                              C{L{AbstractMediator <mediator.AbstractMediator>}}.
+        @raises ValueError:   if C{self} and C{value_object} are the same object.
+        @raises ValueError:   if either C{self} or C{value_object} is not mutable.
+        @raises ValueError:   if current value of C{value_object} is not suitable for
+                              C{self}.
         """
 
         if not isinstance (value_object, AbstractValueObject):
             raise TypeError ("can only synchronize with other `AbstractValueObject' instances")
+
+        if value_object is self:
+            raise ValueError ("can only synchronize with other `AbstractValueObject' instances")
 
         if not self._is_mutable ():
             raise ValueError ("`%s' is not mutable" % self)
@@ -280,16 +309,27 @@ class AbstractValueObject (object):
         Like C{L{synchronize}} except that uses L{store_safe} instead of L{store}.  See
         C{L{synchronize}} for details.
 
-        @raises TypeError:  if C{value_object} is not an C{AbstractValueObject} or
-                            C{mediator} is neither C{None} nor an instance of
-                            C{L{AbstractMediator <mediator.AbstractMediator>}}.
-        @raises ValueError: if either C{self} or C{value_object} is not mutable.
-        @raises ValueError: if current value of C{value_object} is not suitable for
-                            C{self}.
+        @param  value_object: other value object to synchronize with.
+        @type   value_object: C{AbstractValueObject}
+
+        @param  mediator:     optional mediator to transform values between C{self} and
+                              C{value_object}.
+        @type   mediator:     C{L{AbstractMediator}} or C{None}
+
+        @raises TypeError:    if C{value_object} is not an C{AbstractValueObject} or
+                              C{mediator} is neither C{None} nor an instance of
+                              C{L{AbstractMediator <mediator.AbstractMediator>}}.
+        @raises ValueError:   if C{self} and C{value_object} are the same object.
+        @raises ValueError:   if either C{self} or C{value_object} is not mutable.
+        @raises ValueError:   if current value of C{value_object} is not suitable for
+                              C{self}.
         """
 
         if not isinstance (value_object, AbstractValueObject):
             raise TypeError ("can only synchronize with other `AbstractValueObject' instances")
+
+        if value_object is self:
+            raise ValueError ("can only synchronize with other `AbstractValueObject' instances")
 
         if not value_object._is_mutable ():
             raise ValueError ("target `AbstractValueObject' instance is not mutable")
@@ -321,12 +361,19 @@ class AbstractValueObject (object):
         in one call and regardless of how many times the latter has been called, use
         C{L{desynchronize_fully}} method instead.
 
-        @raises TypeError: if C{mediator} is neither C{None} nor an instance of
-                           C{L{AbstractMediator <mediator.AbstractMediator>}}.
+        @param  value_object: other value object to desynchronize with.
+        @type   value_object: C{AbstractValueObject}
 
-        @rtype:            C{bool}
-        @returns:          Whether C{self} and C{value_object} have been synchronized
-                           before (using C{mediator} if it is not C{None}.)
+        @param  mediator:     mediator, equal to what was passed to corresponding call
+                              to C{L{synchronize}}.
+        @type   mediator:     C{L{AbstractMediator}} or C{None}
+
+        @rtype:               C{bool}
+        @returns:             Whether C{self} and C{value_object} have been synchronized
+                              before (using C{mediator} if it is not C{None}.)
+
+        @raises TypeError:    if C{mediator} is neither C{None} nor an instance of
+                              C{L{AbstractMediator <mediator.AbstractMediator>}}.
 
         @note:
         If C{L{set}} method of one of the values has been connected to other value’s
@@ -335,7 +382,7 @@ class AbstractValueObject (object):
         effect has been emulated manually.
         """
 
-        if not isinstance (mediator, (types.NoneType, AbstractMediator)):
+        if not isinstance (mediator, (NoneType, AbstractMediator)):
             raise TypeError ('second argument must be a mediator')
 
         if (   not isinstance (value_object, AbstractValueObject)
@@ -375,12 +422,19 @@ class AbstractValueObject (object):
         many times C{synchronize} has been called.  If that is not what you want, use
         C{L{desynchronize}} method instead.
 
-        @raises TypeError: if C{mediator} is neither C{None} nor an instance of
-                           C{L{AbstractMediator <mediator.AbstractMediator>}}.
+        @param  value_object: other value object to desynchronize with.
+        @type   value_object: C{AbstractValueObject}
 
-        @rtype:            C{bool}
-        @returns:          Whether C{self} and C{value_object} have been synchronized
-                           before (using C{mediator} if it is not C{None}.)
+        @param  mediator:     mediator, equal to what was passed to corresponding call
+                              to C{L{synchronize}}.
+        @type   mediator:     C{L{AbstractMediator}} or C{None}
+
+        @rtype:               C{bool}
+        @returns:             Whether C{self} and C{value_object} have been synchronized
+                              before (using C{mediator} if it is not C{None}.)
+
+        @raises TypeError:    if C{mediator} is neither C{None} nor an instance of
+                              C{L{AbstractMediator <mediator.AbstractMediator>}}.
 
         @note:
         If C{L{set}} method of one of the values has been connected to other value’s
@@ -395,7 +449,7 @@ class AbstractValueObject (object):
         dangerous at times.
         """
 
-        if not isinstance (mediator, (types.NoneType, AbstractMediator)):
+        if not isinstance (mediator, (NoneType, AbstractMediator)):
             raise TypeError ('second argument must be a mediator')
 
         if (   not isinstance (value_object, AbstractValueObject)
@@ -435,8 +489,11 @@ class AbstractValueObject (object):
 
         For convenience, this method always returns C{True}.
 
-        @rtype:   C{bool}
-        @returns: Always C{True}.
+        @param new_value: the new value of C{self}; will be also passed to ‘changed’
+                          signal handlers.
+
+        @rtype:           C{bool}
+        @returns:         Always C{True}.
         """
 
         if self.__signal is not None:
@@ -489,8 +546,11 @@ class AbstractValueObject (object):
         C{L{__str__}}.  If you use your own (and that is perfectly fine), you don’t need
         to override this method.
 
-        @rtype:   C{list}
-        @returns: List of description strings for this object.
+        @param formatter: function (either C{repr} or C{str}) that can be used to format
+                          various objects.
+
+        @rtype:           C{list}
+        @returns:         List of description strings for this object.
         """
 
         if self._has_signal ():
@@ -523,54 +583,58 @@ class AbstractValueObject (object):
 
 
     def __str__(self):
-        # It is impossible to recreate signal, so don't try to generate a valid Python
-        # expression.
         return '<%s: %s%s>' % (self.__class__.__name__,
                                str (self.get ()), self.__to_string (False))
 
 
-    def derive_type (self_class, new_class_name, **options):
+    def derive_type (cls, new_class_name, **options):
         """
         Derive and return a new type named C{new_class_name}.  Various C{options} define
         behaviour of instances of the new type.  Their set and sometimes semantics are
         defined by exact class this method is called for.
 
-        @newfield option:  Option, Options
+        @param new_class_name: name of the new class—important mostly for C{__str__} and
+                               C{__repr__} implementations.
+        @type  new_class_name: C{basestring}
 
-        @option:           C{object} — valid Python identifier.  If specified, derived
-                           type’s constructor will accept one parameter and store it
-                           inside the created instance.  It will be used for calling
-                           C{getter} and C{setter} functions.
+        @param options:        options for the new type, as listed below.
 
-        @option:           C{getter} — a callable accepting one argument, whose return
-                           value will be used as C{L{get}} method result.  If C{object}
-                           option is specified, the only argument will be the one passed
-                           to instance constructor, else it will be C{self} as passed to
-                           C{get} method.
+        @newfield option:      Option, Options
 
-        @option:           C{setter} — a callable accepting two argument, which will be
-                           called from C{L{get}} method.  The first argument is described
-                           in C{getter} option; the second is the C{value} as passed to
-                           C{L{set}} method.
+        @option:               C{object} — valid Python identifier.  If specified, derived
+                               type’s constructor will accept one parameter and store it
+                               inside the created instance.  It will be used for calling
+                               C{getter} and C{setter} functions.
 
-        @rtype:            C{type}
+        @option:               C{getter} — a callable accepting one argument, whose return
+                               value will be used as C{L{get}} method result.  If
+                               C{object} option is specified, the only argument will be
+                               the one passed to instance constructor, else it will be
+                               C{self} as passed to C{get} method.
 
-        @raises TypeError: if C{new_class_name} is not a string or is not a valid Python
-                           identifier.
-        @raises exception: whatever C{L{_generate_derived_type_dictionary}} raises, if
-                           anything.
+        @option:               C{setter} — a callable accepting two argument, which will
+                               be called from C{L{set}} method.  The first argument is
+                               described in C{getter} option; the second is the C{value}
+                               as passed to C{L{set}} method.
+
+        @rtype:                C{type}
+
+        @raises TypeError:     if C{new_class_name} is not a string or is not a valid
+                               Python identifier.
+        @raises exception:     whatever C{L{_generate_derived_type_dictionary}} raises, if
+                               anything.
         """
 
         if not is_valid_identifier (new_class_name):
             raise TypeError ("`%s' is not a valid Python identifier" % new_class_name)
 
-        full_options = dict (options)
-        full_options['self_class']     = self_class
+        full_options                   = dict (options)
+        full_options['cls']            = cls
         full_options['new_class_name'] = new_class_name
 
         dictionary = {}
 
-        for value in self_class._generate_derived_type_dictionary (full_options):
+        for value in cls._generate_derived_type_dictionary (full_options):
             if value[0] != '__slots__':
                 dictionary[value[0]] = value[1]
             else:
@@ -580,18 +644,17 @@ class AbstractValueObject (object):
                 dictionary['__slots__'] += tuple (value[1])
 
         try:
-            # FIXME: I'm not sure this is not a hack.
-            return type (new_class_name, (self_class,), dictionary)
+            return type (new_class_name, (cls,), dictionary)
         finally:
             del dictionary
 
 
-    def _generate_derived_type_dictionary (self_class, options):
+    def _generate_derived_type_dictionary (cls, options):
         """
         Generate an iterable of pairs in the form (Python identifier, value) for a new
         type created by C{L{derive_type}}.  Exact pairs should be influenced by
-        C{options}, which are C{options} as passed to C{derive_type} plus C{self_class}
-        (for convenience) and C{new_class_name}.
+        C{options}, which are C{options} as passed to C{derive_type} plus C{cls} (for
+        convenience) and C{new_class_name}.
 
         This method is not meant to be callable from outside, use C{L{derive_type}} for
         that instead.
@@ -599,8 +662,8 @@ class AbstractValueObject (object):
         Overriden implementations of this method are recommended but not required to be
         generator functions.  They should generally start like this:
 
-            >>> def _generate_derived_type_dictionary (self_class, options):
-            ...     for attribute in super (..., self_class)._generate_derived_type_dictionary (options):
+            >>> def _generate_derived_type_dictionary (cls, options):
+            ...     for attribute in super (..., cls)._generate_derived_type_dictionary (options):
             ...         yield attribute
             ...
             ...     ...
@@ -612,7 +675,7 @@ class AbstractValueObject (object):
         all function-defining statements in it.  For instance, you can write own
         C{_generate_derived_type_dictionary} like this:
 
-            >>> def _generate_derived_type_dictionary (self_class, options):
+            >>> def _generate_derived_type_dictionary (cls, options):
             ...     ...
             ...
             ...     functions = {}
@@ -629,8 +692,13 @@ class AbstractValueObject (object):
         associated with the same name override previous values, values for C{__slots__}
         are combined in to a tuple instead.
 
+        @param options:    dictionary of options passed to C{L{derive_type}} method, plus
+                           C{cls} and C{new_class_name}.
+        @type  options:    C{dict}
+
         @rtype:            iterable
         @returns:          Pairs of (Python identifier, value) for the new type.
+
         @raises exception: if there is any error in C{options}.
         """
 
@@ -644,7 +712,7 @@ class AbstractValueObject (object):
             yield '__slots__', ('_%s__%s' % (options['new_class_name'].lstrip ('_'), object),)
 
             exec (('def __init__(self, %s):\n'
-                   '    self_class.__init__(self)\n'
+                   '    cls.__init__(self)\n'
                    '    %s = %s')
                   % (object, AbstractValueObject._get_object (options), object)) \
                   in options, functions
@@ -680,10 +748,13 @@ class AbstractValueObject (object):
         dictionary contains C{"object"} key.  In this case C{"some_attribute"} string is
         evaluated to a private attribute name for the class being defined.
 
-        This is a helper for C{_generate_derived_type_dictionary} only.  It should not be
-        called from outside.
+        This is a helper for C{L{_generate_derived_type_dictionary}} only.  It should not
+        be called from outside.
 
-        @rtype: C{str}
+        @param options: the same value as passed to C{_generate_derived_type_dictionary}.
+        @type  options: C{dict}
+
+        @rtype:         C{str}
         """
 
         if 'object' in options:

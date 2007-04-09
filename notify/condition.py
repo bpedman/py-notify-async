@@ -36,10 +36,10 @@ __all__       = ('AbstractCondition', 'AbstractStateTrackingCondition',
 
 import weakref
 
-from notify.base   import *
-from notify.gc     import *
-from notify.signal import *
-from notify.utils  import *
+from notify.base   import AbstractValueObject
+from notify.gc     import AbstractGCProtector
+from notify.signal import CleanSignal
+from notify.utils  import raise_not_implemented_exception, DummyReference
 
 
 
@@ -79,7 +79,10 @@ class AbstractCondition (AbstractValueObject):
         words, this static method returns a condition which is either always true or
         always false.
 
-        @rtype: C{AbstractCondition}
+        @param state: desired state of the returned condition (coerced to C{bool} first.)
+        @type  state: C{object}
+
+        @rtype:       C{AbstractCondition}
         """
 
         if state:
@@ -92,9 +95,9 @@ class AbstractCondition (AbstractValueObject):
 
     def __nonzero__(self):
         """
-        Return the state of the condition.  Return value is the same as that of C{L{get}}
-        method.  Existance of C{__nonzero__} method simplifies condition usage in
-        C{if}-like statements.
+        Return the state of the condition.  Return value is the same as that of
+        C{L{state}} property or C{L{get}} method.  Existance of C{__nonzero__} method
+        simplifies condition usage in C{if}-like statements.
 
         @rtype:   C{bool}
         @returns: State of the condition.
@@ -276,6 +279,9 @@ class AbstractStateTrackingCondition (AbstractCondition):
         Initialize a new condition with specified C{initial_state}.  The state may be not
         C{True} or C{False}, but it will be converted to either of these two values with
         C{bool} standard function.
+
+        @param initial_state: initial state for the new condition.
+        @type  initial_state: C{object}
         """
 
         super (AbstractStateTrackingCondition, self).__init__()
@@ -295,8 +301,8 @@ class AbstractStateTrackingCondition (AbstractCondition):
             return False
 
 
-    def _generate_derived_type_dictionary (self_class, options):
-        for attribute in (super (AbstractStateTrackingCondition, self_class)
+    def _generate_derived_type_dictionary (cls, options):
+        for attribute in (super (AbstractStateTrackingCondition, cls)
                           ._generate_derived_type_dictionary (options)):
             if attribute[0] != 'get':
                 yield attribute
@@ -307,13 +313,13 @@ class AbstractStateTrackingCondition (AbstractCondition):
         if 'getter' in options:
             if object is not None:
                 exec (('def __init__(self, %s):\n'
-                       '    self_class.__init__(self, getter (%s))\n'
+                       '    cls.__init__(self, getter (%s))\n'
                        '    %s = %s')
                       % (object, object, AbstractValueObject._get_object (options), object)) \
                       in options, functions
             else:
                 exec ('def __init__(self):\n'
-                      '    self_class.__init__(self, getter (self))\n') in options, functions
+                      '    cls.__init__(self, getter (self))\n') in options, functions
 
             exec (('def resynchronize_with_backend (self):\n'
                    '    self._set (getter (%s))')
@@ -322,13 +328,13 @@ class AbstractStateTrackingCondition (AbstractCondition):
         else:
             if object is not None:
                 exec (('def __init__(self, %s, initial_state):\n'
-                       '    self_class.__init__(self, initial_state)\n'
+                       '    cls.__init__(self, initial_state)\n'
                        '    %s = %s')
                       % (object, AbstractValueObject._get_object (options), object)) \
                       in options, functions
             else:
                 exec ('def __init__(self, initial_state):\n'
-                      '    self_class.__init__(self, initial_state)\n') in options, functions
+                      '    cls.__init__(self, initial_state)\n') in options, functions
 
         for function in functions.iteritems ():
             yield function
@@ -360,6 +366,10 @@ class Condition (AbstractStateTrackingCondition):
         """
         Set the state of the condition to C{value}.  Value is first converted using
         C{bool} function, so it doesn’t need to be either C{True} or C{False}.
+
+        @param value: new I{state} of the condition (parameter name is just kept the same
+                      as in the base class.)
+        @type  value: C{object}
         """
 
         return self._set (value)
@@ -374,6 +384,10 @@ class PredicateCondition (AbstractStateTrackingCondition):
     recomputed, so you need to actively C{L{update}} it.  For an automated way, see
     C{L{AbstractVariable.predicate <variable.AbstractVariable.predicate>}} method.
 
+    Predicate conditions remember their state, so C{predicate} is called only from
+    C{L{__init__}} and C{L{update}} methods.  They also don’t reference last value they
+    were updated for.
+
     Advantage of using predicate conditions over all-purpose mutable ones and setting its
     state to the same predicate over different objects is encapsulation.  Predicate
     conditions remember the way to evaluate their state.
@@ -383,6 +397,22 @@ class PredicateCondition (AbstractStateTrackingCondition):
 
 
     def __init__(self, predicate, initial_object):
+        """
+        Initialize a new predicate conditon, setting its initial state to
+        C{predicate (initial_object)}.  C{predicate} is stored to be invoked also on any
+        subsequent calls to C{L{update}} method.  Return value of C{predicate} is always
+        coerced using C{bool} function, so it needn’t return a boolean value.
+
+        @param predicate:      a callable accepting one argument used to compute
+                               condition’s state.
+
+        @param initial_object: the value to be passed to C{predicate} to find initial
+                               state.
+        @type  initial_object: C{object}
+
+        @raises exception:     whatever C{predicate} raises, if anything.
+        """
+
         if not callable (predicate):
             raise TypeError ('predicate must be callable')
 
@@ -391,7 +421,20 @@ class PredicateCondition (AbstractStateTrackingCondition):
 
 
     def update (self, object):
-        self._set (self.__predicate (object))
+        """
+        Recompute condition state for new C{object}.  This method invokes stored
+        C{predicate} (as passed to C{L{__init__}}) to calculate new state.
+
+        @param object:     the value to be passed to the condition’s predicate.
+        @type  object:     C{object}
+
+        @rtype:            C{bool}
+        @returns:          Whether the state has changed as a result of recomputing.
+
+        @raises exception: whatever C{predicate} raises, if anything.
+        """
+
+        return self._set (self.__predicate (object))
 
 
     def _additional_description (self, formatter):
@@ -429,11 +472,14 @@ class WatcherCondition (AbstractStateTrackingCondition):
         Create a new watcher condition, watching C{condition_to_watch} initially.  The
         only argument is optional and can be omitted or set to C{None}.
 
-        @raises TypeError:  if C{condition_to_watch} is not an instance of
-                            C{L{AbstractCondition}} and not C{None}.
-        @raises ValueError: if C{condition_to_watch} is this condition.
+        @param  condition_to_watch: condition to watch (copy state) initially.
+        @type   condition_to_watch: C{L{AbstractCondition}} or C{None}
 
-        @see:               C{L{watch}}
+        @raises TypeError:          if C{condition_to_watch} is not an instance of
+                                    C{L{AbstractCondition}} and not C{None}.
+        @raises ValueError:         if C{condition_to_watch} is this condition.
+
+        @see:                       C{L{watch}}
         """
 
         super (WatcherCondition, self).__init__(False)
@@ -449,9 +495,12 @@ class WatcherCondition (AbstractStateTrackingCondition):
         one, if new is not C{None}.  Watching a different condition might change own
         state, in which case ‘changed’ signal will get emitted.
 
-        @raises TypeError:  if C{condition_to_watch} is not an instance of
-                            C{L{AbstractCondition}} and not C{None}.
-        @raises ValueError: if C{condition_to_watch} is this condition.
+        @param  condition_to_watch: new condition to watch (copy state.)
+        @type   condition_to_watch: C{L{AbstractCondition}} or C{None}
+
+        @raises TypeError:          if C{condition_to_watch} is not an instance of
+                                    C{L{AbstractCondition}} and not C{None}.
+        @raises ValueError:         if C{condition_to_watch} is this condition.
         """
 
         if condition_to_watch is not None:

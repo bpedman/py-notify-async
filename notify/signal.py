@@ -108,9 +108,9 @@ __all__       = ('AbstractSignal', 'Signal', 'CleanSignal')
 import sys
 import weakref
 
-from notify.bind  import *
-from notify.gc    import *
-from notify.utils import *
+from notify.bind  import Binding, WeakBinding
+from notify.gc    import AbstractGCProtector
+from notify.utils import raise_not_implemented_exception
 
 
 
@@ -176,7 +176,14 @@ class AbstractSignal (object):
             Accumulate C{value_to_add} into C{accumulated_value} and return the result.
             Result will be passed to next invocation of this method, if any.
 
-            @rtype: C{object}
+            @param accumulated_value: value, returned from the last call to
+                                      C{accumulated_value} or C{L{get_initial_value}}.
+            @param value_to_add:      next handler value, to be added to
+                                      C{accumulated_value}.
+
+            @rtype:                   C{object}
+            @returns:                 New accumulated value, combination of
+                                      C{accumulated_value} and C{value_to_add}.
             """
 
             raise_not_implemented_exception (self)
@@ -186,8 +193,11 @@ class AbstractSignal (object):
             Examine C{accumulated_value} and decide if signal emission should continue.
             Default implementation always returns C{True}.
 
-            @rtype:   C{bool}
-            @returns: Whether signal emission should continue.
+            @param accumulated_value: value, returned from the last call to
+                                      C{accumulated_value}.
+
+            @rtype:                   C{bool}
+            @returns:                 Whether signal emission should continue.
             """
 
             return True
@@ -200,7 +210,12 @@ class AbstractSignal (object):
             C{L{AbstractSignal.stop_emission}} method.  Default implementation does
             nothing and returns C{accumulated_value} unchanged.
 
-            @rtype: C{object}
+            @param accumulated_value: value, returned from the last call to
+                                      C{accumulated_value} or C{L{get_initial_value}}.
+
+            @rtype:                   C{object}
+            @returns:                 Final accumulated value, either C{accumulated_value}
+                                      or some transformation of it.
             """
 
             return accumulated_value
@@ -698,6 +713,14 @@ class AbstractSignal (object):
         This handler is just a simple C{pass}.  It ignores everything, including
         C{SystemExit} and C{KeyboardInterrupt}.
 
+        @param signal:    signal, in which emission an exception was raised.
+        @type  signal:    C{AbstractSignal}
+
+        @param exception: raised exception object (same as C{sys.exc_info () [1]}.)
+
+        @param handler:   signal handler that rose the exception.
+        @type  handler:   callable
+
         @see:  exception_handler
         """
 
@@ -710,6 +733,14 @@ class AbstractSignal (object):
         C{sys.excepthook}.  Otherwise, exceptions are ignored and never reraised (except
         if reraised by C{sys.excepthook} itself.)
 
+        @param signal:    signal, in which emission an exception was raised.
+        @type  signal:    C{AbstractSignal}
+
+        @param exception: raised exception object (same as C{sys.exc_info () [1]}.)
+
+        @param handler:   signal handler that rose the exception.
+        @type  handler:   callable
+
         @see:  exception_handler
         """
 
@@ -720,6 +751,14 @@ class AbstractSignal (object):
         """
         Handler for exceptions occured in signal handlers that reraises all exceptions.
         Regardless of exception type it is always thrown out of the emission call.
+
+        @param signal:    signal, in which emission an exception was raised.
+        @type  signal:    C{AbstractSignal}
+
+        @param exception: raised exception object (same as C{sys.exc_info () [1]}.)
+
+        @param handler:   signal handler that rose the exception.
+        @type  handler:   callable
 
         @see:  exception_handler
         """
@@ -794,6 +833,18 @@ class Signal (AbstractSignal):
 
 
     def __init__(self, accumulator = None):
+        """
+        Create a new C{Signal} with specified C{accumulator}.  By default, the signal will
+        not have any accumulator, so its C{L{emit}} method will always discard handlers’s
+        return values and return C{None}.
+
+        @param  accumulator: optional accumulator for signal handlers’ return values.
+        @type   accumulator: C{L{AbstractAccumulator}} or C{None}
+
+        @raises TypeError:   if C{accumulator} is not C{None} and not an instance of
+                             C{AbstractAccumulator}.
+        """
+
         if not (accumulator is None or isinstance (accumulator, Signal.AbstractAccumulator)):
             raise TypeError ("you must provide a `Signal.AbstractAccumulator' or None")
 
@@ -971,7 +1022,7 @@ class Signal (AbstractSignal):
 
             return True
 
-        except:
+        except ValueError:
             # It is not blocked to begin with.
             return False
 
