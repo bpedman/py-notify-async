@@ -751,7 +751,7 @@ class _Not (AbstractStateTrackingCondition):
 
 class _Binary (AbstractCondition):
 
-    __slots__ = ('_Binary__condition1', '_Binary__condition2', '_num_true_conditions')
+    __slots__ = ('_Binary__condition1', '_Binary__condition2', '_term_state')
 
 
     def __init__(self, condition1, condition2):
@@ -760,16 +760,17 @@ class _Binary (AbstractCondition):
         self.__condition1 = weakref.ref (condition1, self.__on_usage_change)
         self.__condition2 = weakref.ref (condition2, self.__on_usage_change)
 
-        condition1.changed.connect (self._on_term_change)
-        condition2.changed.connect (self._on_term_change)
+        condition1.changed.connect (self._on_term1_change)
+        condition2.changed.connect (self._on_term2_change)
 
-        # Note: this doesn't allow for non-symmetric condition implementation, but we
-        # don't need those anyway and this class is private.
-        self._num_true_conditions = condition1.get () + condition2.get ()
+        self._term_state = condition1.get () + 2 * condition2.get ()
 
 
     # For efficiency reasons, descendants must override fully.
-    def _on_term_change (self, new_state):
+    def _on_term1_change (self, new_state):
+        raise_not_implemented_exception (self)
+
+    def _on_term2_change (self, new_state):
         raise_not_implemented_exception (self)
 
 
@@ -789,13 +790,11 @@ class _Binary (AbstractCondition):
                 AbstractGCProtector.default.unprotect (self)
         else:
             if object is self.__condition1:
-                self.__condition1 = _get_dummy_reference (self._num_true_conditions
-                                                          - self.__condition2 ().get ())
+                self.__condition1 = _get_dummy_reference (self._term_state & 1)
                 if self._has_signal () and isinstance (self.__condition2, DummyReference):
                     AbstractGCProtector.default.unprotect (self)
             else:
-                self.__condition2 = _get_dummy_reference (self._num_true_conditions
-                                                          - self.__condition1 ().get ())
+                self.__condition2 = _get_dummy_reference (self._term_state & 2)
                 if self._has_signal () and isinstance (self.__condition1, DummyReference):
                     AbstractGCProtector.default.unprotect (self)
 
@@ -823,17 +822,18 @@ class _And (_Binary):
 
 
     def get (self):
-        return self._num_true_conditions == 2
+        return self._term_state == 3
 
-    def _on_term_change (self, new_state):
-        if new_state:
-            self._num_true_conditions += 1
-            if self._num_true_conditions == 2:
-                self._value_changed (True)
-        else:
-            self._num_true_conditions -= 1
-            if self._num_true_conditions == 1:
-                self._value_changed (False)
+
+    def _on_term1_change (self, new_state):
+        self._term_state ^= 1
+        if self._term_state & 2:
+            self._value_changed (new_state)
+
+    def _on_term2_change (self, new_state):
+        self._term_state ^= 2
+        if self._term_state & 1:
+            self._value_changed (new_state)
 
 
     def _get_operator_name (self):
@@ -847,17 +847,18 @@ class _Or (_Binary):
 
 
     def get (self):
-        return self._num_true_conditions > 0
+        return self._term_state != 0
 
-    def _on_term_change (self, new_state):
-        if new_state:
-            self._num_true_conditions += 1
-            if self._num_true_conditions == 1:
-                self._value_changed (True)
-        else:
-            self._num_true_conditions -= 1
-            if self._num_true_conditions == 0:
-                self._value_changed (False)
+
+    def _on_term1_change (self, new_state):
+        self._term_state ^= 1
+        if not self._term_state & 2:
+            self._value_changed (new_state)
+
+    def _on_term2_change (self, new_state):
+        self._term_state ^= 2
+        if not self._term_state & 1:
+            self._value_changed (new_state)
 
 
     def _get_operator_name (self):
@@ -871,15 +872,16 @@ class _Xor (_Binary):
 
 
     def get (self):
-        return self._num_true_conditions == 1
+        return self._term_state == 1 or self._term_state == 2
 
-    def _on_term_change (self, new_state):
-        if new_state:
-            self._num_true_conditions += 1
-        else:
-            self._num_true_conditions -= 1
 
-        self._value_changed (self._num_true_conditions == 1)
+    def _on_term1_change (self, new_state):
+        self._term_state ^= 1
+        self._value_changed (self._term_state == 1 or self._term_state == 2)
+
+    def _on_term2_change (self, new_state):
+        self._term_state ^= 2
+        self._value_changed (self._term_state == 1 or self._term_state == 2)
 
 
     def _get_operator_name (self):

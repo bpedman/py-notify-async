@@ -1,5 +1,10 @@
 2007-04-09  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	* notify/condition.py (_Binary, _And, _Or, _Xor): Replace
+	`_num_true_conditions' with `_term_state' and reimplement
+	accordingly.  Otherwise __on_usage_change() could access a
+	garbage-collected condition.
+
 	* examples/conditions_pygtk.py: Make it find the non-installed
 	`notify' module in the parent directory.  Make it work with old
 	PyGTK versions.
