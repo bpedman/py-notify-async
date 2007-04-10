@@ -201,6 +201,55 @@ class LogicConditionTestCase (NotifyTestCase):
 
 
 
+class PredicateConditionTestCase (NotifyTestCase):
+
+    def test_predicate_condition_1 (self):
+        self.results = []
+
+        predicate = PredicateCondition (bool, None)
+        predicate.store (self.simple_handler)
+
+        predicate.update (10)
+
+        self.assert_results (False, True)
+
+
+    def test_predicate_condition_2 (self):
+        self.results = []
+
+        predicate = PredicateCondition (bool, None)
+        predicate.store (self.simple_handler)
+
+        predicate.update (False)
+
+        self.assert_results (False)
+
+
+    def test_predicate_condition_3 (self):
+        self.results = []
+
+        predicate = PredicateCondition (lambda x: x > 10, 0)
+        predicate.store (self.simple_handler)
+
+        predicate.update (10)
+        predicate.update (20)
+        predicate.update (-5)
+
+        self.assert_results (False, True, False)
+
+
+    def test_predicate_condition_error_1 (self):
+        self.assertRaises (TypeError, lambda: PredicateCondition (None, None))
+
+
+    def test_predicate_condition_error_2 (self):
+        self.assertRaises (ZeroDivisionError, lambda: PredicateCondition (lambda x: 1/x, 0))
+
+        predicate = PredicateCondition (lambda x: 1/x, 10)
+        self.assertRaises (ZeroDivisionError, lambda: predicate.update (0))
+
+
+
 class WatcherConditionTestCase (NotifyTestCase):
 
     def test_watcher_condition_1 (self):
@@ -235,7 +284,7 @@ class WatcherConditionTestCase (NotifyTestCase):
 
         self.assert_(watcher.watched_condition is None)
 
-        # Later two watch() calls must not change watcher's state.
+        # Last two watch() calls must not change watcher's state.
         self.assert_results (True, False)
 
 

@@ -37,14 +37,18 @@
 # that is) instead.
 
 
+import sys
+
 if __name__ == '__main__':
     import os
-    import sys
-
     sys.path.insert (0, os.path.join (sys.path[0], os.pardir))
 
 
-from notify.all import *
+try:
+    from notify.all import *
+except ImportError:
+    sys.exit ("Please build Py-notify by running `python setup.py build' first")
+
 
 import pygtk
 pygtk.require ('2.0')

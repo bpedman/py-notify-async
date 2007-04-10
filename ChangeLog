@@ -1,3 +1,16 @@
+2007-04-10  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* version: Release 0.1.7.
+
+	* NEWS: Update.
+
+	* test/condition.py (PredicateConditionTestCase): New test case.
+
+	* test/utils.py: New file.
+
+	* examples/conditions_pygtk.py: Print short explanation of what's
+	wrong if importing `notify' fails.
+
 2007-04-09  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/condition.py (_Binary, _And, _Or, _Xor): Replace
