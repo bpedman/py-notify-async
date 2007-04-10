@@ -1,3 +1,17 @@
+--- New in Py-notify 0.1.7 -------------------------------------------
+
+* Improved documentation.  Some documentation files that didn't
+  previously make it to source distribution now do.
+
+* Many minor improvements and fixes.
+
+* New `examples' subdirectory with one but non-trivial example.
+
+* 1 removed and 8 new unit tests (105 in total.)
+
+* 1 new benchmark test.
+
+
 --- New in Py-notify 0.1.6 -------------------------------------------
 
 * Adopted "Don't repeat yourself" principle, therefore most functions
@@ -14,7 +28,7 @@
 
 * Infrastructure script improvements and fixes.
 
-* 6 more unit test (98 in total.)
+* 6 more unit tests (98 in total.)
 
 
 --- New in Py-notify 0.1.5 -------------------------------------------
