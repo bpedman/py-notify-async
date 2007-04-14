@@ -310,17 +310,6 @@ td.metadata-index
 }
 .summary-sig-name
 {
-	color:		#006080;
-	font-weight:	bold;
-}
-a.summary-sig-name:link
-{
-	color:		#006080;
-	font-weight:	bold;
-}
-a.summary-sig-name:visited
-{
-	color:		#006080;
 	font-weight:	bold;
 }
 .summary-sig-arg

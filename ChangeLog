@@ -1,3 +1,16 @@
+2007-04-14  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* docs/epydoc.css: Remove some styles so that `a' are more
+	uniform.
+
+	* notify/condition.py: Improve and expand documentation.
+	* notify/variable.py: Likewise.
+
+	* notify/condition.py (WatcherCondition.watch): Return boolean
+	indicating if self state has changed.  Return early if
+	`condition_to_watch' is already the watched one.
+	* notify/variable.py (WatcherVariable.watch): Likewise.
+
 2007-04-11  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* NEWS: Fix.

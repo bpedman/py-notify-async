@@ -72,6 +72,9 @@ class AbstractVariable (AbstractValueObject):
         Construct a condition, whose state is always given C{predicate} over this variable
         value.
 
+        @param  predicate: a callable accepting one argument (current value) which
+                           determines the state of the returned condition.
+
         @rtype:            C{L{AbstractCondition}}
 
         @raises TypeError: if C{predicate} is not callable.
@@ -109,8 +112,11 @@ class AbstractValueTrackingVariable (AbstractVariable):
         Initialize a new variable with specified C{initial_value}.  The value must conform
         to restrictions (if any) specified in C{L{is_allowed_value}} method.
 
-        @raises ValueError: if C{initial_value} is not suitable per C{L{is_allowed_value}}
-                            method.
+        @param  initial_value: initial value for this variable.
+        @type   initial_value: C{object}
+
+        @raises ValueError:    if C{initial_value} is not suitable according to
+                               C{L{is_allowed_value}} method.
         """
 
         if not self.is_allowed_value (initial_value):
@@ -121,9 +127,34 @@ class AbstractValueTrackingVariable (AbstractVariable):
 
 
     def get (self):
+        """
+        Get the current value of the variable.  Since this variable type stores its value,
+        this is the last object as passed to C{L{_set}} method internally.
+
+        @rtype: C{object}
+        """
+
         return self.__value
 
     def _set (self, value):
+        """
+        Set the value of the variable internally.  The C{value} is checked for both
+        equality with the current value and whether it passes C{L{is_allowed_value}} test.
+        So, this method does all that is needed for C{set} method of a mutable variable.
+
+        This method I{must not} be used from outside.  For mutable variables, use C{set}
+        instead; immutable ones update their values through other means.
+
+        @param  value:      new value for the variable.
+        @type   value:      C{object}
+
+        @rtype:             C{bool}
+        @returns:           Whether variable value changed as a result.
+
+        @raises ValueError: if C{value} is not acceptable according to
+                            C{L{is_allowed_value}}.
+        """
+
         if self.get () != value:
             if not self.is_allowed_value (value):
                 raise ValueError ("`%s' is not allowed as value of the variable" % value)
@@ -142,7 +173,10 @@ class AbstractValueTrackingVariable (AbstractVariable):
         variable’s value set, you need to create a new variable type, either using
         C{L{derive_type}} method or directly.
 
-        @rtype: C{bool}
+        @param value: candidate for the value of self variable.
+        @type  value: C{object}
+
+        @rtype:       C{bool}
         """
 
         return True
@@ -254,6 +288,22 @@ class Variable (AbstractValueTrackingVariable):
 
 
     def set (self, value):
+        """
+        Set the current value for the variable.  As a result, ‘changed’ signal will be
+        emitted, but only if the new value is not equal to the old one.  For derived types
+        this method can raise C{ValueError} if the value doesn’t pass
+        C{L{is_allowed_value}} test.
+
+        @param  value:      new value for the variable.
+        @type   value:      C{object}
+
+        @rtype:             C{bool}
+        @returns:           Whether variable value changed as a result.
+
+        @raises ValueError: if C{value} is not acceptable according to
+                            C{L{is_allowed_value}}.
+        """
+
         return self._set (value)
 
 
@@ -307,9 +357,15 @@ class WatcherVariable (AbstractValueTrackingVariable):
         if new is not C{None}.  Watching a different variable might change own state, in
         which case ‘changed’ signal will get emitted.
 
-        @raises TypeError:  if C{variable_to_watch} is not an instance of
-                            C{L{AbstractVariable}} and not C{None}.
-        @raises ValueError: if C{variable_to_watch} is this variable.
+        @param  variable_to_watch: new variable to watch (copy value.)
+        @type   variable_to_watch: C{L{AbstractVariable}} or C{None}
+
+        @rtype:                    C{bool}
+        @returns:                  Whether self value has changed as a result.
+
+        @raises TypeError:         if C{variable_to_watch} is not an instance of
+                                   C{L{AbstractVariable}} and not C{None}.
+        @raises ValueError:        if C{variable_to_watch} is this variable.
         """
 
         if variable_to_watch is not None:
@@ -320,6 +376,12 @@ class WatcherVariable (AbstractValueTrackingVariable):
                 raise TypeError ('can only watch other variables')
 
         watched_variable = self.__get_watched_variable ()
+
+        if watched_variable is variable_to_watch:
+            return False
+
+        old_value = self.get ()
+
         if watched_variable is not None:
             watched_variable.changed.disconnect (self._set)
 
@@ -335,6 +397,8 @@ class WatcherVariable (AbstractValueTrackingVariable):
                 AbstractGCProtector.default.protect (self)
             elif watched_variable is not None and variable_to_watch is None:
                 AbstractGCProtector.default.unprotect (self)
+
+        return self.get () != old_value
 
 
     def __get_watched_variable (self):

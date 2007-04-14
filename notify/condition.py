@@ -289,12 +289,37 @@ class AbstractStateTrackingCondition (AbstractCondition):
 
 
     def get (self):
+        """
+        Get the current state of the condition.  Since this condition type stores its
+        state, this is the last value as passed to C{L{_set}} method internally, except it
+        is always converted to either C{True} or C{False} using C{bool} function.
+
+        @rtype: C{bool}
+        """
+
         return self.__state
 
     def _set (self, value):
+        """
+        Set the state of the condition internally.  The C{value} parameter is first
+        coerced to boolean state using C{bool} function, then checked equality with the
+        current state.  So, this method does all that is needed for C{set} method of a
+        mutable condition.
+
+        This method I{must not} be used from outside.  For mutable conditions, use C{set}
+        instead; immutable ones update their states through other means.
+
+        @param  value: new value for the variable (coerced to boolean state
+                       automatically.)
+        @type   value: C{object}
+
+        @rtype:        C{bool}
+        @returns:      Whether condition state changed as a result.
+        """
+
         state = bool (value)
 
-        if self.get () is not state:
+        if self.get () != state:
             self.__state = state
             return self._value_changed (state)
         else:
@@ -370,6 +395,9 @@ class Condition (AbstractStateTrackingCondition):
         @param value: new I{state} of the condition (parameter name is just kept the same
                       as in the base class.)
         @type  value: C{object}
+
+        @rtype:       C{bool}
+        @returns:     Whether condition state changed as a result.
         """
 
         return self._set (value)
@@ -498,6 +526,9 @@ class WatcherCondition (AbstractStateTrackingCondition):
         @param  condition_to_watch: new condition to watch (copy state.)
         @type   condition_to_watch: C{L{AbstractCondition}} or C{None}
 
+        @rtype:                     C{bool}
+        @returns:                   Whether self state has changed as a result.
+
         @raises TypeError:          if C{condition_to_watch} is not an instance of
                                     C{L{AbstractCondition}} and not C{None}.
         @raises ValueError:         if C{condition_to_watch} is this condition.
@@ -511,6 +542,12 @@ class WatcherCondition (AbstractStateTrackingCondition):
                 raise TypeError ('can only watch other conditions')
 
         watched_condition = self.__get_watched_condition ()
+
+        if watched_condition is condition_to_watch:
+            return False
+
+        old_state = self.get ()
+
         if watched_condition is not None:
             watched_condition.changed.disconnect (self._set)
 
@@ -526,6 +563,8 @@ class WatcherCondition (AbstractStateTrackingCondition):
                 AbstractGCProtector.default.protect (self)
             elif watched_condition is not None and condition_to_watch is None:
                 AbstractGCProtector.default.unprotect (self)
+
+        return self.get () != old_state
 
 
     def __get_watched_condition (self):
