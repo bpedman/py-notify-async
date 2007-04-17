@@ -959,10 +959,9 @@ class _IfElse (AbstractCondition):
 
     def __on_if_term_change (self, new_state):
         self.__term_state ^= 4
-        state              = _IfElse.__TERM_STATE_TO_SELF_STATE[self.__term_state]
 
-        if state != _IfElse.__TERM_STATE_TO_SELF_STATE[self.__term_state ^ 4]:
-            self._value_changed (state)
+        if self.__term_state & 4 == 1 or self.__term_state & 4 == 2:
+            self._value_changed (self.__term_state == 1 or self.__term_state == 6)
 
 
     def __on_then_term_change (self, new_state):

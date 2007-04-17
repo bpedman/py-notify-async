@@ -1096,6 +1096,9 @@ class Signal (AbstractSignal):
 
 
     def collect_garbage (self):
+        # NOTE: If, for some reason, you change this, don't forget to adjust
+        #       `CleanSignal.collect_garbage' accordingly.
+
         # Don't remove disconnected or garbage-collected handlers if in nested emission,
         # it will spoil emit() calls completely.
         if self._handlers is not None and self.__emission_level == 0:
@@ -1196,8 +1199,17 @@ class CleanSignal (Signal):
 
     def collect_garbage (self):
         if self._handlers is not None and self._get_emission_level () == 0:
-            super (CleanSignal, self).collect_garbage ()
-            if self._handlers is None and self.__parent is not None:
+            # NOTE: This is essentially inlined method of the superclass.  While calling
+            #       that method would be more proper, inlining it gives significant speed
+            #       improvement.  Since it makes no difference for derivatives, we
+            #       sacrifice "do what is right" principle in this case.
+
+            self._handlers = [handler for handler in self._handlers
+                              if handler is not None and (not isinstance (handler, WeakBinding)
+                                                          or handler)]
+
+            if not self._handlers:
+                self._handlers = None
                 AbstractGCProtector.default.unprotect (self)
 
 
