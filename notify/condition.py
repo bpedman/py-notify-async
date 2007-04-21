@@ -960,7 +960,7 @@ class _IfElse (AbstractCondition):
     def __on_if_term_change (self, new_state):
         self.__term_state ^= 4
 
-        if self.__term_state & 4 == 1 or self.__term_state & 4 == 2:
+        if self.__term_state & 3 == 1 or self.__term_state & 3 == 2:
             self._value_changed (self.__term_state == 1 or self.__term_state == 6)
 
 

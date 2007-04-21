@@ -35,7 +35,7 @@ from notify.condition import *
 
 
 
-_NUM_LOOPS = 10000
+_NUM_ITERATIONS = 10000
 
 
 class LogicalBenchmark1 (benchmarking.Benchmark):
@@ -54,8 +54,8 @@ class LogicalBenchmark1 (benchmarking.Benchmark):
 
 
     def get_description (self, scale = 1.0):
-        return ('%d loops of state changes in a complex compound conditions tree'
-                % int (scale * _NUM_LOOPS))
+        return ('%d iterations of state changes in a complex compound conditions tree'
+                % int (scale * _NUM_ITERATIONS))
 
 
     def execute (self, scale = 1.0):
@@ -65,7 +65,7 @@ class LogicalBenchmark1 (benchmarking.Benchmark):
         condition4 = self.__condition4
         condition5 = self.__condition5
 
-        for k in xrange (0, int (scale * _NUM_LOOPS)):
+        for k in xrange (0, int (scale * _NUM_ITERATIONS)):
             # Changed order to increase number of state changes in
             # `self.__compound_condition' (the final condition.)
 

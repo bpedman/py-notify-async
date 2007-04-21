@@ -151,7 +151,7 @@ class LogicConditionTestCase (NotifyTestCase):
         self.assert_results (False, True, False, True, False)
 
 
-    def test_if_else (self):
+    def test_if_else_1 (self):
         self.results = []
 
         condition1 = Condition (False)
@@ -198,6 +198,22 @@ class LogicConditionTestCase (NotifyTestCase):
         self.assertEqual (if_else_condition.state, True)
 
         self.assert_results (False, True, False, True, False, True)
+
+
+    # Test for a real bug introduced when optimizing if-else condition.
+    def test_if_else_2 (self):
+        self.results = []
+
+        condition1 = Condition (False)
+        condition2 = Condition (False)
+        condition3 = Condition (True)
+
+        if_else_condition = condition1.if_else (condition2, condition3)
+        if_else_condition.store (self.simple_handler)
+
+        condition1.state = True
+
+        self.assert_results (True, False)
 
 
 

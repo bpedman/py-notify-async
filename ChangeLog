@@ -1,3 +1,15 @@
+2007-04-20  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* test/condition.py (LogicConditionTestCase.test_if_else_1):
+	Rename from test_if_else().
+	(LogicConditionTestCase.test_if_else_2): New test.
+
+	* notify/condition.py (_IfElse.__on_if_term_change): Fix.
+
+2007-04-18  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* setup.py: Replace package description.
+
 2007-04-17  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/condition.py (_IfElse.__on_if_term_change): Rewrite to

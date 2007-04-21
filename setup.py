@@ -141,7 +141,7 @@ gc_extension = Extension (name    = 'notify.gc',
 
 setup (name         = 'py-notify',
        version      = version,
-       description  = 'A Python package providing signals, conditions and variables.',
+       description  = 'An unorthodox implementation of Observer programming pattern.',
        author       = 'Paul Pogonyshev',
        author_email = 'py-notify-dev@gna.org',
        url          = 'http://home.gna.org/py-notify/',
