@@ -196,7 +196,7 @@ class AbstractValueTrackingVariable (AbstractVariable):
 
         for attribute in (super (AbstractValueTrackingVariable, cls)
                           ._generate_derived_type_dictionary (options)):
-            if attribute[0] != 'get':
+            if attribute[0] not in ('get', 'set'):
                 yield attribute
 
         functions = {}
@@ -259,6 +259,21 @@ class AbstractValueTrackingVariable (AbstractVariable):
                 exec (('def __init__(self, initial_value%s):\n'
                        '    cls.__init__(self, initial_value)\n')
                       % initial_default) in options, functions
+
+        if 'setter' in options:
+            exec (('def _set (self, value):\n'
+                   '    if self.get () != value:\n'
+                   '        if not self.is_allowed_value (value):\n'
+                   '            raise ValueError \\\n'
+                   '                ("`%%s\' is not allowed as value of the variable" %% value)\n'
+                   '        setter (%s, value)\n'
+                   '        self._AbstractValueTrackingVariable__value = value\n'
+                   '        return self._value_changed (value)\n'
+                   '    else:\n'
+                   '        return False')
+                  % AbstractValueObject._get_object (options)) in options, functions
+
+            exec 'def set (self, value): return self._set (value)' in options, functions
 
         for function in functions.iteritems ():
             yield function
@@ -448,6 +463,12 @@ class WatcherVariable (AbstractValueTrackingVariable):
     def _additional_description (self, formatter):
         return (['watching %s' % formatter (self.__get_watched_variable ())]
                 + super (WatcherVariable, self)._additional_description (formatter))
+
+
+    def _generate_derived_type_dictionary (cls, options):
+        raise TypeError ("`WatcherVariable' doesn't support derive_type() method")
+
+    _generate_derived_type_dictionary = classmethod (_generate_derived_type_dictionary)
 
 
 

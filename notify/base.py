@@ -720,16 +720,14 @@ class AbstractValueObject (object):
             del object
 
         if 'getter' in options:
-            getter = options['getter']
-            if not callable (getter):
+            if not callable (options['getter']):
                 raise TypeError ("`getter' must be a callable")
 
             exec ('def get (self): return getter (%s)'
-                  % AbstractValueObject._get_object (options))  in options, functions
+                  % AbstractValueObject._get_object (options)) in options, functions
 
         if 'setter' in options:
-            setter = options['setter']
-            if not callable (setter):
+            if not callable (options['setter']):
                 raise TypeError ("`setter' must be a callable")
 
             exec ('def set (self, value): return setter (%s, value)'

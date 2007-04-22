@@ -329,7 +329,7 @@ class AbstractStateTrackingCondition (AbstractCondition):
     def _generate_derived_type_dictionary (cls, options):
         for attribute in (super (AbstractStateTrackingCondition, cls)
                           ._generate_derived_type_dictionary (options)):
-            if attribute[0] != 'get':
+            if attribute[0] not in ('get', 'set'):
                 yield attribute
 
         functions = {}
@@ -360,6 +360,19 @@ class AbstractStateTrackingCondition (AbstractCondition):
             else:
                 exec ('def __init__(self, initial_state):\n'
                       '    cls.__init__(self, initial_state)\n') in options, functions
+
+        if 'setter' in options:
+            exec (('def _set (self, value):\n'
+                   '    state = bool (value)\n'
+                   '    if self.get () != state:\n'
+                   '        setter (%s, state)\n'
+                   '        self._AbstractStateTrackingCondition__state = state\n'
+                   '        return self._value_changed (state)\n'
+                   '    else:\n'
+                   '        return False')
+                  % AbstractValueObject._get_object (options)) in options, functions
+
+            exec 'def set (self, value): return self._set (value)' in options, functions
 
         for function in functions.iteritems ():
             yield function
@@ -468,6 +481,12 @@ class PredicateCondition (AbstractStateTrackingCondition):
     def _additional_description (self, formatter):
         return (['predicate: %s' % formatter (self.__predicate)]
                 + super (PredicateCondition, self)._additional_description (formatter))
+
+
+    def _generate_derived_type_dictionary (cls, options):
+        raise TypeError ("`PredicateCondition' doesn't support derive_type() method")
+
+    _generate_derived_type_dictionary = classmethod (_generate_derived_type_dictionary)
 
 
 
@@ -614,6 +633,12 @@ class WatcherCondition (AbstractStateTrackingCondition):
     def _additional_description (self, formatter):
         return (['watching %s' % formatter (self.__get_watched_condition ())]
                 + super (WatcherCondition, self)._additional_description (formatter))
+
+
+    def _generate_derived_type_dictionary (cls, options):
+        raise TypeError ("`PredicateCondition' doesn't support derive_type() method")
+
+    _generate_derived_type_dictionary = classmethod (_generate_derived_type_dictionary)
 
 
 

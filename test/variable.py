@@ -232,6 +232,30 @@ class VariableDerivationTestCase (NotifyTestCase):
         self.assertRaises (ValueError, lambda: variable.set ('string'))
 
 
+    def test_derivation_6 (self):
+        StringVariable = Variable.derive_type ('StringVariable',
+                                               allowed_value_types = basestring,
+                                               setter = lambda variable, value: None)
+
+        variable = StringVariable ('')
+        self.assertRaises (ValueError, lambda: variable.set (None))
+
+
+    def test_derivation_7 (self):
+        DerivedVariable = \
+            AbstractValueTrackingVariable.derive_type ('DerivedVariable',
+                                                       setter = lambda variable, value: None)
+
+        variable = DerivedVariable ()
+        self.assert_(variable.value is None)
+
+        variable.set (100)
+        self.assert_(variable.value == 100)
+
+        variable.value = 'abc'
+        self.assert_(variable.value == 'abc')
+
+
     def test_multiple_derivation (self):
         # Derive two types and make sure they don't spoil each other's is_allowed_value()
         # method.

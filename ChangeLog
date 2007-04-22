@@ -1,3 +1,31 @@
+2007-04-22  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* examples/conditions_pygtk.py (Entry.__Text): Add
+	`allowed_value_types' option.
+	(PredicateConditionPage.build_contents): Initialize entry text to
+	show how it is possible with variables.
+
+	* notify/condition.py
+	(AbstractStateTrackingCondition._generate_derived_type_dictionary):
+	Rewrite to substitute custom proper set() method.
+
+	* notify/variable.py
+	(AbstractValueTrackingVariable._generate_derived_type_dictionary):
+	Likewise.
+
+	* test/variable.py (VariableDerivationTestCase.test_derivation_6)
+	(VariableDerivationTestCase.test_derivation_7): New tests.
+
+	* test/condition.py (ConditionDerivationTestCase): New test case.
+
+	* notify/condition.py
+	(PredicateCondition._generate_derived_type_dictionary)
+	(WatcherCondition._generate_derived_type_dictionary): New
+	functions, just raise `TypeError' unconditionally.
+
+	* notify/variable.py
+	(WatcherVariable._generate_derived_type_dictionary): Likewise.
+
 2007-04-20  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* test/condition.py (LogicConditionTestCase.test_if_else_1):

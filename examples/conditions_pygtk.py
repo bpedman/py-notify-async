@@ -75,7 +75,8 @@ class Entry (gtk.Entry):
 
     __Text = AbstractValueTrackingVariable.derive_type ('__Text', object = 'entry',
                                                         getter = gtk.Entry.get_text,
-                                                        setter = gtk.Entry.set_text)
+                                                        setter = gtk.Entry.set_text,
+                                                        allowed_value_types = basestring)
 
 
     def __init__(self):
@@ -189,6 +190,7 @@ class PredicateConditionPage (Page):
 
     def build_contents (self):
         entry = Entry ()
+        entry.text.set ('odd')
 
         self.condition = entry.text.predicate (lambda text: len (text) % 2 == 0)
 

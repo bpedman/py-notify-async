@@ -571,6 +571,24 @@ class SignalConditionTestCase (NotifyTestCase):
 
 
 
+class ConditionDerivationTestCase (NotifyTestCase):
+
+    def test_derivation_1 (self):
+        DerivedCondition = \
+            AbstractStateTrackingCondition.derive_type ('DerivedCondition',
+                                                        setter = lambda condition, state: None)
+
+        condition = DerivedCondition (False)
+        self.assert_(not condition.state)
+
+        condition.set (True)
+        self.assert_(condition.state)
+
+        condition.state = False
+        self.assert_(not condition.state)
+
+
+
 if __name__ == '__main__':
     unittest.main ()
 
