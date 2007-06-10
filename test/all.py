@@ -82,6 +82,7 @@ class AllTestCase (unittest.TestCase):
 
     def test_condition (self):
         self.assert_is_class (AbstractCondition)
+        self.assert_is_class (AbstractStateTrackingCondition)
         self.assert_is_class (Condition)
         self.assert_is_class (PredicateCondition)
         self.assert_is_class (WatcherCondition)
@@ -100,6 +101,7 @@ class AllTestCase (unittest.TestCase):
 
 
     def test_signal (self):
+        self.assert_is_class (AbstractSignal)
         self.assert_is_class (Signal)
         self.assert_is_class (CleanSignal)
 
@@ -111,6 +113,7 @@ class AllTestCase (unittest.TestCase):
 
     def test_variable (self):
         self.assert_is_class (AbstractVariable)
+        self.assert_is_class (AbstractValueTrackingVariable)
         self.assert_is_class (Variable)
         self.assert_is_class (WatcherVariable)
 

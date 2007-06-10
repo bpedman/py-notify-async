@@ -271,7 +271,7 @@ class Binding (object):
             if isinstance (other, Binding):
                 return self._get_arguments () == other._get_arguments ()
             else:
-                return bool (self._get_arguments ())
+                return not self._get_arguments ()
 
         else:
             if isinstance (other, FunctionType):
