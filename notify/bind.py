@@ -75,6 +75,14 @@ from notify.utils import DummyReference
 
 #-- Base binding class -----------------------------------------------
 
+# Note on (not) using `functools.partial' in Python 2.5 and up.  I have investigated the
+# possibility, but it doesn't seem useful.  It gave no visible speed up even on
+# `emission.EmissionBenchmark1' (which uses functional handlers.)  Besides, using
+# `partial' would complicate the code, because it would bind the object strongly (hence
+# unusable for `WeakBinding' below), won't compare as needed by itself and so on.
+#
+# Conclusion: let's not use it at all.
+
 class Binding (object):
 
     """
@@ -154,7 +162,7 @@ class Binding (object):
                            iterable.
         """
 
-        if arguments is not ():
+        if arguments:
             return cls (callable_object, arguments)
         else:
             if not callable (callable_object):
@@ -263,14 +271,14 @@ class Binding (object):
             if isinstance (other, Binding):
                 return self._get_arguments () == other._get_arguments ()
             else:
-                return self._get_arguments () is ()
+                return bool (self._get_arguments ())
 
         else:
             if isinstance (other, FunctionType):
-                return (self.im_func is other
-                        and self.im_self is None
+                return (    self.im_func  is other
+                        and self.im_self  is None
                         and self.im_class is None
-                        and self.im_args is ())
+                        and not self.im_args)
             else:
                 return NotImplemented
 
@@ -443,7 +451,7 @@ class WeakBinding (Binding):
 
     def wrap (cls, callable_object, arguments = (), callback = None):
         # Inherit documentation somehow?
-        if (arguments is not ()
+        if (arguments
             or (    isinstance (callable_object, BindingCompatibleTypes)
                 and not isinstance (callable_object, WeakBinding)
                 and callable_object.im_self is not None)):

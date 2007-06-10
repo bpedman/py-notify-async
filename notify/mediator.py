@@ -81,6 +81,9 @@ class AbstractMediator (object):
     what is needed to create an argument to a L{signal}.
     """
 
+    __slots__ = ()
+
+
     def forward_value (self, value):
         """
         Apply forward transformation to C{value} and return the result.  This function may

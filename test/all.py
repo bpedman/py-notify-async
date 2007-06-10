@@ -46,18 +46,22 @@ class AllTestCase (unittest.TestCase):
     def assert_is_class (self, _class):
         self.assert_(isinstance (_class, (type, types.ClassType)), _class)
 
-        # Also assert that classes define `__slots__' variable appropriately.  We use a
-        # trick hoping that constructor of `_class' accepts a number of `None' values.
-        # Thus, not all classes are tested.
+        if not issubclass (_class, Exception):
+            # Also assert that classes define `__slots__' variable appropriately.  We use
+            # a trick hoping that constructor of `_class' accepts a number of `None'
+            # values.  Thus, not all classes are tested.
 
-        for num_arguments in range (0, 10):
-            try:
-                object = _class (* ((None,) * num_arguments))
-            except:
-                continue
+            for num_arguments in range (0, 10):
+                try:
+                    object = _class (* ((None,) * num_arguments))
+                except:
+                    continue
 
-            self.assertRaises (AttributeError, lambda: object.this_attribute_sure_doesnt_exist)
-            break
+                def set_non_existing_attribute ():
+                    object.this_attribute_sure_doesnt_exist = None
+
+                self.assertRaises (AttributeError, set_non_existing_attribute)
+                break
 
 
     def test_base (self):
@@ -86,6 +90,7 @@ class AllTestCase (unittest.TestCase):
     def test_gc (self):
         self.assert_is_class (AbstractGCProtector)
         self.assert_is_class (FastGCProtector)
+        self.assert_is_class (DebugGCProtector)
 
 
     def test_mediator (self):
@@ -96,6 +101,7 @@ class AllTestCase (unittest.TestCase):
 
     def test_signal (self):
         self.assert_is_class (Signal)
+        self.assert_is_class (CleanSignal)
 
 
     def test_util (self):

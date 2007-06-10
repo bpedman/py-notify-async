@@ -851,7 +851,7 @@ class Signal (AbstractSignal):
         super (Signal, self).__init__()
 
         self._handlers         = None
-        self._blocked_handlers = ()
+        self._blocked_handlers = _EMPTY_TUPLE
         self.__accumulator     = accumulator
         self.__emission_level  = 0
 
@@ -899,7 +899,7 @@ class Signal (AbstractSignal):
 
 
     def is_blocked (self, handler, *arguments):
-        if self._blocked_handlers is not () and callable (handler):
+        if self._blocked_handlers is not _EMPTY_TUPLE and callable (handler):
             if arguments:
                 handler = Binding (handler, arguments)
 
@@ -935,7 +935,7 @@ class Signal (AbstractSignal):
                 else:
                     self._handlers[index] = None
 
-                if (self._blocked_handlers is not ()
+                if (    self._blocked_handlers is not _EMPTY_TUPLE
                     and handler not in self._handlers[index:]):
                     # This is the last handler, need to make sure it is not listed in
                     # `_blocked_handlers'.
@@ -943,7 +943,7 @@ class Signal (AbstractSignal):
                                               if _handler != handler]
 
                     if not self._blocked_handlers:
-                        self._blocked_handlers = ()
+                        self._blocked_handlers = _EMPTY_TUPLE
 
                 if not self._handlers:
                     self._handlers = None
@@ -978,12 +978,12 @@ class Signal (AbstractSignal):
                     self._handlers[index] = None
                     any_removed           = True
 
-        if any_removed and self._blocked_handlers is not ():
+        if any_removed and self._blocked_handlers is not _EMPTY_TUPLE:
             self._blocked_handlers = [_handler for _handler in self._blocked_handlers
                                       if _handler != handler]
 
             if not self._blocked_handlers:
-                self._blocked_handlers = ()
+                self._blocked_handlers = _EMPTY_TUPLE
 
         return any_removed
 
@@ -997,7 +997,7 @@ class Signal (AbstractSignal):
                 handler = Binding (handler, arguments)
 
             if handler in self._handlers:
-                if self._blocked_handlers is not ():
+                if self._blocked_handlers is not _EMPTY_TUPLE:
                     self._blocked_handlers.append (handler)
                 else:
                     self._blocked_handlers = [handler]
@@ -1008,7 +1008,7 @@ class Signal (AbstractSignal):
 
 
     def unblock (self, handler, *arguments):
-        if self._blocked_handlers is () or not callable (handler):
+        if self._blocked_handlers is _EMPTY_TUPLE or not callable (handler):
             return False
 
         if arguments:
@@ -1018,7 +1018,7 @@ class Signal (AbstractSignal):
             self._blocked_handlers.remove (handler)
 
             if not self._blocked_handlers:
-                self._blocked_handlers = ()
+                self._blocked_handlers = _EMPTY_TUPLE
 
             return True
 
@@ -1053,7 +1053,6 @@ class Signal (AbstractSignal):
                         continue
 
                     if self.__emission_level < 0:
-                        self.__emission_level = -self.__emission_level
                         break
 
                     try:
@@ -1211,6 +1210,11 @@ class CleanSignal (Signal):
             if not self._handlers:
                 self._handlers = None
                 AbstractGCProtector.default.unprotect (self)
+
+
+
+# It is not guaranteed to be a singleton, also it probably always is.
+_EMPTY_TUPLE = ()
 
 
 

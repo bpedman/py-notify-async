@@ -1,10 +1,3 @@
-			    TEST COVERAGE
-
-Currently, unit test coverage is inadequate.  Add more tests and make
-sure all of them pass.
-
-
-
 			    NAMED SIGNALS
 
 It would look like this: there is a single object (maybe
