@@ -351,15 +351,26 @@ class AbstractStateTrackingCondition (AbstractCondition):
                   % AbstractValueObject._get_object (options)) in options, functions
 
         else:
+            if 'setter' in options:
+                setter_statement = ('setter (%s, initial_state)'
+                                    % AbstractValueObject._get_object (options))
+            else:
+                setter_statement = ''
+
             if object is not None:
                 exec (('def __init__(self, %s, initial_state):\n'
                        '    cls.__init__(self, initial_state)\n'
-                       '    %s = %s')
-                      % (object, AbstractValueObject._get_object (options), object)) \
+                       '    %s = %s\n'
+                       '    %s\n')
+                      % (object, AbstractValueObject._get_object (options), object,
+                         setter_statement)) \
                       in options, functions
             else:
-                exec ('def __init__(self, initial_state):\n'
-                      '    cls.__init__(self, initial_state)\n') in options, functions
+                exec (('def __init__(self, initial_state):\n'
+                       '    cls.__init__(self, initial_state)\n'
+                       '    %s\n')
+                      % setter_statement) \
+                      in options, functions
 
         if 'setter' in options:
             exec (('def _set (self, value):\n'

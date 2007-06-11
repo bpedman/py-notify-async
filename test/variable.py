@@ -256,6 +256,40 @@ class VariableDerivationTestCase (NotifyTestCase):
         self.assert_(variable.value == 'abc')
 
 
+    def test_derivation_8 (self):
+        self.results = []
+
+        DerivedVariable = \
+            AbstractValueTrackingVariable.derive_type ('DerivedVariable',
+                                                       getter = lambda variable: None,
+                                                       setter = (lambda variable, value:
+                                                                     self.simple_handler (value)))
+
+        variable = DerivedVariable ()
+        variable.set (100)
+        variable.value = 'abc'
+
+        # The default value is retrieved with the getter function, so the setter must not
+        # be called during variable creation.
+        self.assert_results (100, 'abc')
+
+
+    def test_derivation_9 (self):
+        self.results = []
+
+        DerivedVariable = \
+            AbstractValueTrackingVariable.derive_type ('DerivedVariable',
+                                                       setter = (lambda variable, value:
+                                                                     self.simple_handler (value)))
+
+        variable = DerivedVariable ()
+        variable.set (100)
+        variable.value = 'abc'
+
+        # There is no getter at all, so setter must be called during variable creation.
+        self.assert_results (None, 100, 'abc')
+
+
     def test_multiple_derivation (self):
         # Derive two types and make sure they don't spoil each other's is_allowed_value()
         # method.

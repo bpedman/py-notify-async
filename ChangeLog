@@ -1,3 +1,20 @@
+2007-06-11  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/condition.py
+	(AbstractStateTrackingCondition._generate_derived_type_dictionary):
+	If `setter' but not `getter' is specified, always invoke the
+	former from __init__() function of the new type.
+
+	* notify/variable.py
+	(AbstractValueTrackingVariable._generate_derived_type_dictionary):
+	Likewise.
+
+	* test/condition.py (ConditionDerivationTestCase.test_derivation_2)
+	(ConditionDerivationTestCase.test_derivation_3): New tests.
+
+	* test/variable.py (VariableDerivationTestCase.test_derivation_8)
+	(VariableDerivationTestCase.test_derivation_9): New tests.
+
 2007-06-10  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/bind.py (Binding.__eq__): Fix bug introduced in the

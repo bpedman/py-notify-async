@@ -248,17 +248,25 @@ class AbstractValueTrackingVariable (AbstractVariable):
             else:
                 initial_default = ''
 
+            if 'setter' in options:
+                setter_statement = ('setter (%s, initial_value)'
+                                    % AbstractValueObject._get_object (options))
+            else:
+                setter_statement = ''
+
             if object is not None:
                 exec (('def __init__(self, %s, initial_value%s):\n'
                        '    cls.__init__(self, initial_value)\n'
-                       '    %s = %s')
+                       '    %s = %s\n'
+                       '    %s\n')
                       % (object, initial_default,
-                         AbstractValueObject._get_object (options), object)) \
+                         AbstractValueObject._get_object (options), object), setter_statement) \
                       in options, functions
             else:
                 exec (('def __init__(self, initial_value%s):\n'
-                       '    cls.__init__(self, initial_value)\n')
-                      % initial_default) in options, functions
+                       '    cls.__init__(self, initial_value)\n'
+                       '    %s\n')
+                      % (initial_default, setter_statement)) in options, functions
 
         if 'setter' in options:
             exec (('def _set (self, value):\n'

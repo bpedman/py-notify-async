@@ -588,6 +588,40 @@ class ConditionDerivationTestCase (NotifyTestCase):
         self.assert_(not condition.state)
 
 
+    def test_derivation_2 (self):
+        self.results = []
+
+        DerivedCondition = \
+            AbstractStateTrackingCondition.derive_type ('DerivedCondition',
+                                                        getter = lambda condition: False,
+                                                        setter = (lambda condition, state:
+                                                                      self.simple_handler (state)))
+
+        condition = DerivedCondition ()
+        condition.set (True)
+        condition.state = False
+
+        # The default state is retrieved with the getter function, so the setter must not
+        # be called during condition creation.
+        self.assert_results (True, False)
+
+
+    def test_derivation_3 (self):
+        self.results = []
+
+        DerivedCondition = \
+            AbstractStateTrackingCondition.derive_type ('DerivedCondition',
+                                                        setter = (lambda condition, state:
+                                                                      self.simple_handler (state)))
+
+        condition = DerivedCondition (False)
+        condition.set (True)
+        condition.state = False
+
+        # There is no getter at all, so setter must be called during condition creation.
+        self.assert_results (False, True, False)
+
+
 
 if __name__ == '__main__':
     unittest.main ()
