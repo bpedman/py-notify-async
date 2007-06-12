@@ -1,3 +1,19 @@
+2007-06-12  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/bind.py (Binding.__repr__, Binding.__str__)
+	(Binding.__to_string): New methods.
+
+	* notify/signal.py (AbstractSignal._additional_description): New
+	function (clone mechanism used by `AbstractValueObject' and its
+	descendants.)
+	(AbstractSignal.__to_string, AbstractSignal.__repr__)
+	(AbstractSignal.__str__): Rewrite to use new machinery.
+	(Signal._additional_description)
+	(CleanSignal._additional_description): New methods.
+
+	* notify/utils.py (DummyReference.__repr__)
+	(DummyReference.__str__): New methods.
+
 2007-06-11  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/condition.py

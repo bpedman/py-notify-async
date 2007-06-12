@@ -172,6 +172,14 @@ class DummyReference (object):
         return self.__object
 
 
+    def __repr__(self):
+        return ('<%s.%s at 0x%x; to %r>'
+                % (self.__module__, self.__class__.__name__, id (self), self.__object))
+
+    def __str__(self):
+        return '<%s at 0x%x; to %s>' % (self.__class__.__name__, id (self), self.__object)
+
+
 
 # Local variables:
 # mode: python

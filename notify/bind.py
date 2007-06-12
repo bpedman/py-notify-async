@@ -361,6 +361,48 @@ class Binding (object):
                                 """))
 
 
+    def __repr__(self):
+        return self.__to_string ('%s.%s' % (self.__module__, self.__class__.__name__), True)
+
+    def __str__(self):
+        return self.__to_string (self.__class__.__name__, False)
+
+    def __to_string (self, class_name, strict):
+        if strict:
+            formatter = repr
+        else:
+            formatter = str
+
+        _class    = self._get_class     ()
+        function  = self._get_function  ()
+        arguments = self._get_arguments ()
+
+        if isinstance (function, FunctionType):
+            function_description = function.__name__
+        else:
+            function_description = formatter (function)
+
+        description = '%s at 0x%x' % (class_name, id (self))
+
+        if _class is not None:
+            object = self._get_object ()
+
+            if object is not None:
+                description = ('bound %s for %s.%s of %s'
+                               % (description, _class.__name__, function_description,
+                                  formatter (object)))
+            else:
+                description = ('unbound %s for %s.%s'
+                               % (description, _class.__name__, function_description))
+        else:
+            description = '%s for %s' % (description, function_description)
+
+        if arguments:
+            return ('<%s (%s, ...)>'
+                    % (description, ', '.join ([formatter (argument) for argument in arguments])))
+        else:
+            return '<%s>' % description
+
 
 BindingCompatibleTypes = (MethodType, Binding)
 """
