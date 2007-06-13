@@ -1,5 +1,9 @@
 2007-06-13  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	* version: Release 0.1.8.
+
+	* NEWS: Update.
+
 	* test/bind.py (BindingTestCase.test_equality_1): Test all
 	standard binding types at once.  Also don't let dummy objects be
 	garbage-collected before binding comparison.

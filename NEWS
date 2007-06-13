@@ -1,3 +1,18 @@
+--- New in Py-notify 0.1.8 -------------------------------------------
+
+* Improved and fixed derive_type() class method in several
+  AbstractValueObject-derived classes.
+
+* Mediators and bindings got __hash__() method.
+
+* Informative string representation added to bindings and
+  DummyReference class, improved in signals.
+
+* Other small improvements and fixes.
+
+* 8 new unit tests (114 in total) and several improved.
+
+
 --- New in Py-notify 0.1.7 -------------------------------------------
 
 * Improved documentation.  Some documentation files that didn't
@@ -9,7 +24,7 @@
 
 * 1 removed and 9 new unit tests (106 in total.)
 
-* 1 new benchmark test.
+* 1 new benchmark test (5 in total.)
 
 
 --- New in Py-notify 0.1.6 -------------------------------------------
