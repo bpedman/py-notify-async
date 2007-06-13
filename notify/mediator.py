@@ -203,6 +203,9 @@ class AbstractMediator (object):
         else:
             return NotImplemented
 
+    def __hash__(self):
+        return id (self)
+
 
 
 #-- Standard mediator classes ----------------------------------------
@@ -272,6 +275,9 @@ class BooleanMediator (AbstractMediator):
         else:
             return NotImplemented
 
+    def __hash__(self):
+        return hash (self.__true_value) ^ hash (self.__false_value) ^ hash (self.__fallback)
+
 
 
 class FunctionalMediator (AbstractMediator):
@@ -320,6 +326,11 @@ class FunctionalMediator (AbstractMediator):
         else:
             return NotImplemented
 
+    def __hash__(self):
+        return (  hash (self.__forward_function)
+                ^ hash (self.__back_function)
+                ^ hash (self.__arguments))
+
 
 
 def _identity (value, *ignored_arguments):
@@ -363,6 +374,9 @@ class _ReverseMediator (AbstractMediator):
         else:
             return NotImplemented
 
+    def __hash__(self):
+        return ~hash (self.__wrapped_mediator)
+
 
 
 class _Function (object):
@@ -385,6 +399,9 @@ class _Function (object):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def __hash__(self):
+        return id (self.__class__) ^ hash (self._mediator) ^ hash (self._function)
 
 
 

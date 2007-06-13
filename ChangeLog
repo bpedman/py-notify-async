@@ -1,3 +1,23 @@
+2007-06-13  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* test/bind.py (BindingTestCase.test_equality_1): Test all
+	standard binding types at once.  Also don't let dummy objects be
+	garbage-collected before binding comparison.
+	(BindingTestCase.test_equality_2): Likewise for all types.
+	(BindingTestCase.test_equality_3): Likewise.
+	(BindingTestCase.test_equality_4): Likewise.
+
+	* test/__common.py (NotifyTestCase.assert_equal_thoroughly): Also
+	test that if both values are hashable, then hashes are equal.
+
+	* notify/bind.py (Binding.__hash__): New method.
+	(WeakBinding.__init__): Reset new `__hash' slot.
+	(WeakBinding.__hash__): New method.
+
+	* notify/mediator.py (AbstractMediator.__hash__)
+	(BooleanMediator.__hash__, FunctionalMediator.__hash__)
+	(_ReverseMediator.__hash__, _Function.__hash__): New methods.
+
 2007-06-12  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/bind.py (Binding.__repr__, Binding.__str__)

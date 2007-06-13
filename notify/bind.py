@@ -273,15 +273,14 @@ class Binding (object):
             else:
                 return not self._get_arguments ()
 
-        else:
-            if isinstance (other, FunctionType):
-                return (    self.im_func  is other
-                        and self.im_self  is None
-                        and self.im_class is None
-                        and not self.im_args)
-            else:
-                return NotImplemented
+        elif isinstance (other, FunctionType):
+            return (    self._get_function () is other
+                    and self._get_object   () is None
+                    and self._get_class    () is None
+                    and not self._get_arguments ())
 
+        else:
+            return NotImplemented
 
 
     def __ne__(self, other):
@@ -297,6 +296,22 @@ class Binding (object):
             return not equal
         else:
             return NotImplemented
+
+
+    def __hash__(self):
+        _class    = self._get_class     ()
+        object    = self._get_object    ()
+        arguments = self._get_arguments ()
+
+        if _class is not None or object is not None:
+            _hash = hash (MethodType (self._get_function (), object, _class))
+        else:
+            _hash = id (self._get_function ())
+
+        if arguments:
+            return _hash ^ hash (arguments)
+        else:
+            return _hash
 
 
     def __nonzero__(self):
@@ -442,7 +457,7 @@ class WeakBinding (Binding):
     @see:  RaisingWeakBinding
     """
 
-    __slots__ = ('_WeakBinding__callback')
+    __slots__ = ('_WeakBinding__callback', '_WeakBinding__hash')
 
 
     def __init__(self, callable_object, arguments = (), callback = None):
@@ -489,6 +504,8 @@ class WeakBinding (Binding):
                 raise CannotWeakReferenceError (self._object)
         else:
             self._object = _NONE_REFERENCE
+
+        self.__hash = None
 
 
     def wrap (cls, callable_object, arguments = (), callback = None):
@@ -565,6 +582,18 @@ class WeakBinding (Binding):
         if callback is not None:
             self.__callback = None
             callback (reference)
+
+
+    def __hash__(self):
+        if self.__hash is None:
+            if bool (self):
+                self.__hash = super (WeakBinding, self).__hash__()
+            else:
+                raise TypeError (("%s's object had been garbage-collected"
+                                  "before first call to __hash__()")
+                                 % self.__class__.__name__)
+
+        return self.__hash
 
 
     def __nonzero__(self):

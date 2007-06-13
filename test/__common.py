@@ -41,9 +41,23 @@ class NotifyTestCase (unittest.TestCase):
         self.assert_(    value1 == value2)
         self.assert_(not value1 != value2)
 
+        try:
+            hash1 = hash (value1)
+            hash2 = hash (value2)
+
+        except TypeError:
+            # It is OK, at least one value is unhashable then.
+            pass
+
+        else:
+            self.assert_(hash1 == hash2)
+
+
     def assert_not_equal_thoroughly (self, value1, value2):
         self.assert_(    value1 != value2)
         self.assert_(not value1 == value2)
+
+        # Note: hashes are _not_ required to be different, so don't test them.
 
 
     def assert_results (self, *results):
