@@ -1,3 +1,22 @@
+2007-06-16  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* test/_gc.py (RaisingGCProtectorTestCase): New test case.
+
+	* notify/gc.c (RaisingGCProtector_init): Rename from
+	DebugGCProtector_init().
+	(RaisingGCProtector_dealloc): Rename likewise.
+	(RaisingGCProtector_protect): Rename likewise.
+	(RaisingGCProtector_unprotect): Rename likewise.  Create an
+	exception of new `UnprotectionError' type and raise it instead.
+	(RaisingGCProtector_get_num_object_protections): Rename likewise.
+	(RaisingGCProtector_get_num_protected_objects): Rename likewise.
+	(RaisingGCProtector_get_num_active_protections): Rename likewise.
+	(DebugGCProtector_unprotect): New function.
+	(initgc): Register new `RaisingGCProtector' type and new
+	`UnprotectionError' exception type.
+
+	* README (About Py-notify): Style and grammar fixes.
+
 2007-06-13  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* version: Release 0.1.8.

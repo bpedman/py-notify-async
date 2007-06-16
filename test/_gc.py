@@ -113,6 +113,16 @@ class FastGCProtectorTestCase (_GCProtectorTestCase):
 
 
 
+class RaisingGCProtectorTestCase (_GCProtectorTestCase):
+
+    def test_protection_1 (self):
+        self._do_test_protection (RaisingGCProtector ())
+
+    def test_protection_2 (self):
+        self._do_test_double_protection (RaisingGCProtector ())
+
+
+
 class DebugGCProtectorTestCase (_GCProtectorTestCase):
 
     def test_protection_1 (self):

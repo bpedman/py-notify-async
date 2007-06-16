@@ -4,12 +4,12 @@ Py-notify is a Python package providing tools for implementing
 Observer programming pattern. These tools include signals, conditions
 and variables.
 
-Signals are a list of handlers that are called when signal is
+Signals are lists of handlers that are called when signal is
 emitted. Conditions are basically boolean variables coupled with a
-signal that is emitted when their state changes. They can be combined
-using standard logical operators (not, and etc.) into compound
-conditions. Variables, unlike conditions, can hold any Python object,
-not just booleans, but they cannot be combined.
+signal that is emitted when condition state changes. They can be
+combined using standard logical operators (not, and, etc.) into
+compound conditions. Variables, unlike conditions, can hold any Python
+object, not just booleans, but they cannot be combined.
 
 All three main concepts support deriving by users. Conditions and
 variables even have derive_type() method that can be used to subclass
