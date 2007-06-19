@@ -1,3 +1,19 @@
+2007-06-19  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/signal.py: Improve documentation.
+
+	* test/signal.py (SimpleSignalTestCase.test_emission_level_1)
+	(SimpleSignalTestCase.test_emission_level_2)
+	(RecursiveEmissionSignalTestCase.test_unblock_in_recursive_emission_1)
+	(RecursiveEmissionSignalTestCase.test_unblock_in_recursive_emission_2):
+	New tests.
+
+	* test/all.py (AllTestCase.assert_is_class): Assert that all
+	non-exception classes are new-style classes.
+
+	* notify/gc.c (RaisingGCProtector_unprotect): Fix compilation
+	warnings.
+
 2007-06-16  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* test/_gc.py (RaisingGCProtectorTestCase): New test case.

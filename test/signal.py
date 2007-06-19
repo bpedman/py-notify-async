@@ -151,6 +151,41 @@ class SimpleSignalTestCase (NotifyTestCase):
         self.assert_results (1, 3)
 
 
+    def test_emission_level_1 (self):
+        signal = Signal (Signal.VALUE_LIST)
+
+        self.assertEqual (signal.emission_level, 0)
+
+        signal.connect (lambda: signal.emission_level)
+
+        self.assertEqual (signal.emit (), [1])
+
+        signal = Signal (Signal.VALUE_LIST)
+
+        def stop_emission_and_get_level ():
+            signal.stop_emission ()
+            return signal.emission_level
+
+        signal.connect (stop_emission_and_get_level)
+
+        self.assertEqual (signal.emit (), [1])
+
+
+    def test_emission_level_2 (self):
+        signal       = Signal ()
+        self.results = []
+
+        def reemit_if_shallow ():
+            self.results.append (signal.emission_level)
+            if signal.emission_level < 3:
+                signal.emit ()
+
+        signal.connect (reemit_if_shallow)
+        signal.emit ()
+
+        self.assert_results (1, 2, 3)
+
+
     def test_emission_stop_1 (self):
         def stop_emission ():
             signal.stop_emission ()
@@ -332,6 +367,38 @@ class RecursiveEmissionSignalTestCase (NotifyTestCase):
         self.assert_results (1)
 
 
+    def test_unblock_in_recursive_emission_1 (self):
+        signal       = Signal ()
+        self.results = []
+
+        signal.connect (self.simple_handler)
+        signal.connect (lambda x: signal.unblock (self.simple_handler))
+        signal.connect (self.simple_handler)
+
+        signal.block (self.simple_handler)
+        signal.emit (1)
+
+        self.assert_results (1)
+
+
+    def test_unblock_in_recursive_emission_2 (self):
+        signal       = Signal ()
+        self.signal  = signal
+        self.results = []
+
+        signal.connect (self.simple_handler_100)
+        signal.connect (self.unblocking_recursive_handler)
+        signal.connect (self.simple_handler_100)
+
+        signal.block (self.simple_handler_100)
+        signal.block (self.simple_handler_100)
+
+        signal.emit (0)
+
+        del self.signal
+        self.assert_results (0, 1, 2, 3, 104, 4, 104, 103, 102, 101, 100)
+
+
     def simple_handler_100 (self, *arguments):
         self.simple_handler (100 + arguments[0])
 
@@ -398,6 +465,16 @@ class RecursiveEmissionSignalTestCase (NotifyTestCase):
 
         if arguments[0] >= 2:
             self.signal.unblock (self.simple_handler_100)
+
+
+    def unblocking_recursive_handler (self, *arguments):
+        self.simple_handler (*arguments)
+
+        if arguments[0] >= 2:
+            self.signal.unblock (self.simple_handler_100)
+
+        if arguments[0] < 4:
+            self.signal.emit (arguments[0] + 1)
 
 
 

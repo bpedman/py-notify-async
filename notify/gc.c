@@ -687,7 +687,7 @@ RaisingGCProtector_unprotect (RaisingGCProtector *self, PyObject *arguments, PyO
         }
       else
         {
-          char *type_name = self->ob_type->tp_name;
+          const char *type_name = self->ob_type->tp_name;
 
           if (type_name)
             {

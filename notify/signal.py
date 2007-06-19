@@ -459,6 +459,10 @@ class AbstractSignal (object):
         C{L{connect_safe}} instead.  Note that since signal class will not do any handler
         modification at this point, calling C{do_connect} directly I{may break} promises
         of the signal class.
+
+        @rtype:   C{bool}
+        @returns: C{True} if it has connected C{handler}, C{False} if it had been
+                  connected already.
         """
 
         if not self.is_connected (handler):

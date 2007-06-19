@@ -44,9 +44,12 @@ class AllTestCase (unittest.TestCase):
 
 
     def assert_is_class (self, _class):
-        self.assert_(isinstance (_class, (type, types.ClassType)), _class)
+        if issubclass (_class, Exception):
+            self.assert_(isinstance (_class, (type, types.ClassType)), _class)
 
-        if not issubclass (_class, Exception):
+        else:
+            self.assert_(isinstance (_class, type), _class)
+
             # Also assert that classes define `__slots__' variable appropriately.  We use
             # a trick hoping that constructor of `_class' accepts a number of `None'
             # values.  Thus, not all classes are tested.
