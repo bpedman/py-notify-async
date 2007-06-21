@@ -25,7 +25,8 @@ if sys.version_info[:3] < REQUIRED_PYTHON_VERSION:
 
 
 
-os.chdir (os.path.dirname (sys.argv[0]))
+if os.path.dirname (sys.argv[0]):
+    os.chdir (os.path.dirname (sys.argv[0]))
 
 if not os.path.isfile (os.path.join ('notify', 'all.py')):
     sys.exit ("%s: cannot find `%s', strange..."

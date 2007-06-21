@@ -1,3 +1,8 @@
+2007-06-22  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* setup.py: Bug-fix: used to fail if run as `python setup.py ...',
+	not just `./setup.py ...'.
+
 2007-06-19  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/signal.py: Improve documentation.
