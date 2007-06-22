@@ -1,5 +1,13 @@
 2007-06-22  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	* version: Release 0.1.9.
+
+	* NEWS: Update.
+
+	* setup.py: Add ``long'' package description
+	(configure): Rewrite to not overwrite `__init__.py' unless needed.
+	(build_ext.build_extension): Likewise don't symlink unless needed.
+
 	* setup.py: Bug-fix: used to fail if run as `python setup.py ...',
 	not just `./setup.py ...'.
 

@@ -1,3 +1,12 @@
+--- New in Py-notify 0.1.9 -------------------------------------------
+
+* Fixed and improved `setup.py' script.
+
+* New RaisingGCProtector class.
+
+* 6 new unit tests (120 in total.)
+
+
 --- New in Py-notify 0.1.8 -------------------------------------------
 
 * Improved and fixed derive_type() class method in several

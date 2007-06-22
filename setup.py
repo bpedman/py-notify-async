@@ -9,6 +9,7 @@
 
 # In particular, we heavily use True and False, there are uses of
 # enumerate(), file coding is explicitly set etc.
+
 REQUIRED_PYTHON_VERSION = (2, 3)
 
 
@@ -52,30 +53,57 @@ def configure (version):
                                  'version':        tuple (map (lambda string: int (string),
                                                                version.split ('.'))) }
 
+    # This can be much simplified with Python 2.5 `with' statement, once that version is
+    # required.
+
     try:
-        template_file = open (os.path.join ('notify', '__init__.py.in'))
+        template_file   = None
+        output_file_in  = None
+        output_file_out = None
 
         try:
-            output_file = open (os.path.join ('notify', '__init__.py'), 'w')
+            template_file    = open (os.path.join ('notify', '__init__.py.in'))
+            result_line_list = []
+            in_configuration = False
 
-            try:
-                in_configuration = False
+            for line in template_file:
+                if re.search ('# *CONFIGURATION *$', line):
+                    in_configuration = True
+                elif re.search ('# */CONFIGURATION *$', line):
+                    in_configuration = False
+                else:
+                    if in_configuration:
+                        line = line % configuration_parameters
 
-                for line in template_file:
-                    if re.search ('# *CONFIGURATION *$', line):
-                        in_configuration = True
-                    elif re.search ('# */CONFIGURATION *$', line):
-                        in_configuration = False
-                    else:
-                        if in_configuration:
-                            line = line % configuration_parameters
+                result_line_list.append (line)
 
-                    output_file.write (line)
-
-            finally:
-                output_file.close ()
         finally:
-            template_file.close ()
+            if template_file is not None:
+                template_file.close ()
+
+        output_file_name = os.path.join ('notify', '__init__.py')
+
+        try:
+            try:
+                output_file_in = open (output_file_name, 'r')
+            except IOError:
+                # Cannot open, so ignore.
+                pass
+            else:
+                if list (output_file_in) == result_line_list:
+                    return
+
+        finally:
+            if output_file_in is not None:
+                output_file_in.close ()
+
+        try:
+            output_file_out = open (output_file_name, 'w')
+            output_file_out.writelines (result_line_list)
+
+        finally:
+            if output_file_out is not None:
+                output_file_out.close ()
 
     except IOError, exception:
         sys.exit (str (exception))
@@ -85,6 +113,22 @@ def configure (version):
 configure (version)
 
 
+
+long_description = \
+"""
+Py-notify is a Python package providing tools for implementing `Observer programming
+pattern`_.  These tools include signals, conditions and variables.
+
+Signals are lists of handlers that are called when signal is emitted. Conditions are
+basically boolean variables coupled with a signal that is emitted when condition state
+changes. They can be combined using standard logical operators (*not*, *and*, etc.) into
+compound conditions. Variables, unlike conditions, can hold any Python object, not just
+booleans, but they cannot be combined.
+
+.. _Observer programming pattern:
+   http://en.wikipedia.org/wiki/Observer_pattern
+
+""";
 
 classifiers = ['Topic :: Software Development :: Libraries :: Python Modules',
                'Intended Audience :: Developers',
@@ -113,6 +157,13 @@ class build_ext (_build_ext):
 
             recursion_scan  = os.path.split (filename) [0]
 
+            if hasattr (os, 'symlink'):
+                if os.path.islink (link_filename):
+                    return
+
+                if os.path.realpath (link_filename) == os.path.abspath (target_filename):
+                    return
+
             while recursion_scan:
                 recursion_scan  = os.path.split (recursion_scan) [0]
                 target_filename = os.path.join  (os.pardir, target_filename)
@@ -123,14 +174,14 @@ class build_ext (_build_ext):
                 # Ignore all errors.
                 pass
 
-            try:
-                if hasattr (os, 'symlink'):
+            if hasattr (os, 'symlink'):
+                try:
                     os.symlink (target_filename, link_filename)
-                else:
-                    # FIXME: Copy the library then.
+                except:
+                    # Ignore all errors.
                     pass
-            except:
-                # Ignore all errors.
+            else:
+                # FIXME: Copy the library then.
                 pass
 
 
@@ -140,24 +191,25 @@ gc_extension = Extension (name    = 'notify.gc',
 
 
 
-setup (name         = 'py-notify',
-       version      = version,
-       description  = 'An unorthodox implementation of Observer programming pattern.',
-       author       = 'Paul Pogonyshev',
-       author_email = 'py-notify-dev@gna.org',
-       url          = 'http://home.gna.org/py-notify/',
-       download_url = 'http://download.gna.org/py-notify/',
-       license      = "GNU Lesser General Public License v2.1 (see `COPYING')",
-       classifiers  = classifiers,
-       packages     = ['notify'],
-       ext_modules  = [gc_extension],
-       cmdclass     = { 'build_ext': build_ext })
+setup (name             = 'py-notify',
+       version          = version,
+       description      = 'An unorthodox implementation of Observer programming pattern.',
+       long_description = long_description,
+       author           = 'Paul Pogonyshev',
+       author_email     = 'py-notify-dev@gna.org',
+       url              = 'http://home.gna.org/py-notify/',
+       download_url     = 'http://download.gna.org/py-notify/',
+       license          = "GNU Lesser General Public License v2.1 (see `COPYING')",
+       classifiers      = classifiers,
+       packages         = ['notify'],
+       ext_modules      = [gc_extension],
+       cmdclass         = { 'build_ext': build_ext })
 
 
 
 # Local variables:
-# coding: utf-8
 # mode: python
 # python-indent: 4
 # indent-tabs-mode: nil
+# fill-column: 90
 # End:
