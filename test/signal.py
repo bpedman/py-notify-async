@@ -640,6 +640,13 @@ class ExoticSignalTestCase (NotifyTestCase):
 
 
 
+import __future__
+
+if NotifyTestCase.note_skipped_tests ('with_statement' in __future__.all_feature_names):
+    from _signal_2_5 import SignalContextManagerTestCase
+
+
+
 if __name__ == '__main__':
     unittest.main ()
 

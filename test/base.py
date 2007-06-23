@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
 #--------------------------------------------------------------------#
@@ -23,42 +22,35 @@
 #--------------------------------------------------------------------#
 
 
-import os
-import sys
+if __name__ == '__main__':
+    import os
+    import sys
+
+    sys.path.insert (0, os.path.join (sys.path[0], os.pardir))
+
+
 import unittest
 
-
-if not os.path.isfile (os.path.join ('notify', 'all.py')):
-    sys.exit ("%s: cannot find `%s', strange..."
-              % (sys.argv[0], os.path.join ('notify', 'all.py')))
-
-
-print 'Building extension...'
-
-# FIXME: Is that portable enough?
-if os.system ('python setup.py build_ext') != 0:
-    sys.exit (1)
+from notify.condition import *
+from notify.variable  import *
+from test.__common    import *
 
 
 
-class AllTests (object):
-
-    def __init__(self):
-        everything = unittest.TestSuite ()
-
-        for module_name in ('all', 'base', 'bind', 'condition', '_gc', 'mediator', 'signal',
-                            'utils', 'variable'):
-            module = __import__('test.%s' % module_name, globals (), locals (), ('*',))
-
-            setattr (self, module_name, module)
-            everything.addTest (unittest.defaultTestLoader.loadTestsFromModule (module))
-
-        setattr (self, 'everything', lambda: everything)
+# Note: since base class (AbstractValueObject) is abstract, we actually test variables and
+# sometimes conditions here.  However, tested functionality comes from the base class.
 
 
-print '\nNote that most of the time is spent in gc.collect() calls, not in this package\n'
 
-unittest.main (AllTests (), 'everything')
+import __future__
+
+if NotifyTestCase.note_skipped_tests ('with_statement' in __future__.all_feature_names):
+    from _base_2_5 import BaseContextManagerTestCase
+
+
+
+if __name__ == '__main__':
+    unittest.main ()
 
 
 

@@ -37,6 +37,12 @@ from types           import NoneType
 from notify.mediator import AbstractMediator
 from notify.signal   import AbstractSignal, Signal
 from notify.utils    import is_valid_identifier, raise_not_implemented_exception
+ 
+try:
+    import contextlib
+except ImportError:
+    # Ignore, related features will not be provided.
+    pass
 
 
 
@@ -475,6 +481,10 @@ class AbstractValueObject (object):
 
         else:
             return False
+ 
+ 
+    if 'contextlib' in globals ():
+        from _base_2_5 import storing, storing_safely, synchronizing, synchronizing_safely
 
 
     def _value_changed (self, new_value):

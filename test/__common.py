@@ -26,11 +26,14 @@ import gc
 import unittest
 
 
-__all__ = ('NotifyTestCase',)
+__all__ = ('NotifyTestCase', 'ignoring_exceptions')
 
 
 
 class NotifyTestCase (unittest.TestCase):
+
+    __have_skipped_tests = False
+
 
     def setUp (self):
         gc.set_threshold (0, 0, 0)
@@ -77,6 +80,42 @@ class NotifyTestCase (unittest.TestCase):
     def collect_garbage (self, times = 1):
         for k in range (0, times):
             gc.collect ()
+
+
+    def note_skipped_tests (tests_defined = False):
+        if tests_defined or NotifyTestCase.__have_skipped_tests:
+            return tests_defined
+
+        import sys
+        import atexit
+
+        atexit.register (sys.stdout.write,
+                         ('\nSome tests were skipped because '
+                          'they require a later Python version to run\n'))
+
+        NotifyTestCase.__have_skipped_tests = True
+
+        return tests_defined
+
+
+    note_skipped_tests = staticmethod (note_skipped_tests)
+
+
+
+import __future__
+
+
+if 'with_statement' in __future__.all_feature_names:
+
+    class ignoring_exceptions (object):
+        def __enter__(self):
+            pass
+        def __exit__(self, *exception_info):
+            return True
+
+else:
+    def ignoring_exceptions (object):
+        raise RuntimeError ('ignoring_exceptions() must not be used in pre-Python 2.5 tests')
 
 
 

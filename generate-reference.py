@@ -45,7 +45,7 @@ if not os.path.isfile (os.path.join ('notify', 'all.py')):
 print 'Building extension...'
 
 # FIXME: Is that portable enough?
-if os.system ('./setup.py build_ext') != 0:
+if os.system ('python setup.py build_ext') != 0:
     sys.exit (1)
 
 

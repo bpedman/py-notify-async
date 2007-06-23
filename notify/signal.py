@@ -112,6 +112,12 @@ from notify.bind  import Binding, WeakBinding
 from notify.gc    import AbstractGCProtector
 from notify.utils import raise_not_implemented_exception
 
+try:
+    import contextlib
+except ImportError:
+    # Ignore, related features will not be provided.
+    pass
+
 
 
 #-- Signal interface classes -----------------------------------------
@@ -553,6 +559,10 @@ class AbstractSignal (object):
         """
 
         raise_not_implemented_exception (self)
+
+
+    if 'contextlib' in globals ():
+        from _signal_2_5 import connecting, connecting_safely, blocking
 
 
     def emit (self, *arguments):
@@ -1170,6 +1180,8 @@ class Signal (AbstractSignal):
 
 
 
+#-- Handler auto-disconnecting signal class --------------------------
+
 class CleanSignal (Signal):
 
     """
@@ -1281,6 +1293,8 @@ class CleanSignal (Signal):
         return descriptions + super (CleanSignal, self)._additional_description (formatter)
 
 
+
+#-- Internal variables -----------------------------------------------
 
 # It is not guaranteed to be a singleton, although it probably always is.
 _EMPTY_TUPLE = ()

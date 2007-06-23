@@ -1,3 +1,30 @@
+2007-06-23  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/base.py (AbstractValueObject): Import methods from new
+	_base_2_5 module if Python features allow.
+	* notify/_base_2_5.py: New file.
+
+	* notify/signal.py (AbstractSignal): Import methods from new
+	_signal_2_5 module if Python features allow.
+	* notify/_signal_2_5.py: New file.
+
+	* test/base.py: New file
+	* test/_base_2_5.py: New file.
+
+	* test/signal.py: Import test cases from new _signal_2_5 module if
+	Python features allow.
+	* test/_signal_2_5.py: New file.
+
+	* test/__common.py (NotifyTestCase.note_skipped_tests): New
+	method.
+	(ignoring_exceptions): New class/function.
+
+	* benchmark.py: Run `build' target, not just `build_ext'.
+	* run-tests.py: Likewise.
+
+	* setup.py (build_ext.build_extension): Don't symlink unless there
+	is a link pointing to our target, not just any link.
+
 2007-06-22  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* version: Release 0.1.9.

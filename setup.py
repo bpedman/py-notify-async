@@ -158,10 +158,8 @@ class build_ext (_build_ext):
             recursion_scan  = os.path.split (filename) [0]
 
             if hasattr (os, 'symlink'):
-                if os.path.islink (link_filename):
-                    return
-
-                if os.path.realpath (link_filename) == os.path.abspath (target_filename):
+                if (    os.path.islink (link_filename)
+                    and os.path.realpath (link_filename) == os.path.abspath (target_filename)):
                     return
 
             while recursion_scan:

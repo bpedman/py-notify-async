@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
 #--------------------------------------------------------------------#
@@ -23,42 +22,65 @@
 #--------------------------------------------------------------------#
 
 
-import os
-import sys
-import unittest
-
-
-if not os.path.isfile (os.path.join ('notify', 'all.py')):
-    sys.exit ("%s: cannot find `%s', strange..."
-              % (sys.argv[0], os.path.join ('notify', 'all.py')))
-
-
-print 'Building extension...'
-
-# FIXME: Is that portable enough?
-if os.system ('python setup.py build_ext') != 0:
-    sys.exit (1)
+# TODO: Merge this file into `base.py' test file when Py-notify relies on Python 2.5 or
+#       later.  Also use __get_changed_signal() once functions end in the proper class.
 
 
 
-class AllTests (object):
+"""
+Internal module used to implement Python 2.5 feautures of C{L{AbstractValueObject}} class.
+I{Don’t import} this module directly: it is implementation detail and will be removed
+eventually.
+"""
 
-    def __init__(self):
-        everything = unittest.TestSuite ()
-
-        for module_name in ('all', 'base', 'bind', 'condition', '_gc', 'mediator', 'signal',
-                            'utils', 'variable'):
-            module = __import__('test.%s' % module_name, globals (), locals (), ('*',))
-
-            setattr (self, module_name, module)
-            everything.addTest (unittest.defaultTestLoader.loadTestsFromModule (module))
-
-        setattr (self, 'everything', lambda: everything)
+__docformat__ = 'epytext en'
+__all__       = ('storing', 'storing_safely', 'synchronizing', 'synchronizing_safely')
 
 
-print '\nNote that most of the time is spent in gc.collect() calls, not in this package\n'
+from contextlib import contextmanager
 
-unittest.main (AllTests (), 'everything')
+
+
+@contextmanager
+def storing (self, handler, *arguments):
+    self.store (handler, *arguments)
+
+    try:
+        yield self
+    finally:
+        self.changed.disconnect (handler, *arguments)
+
+
+@contextmanager
+def storing_safely (self, handler, *arguments):
+    if self.store_safe (handler, *arguments):
+        try:
+            yield self
+        finally:
+            self.changed.disconnect (handler, *arguments)
+    else:
+        yield self
+
+
+@contextmanager
+def synchronizing (self, value_object, mediator = None):
+    self.synchronize (value_object, mediator)
+
+    try:
+        yield self
+    finally:
+        self.desynchronize (value_object, mediator)
+
+
+@contextmanager
+def synchronizing_safely (self, value_object, mediator = None):
+    if self.synchronize_safe (value_object, mediator):
+        try:
+            yield self
+        finally:
+            self.desynchronize (value_object, mediator)
+    else:
+        yield self
 
 
 

@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
 #--------------------------------------------------------------------#
@@ -23,42 +22,54 @@
 #--------------------------------------------------------------------#
 
 
-import os
-import sys
-import unittest
+# TODO: Merge this file into `signal.py' test file when Py-notify relies on Python 2.5 or
+#       later.
 
 
-if not os.path.isfile (os.path.join ('notify', 'all.py')):
-    sys.exit ("%s: cannot find `%s', strange..."
-              % (sys.argv[0], os.path.join ('notify', 'all.py')))
+"""
+Internal module used to implement Python 2.5 feautures of C{L{AbstractSignal}} class.
+I{Don’t import} this module directly: it is implementation detail and will be removed
+eventually.
+"""
+
+__docformat__ = 'epytext en'
+__all__       = ('connecting', 'connecting_safely', 'blocking')
 
 
-print 'Building extension...'
-
-# FIXME: Is that portable enough?
-if os.system ('python setup.py build_ext') != 0:
-    sys.exit (1)
+from contextlib import contextmanager
 
 
 
-class AllTests (object):
+@contextmanager
+def connecting (self, handler, *arguments):
+    self.connect (handler, *arguments)
 
-    def __init__(self):
-        everything = unittest.TestSuite ()
-
-        for module_name in ('all', 'base', 'bind', 'condition', '_gc', 'mediator', 'signal',
-                            'utils', 'variable'):
-            module = __import__('test.%s' % module_name, globals (), locals (), ('*',))
-
-            setattr (self, module_name, module)
-            everything.addTest (unittest.defaultTestLoader.loadTestsFromModule (module))
-
-        setattr (self, 'everything', lambda: everything)
+    try:
+        yield self
+    finally:
+        self.disconnect (handler, *arguments)
 
 
-print '\nNote that most of the time is spent in gc.collect() calls, not in this package\n'
+@contextmanager
+def connecting_safely (self, handler, *arguments):
+    if self.connect_safe (handler, *arguments):
+        try:
+            yield self
+        finally:
+            self.disconnect (handler, *arguments)
+    else:
+        yield self
 
-unittest.main (AllTests (), 'everything')
+
+@contextmanager
+def blocking (self, handler, *arguments):
+    if self.block (handler, *arguments):
+        try:
+            yield self
+        finally:
+            self.unblock (handler, *arguments)
+    else:
+        yield self
 
 
 
