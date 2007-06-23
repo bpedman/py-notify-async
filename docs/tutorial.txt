@@ -479,17 +479,73 @@ not each time state is recomputed.
 
 
 
+More Advanced Topics
+********************
+
+Topics here are ‘advanced’ only in the sense they are not very basic
+and you don’t need to know them in order to use Py-notify.  Still,
+they are not really complicated and reading them can be helpful.
+
+
+
+Context Managers
+~~~~~~~~~~~~~~~~
+
+Though Py-notify currently works with Python 2.3 or later, it does
+provide features only available in later versions.  Currently they are
+limited to context mangers, available if you run under Python 2.5 or
+later only.
+
+Context managers are nothing but syntactic sugar, yet they allow to
+write more concise and easily understandable code.  Basic idea is that
+once some setup code is executed, it is guaranteed that associated
+cleanup code will be too, regardless of the block exit method.  Given
+that context managers are basically pairs of setup/cleanup, Py-notify
+provides them for all complementary method pairs, like
+``connect()``/``disconnect()``.
+
+Most useful of the context manager is ``blocking()``.  Here is how a
+function using it could look like (it assumes ``signal`` variable is
+declared somewhere in an enclosing scope)::
+
+    def signing_handler (text):
+        signal.stop_emission ()
+        with signal.blocking (signing_handler):
+            signal ('%s  -- Bob was here' % text)
+
+This context manager first blocks the handler, executes the code suite
+and finally unblocks the handler, even if an exception is risen.  In
+effect, this function ensures it never signs a piece of text more than
+once.
+
+In addition to ``blocking()``, signal objects also provide
+``connecting()`` and ``connecting_safely()`` context managers.  Their
+semantics should be obvious from the names.  Conditions and variables
+provide ``storing()``, ``storing_safely()``, ``synchronizing()`` and
+``synchronizing_safely()`` managers.
+
+Remember that in Python 2.5 ``with`` statement becomes available only
+if you do
+
+::
+
+    from __future__ import with_statement
+
+at the top of your module.
+
+
+
 Garbage-Collection Magic
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Example in the previous section may look somewhat strange to you: the
-predicate condition is created and one handler is connected to it, but
-it is not referenced from anywhere.  Yet the example works.  In fact,
-conditions and variables do certain tricks ‘behind the scenes’ to
-ensure they are not garbage-collected while they are used.  For
-predicate conditions this means the variable is alive (in our case it
-is referenced, therefore it is alive) and at least one handler is
-connected (in our case it is ``print_state()``.)
+Example in the `Predicates Over Variables`_ section may look
+somewhat strange to you: the predicate condition is created and one
+handler is connected to it, but it is not referenced from anywhere.
+Yet the example works.  In fact, conditions and variables do certain
+tricks ‘behind the scenes’ to ensure they are not garbage-collected
+while they are used.  For predicate conditions this means the variable
+is alive (in our case it is referenced, therefore it is alive) and at
+least one handler is connected (in our case it is ``print_state()``.)
 
 In general, you can be sure that conditions and variables will not be
 deleted as long as they are used in some common sense.  And they

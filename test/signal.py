@@ -122,6 +122,30 @@ class SimpleSignalTestCase (NotifyTestCase):
         self.assert_results (1, 1, 1, 2, 2)
 
 
+    def test_connect_disconnect (self):
+        signal       = Signal ()
+        self.results = []
+
+        signal.connect (self.simple_handler)
+        signal.connect (self.simple_handler_100)
+
+        signal.emit (1)
+
+        # This must be a no-op.
+        signal.connect    (self.simple_handler)
+        signal.disconnect (self.simple_handler)
+
+        signal.emit (2)
+
+        # This must be a no-op.
+        signal.connect    (self.simple_handler_100)
+        signal.disconnect (self.simple_handler_100)
+
+        signal.emit (3)
+
+        self.assert_results (1, 101, 2, 102, 3, 103)
+
+
     def test_block (self):
         signal       = Signal ()
         self.results = []
@@ -397,14 +421,6 @@ class RecursiveEmissionSignalTestCase (NotifyTestCase):
 
         del self.signal
         self.assert_results (0, 1, 2, 3, 104, 4, 104, 103, 102, 101, 100)
-
-
-    def simple_handler_100 (self, *arguments):
-        self.simple_handler (100 + arguments[0])
-
-
-    def simple_handler_200 (self, *arguments):
-        self.simple_handler (200 + arguments[0])
 
 
     def recursive_handler (self, *arguments):

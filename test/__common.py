@@ -76,6 +76,13 @@ class NotifyTestCase (unittest.TestCase):
 
         self.results.append (arguments)
 
+    def simple_handler_100 (self, *arguments):
+        self.simple_handler (100 + arguments[0])
+
+
+    def simple_handler_200 (self, *arguments):
+        self.simple_handler (200 + arguments[0])
+
 
     def collect_garbage (self, times = 1):
         for k in range (0, times):

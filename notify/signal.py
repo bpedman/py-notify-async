@@ -983,21 +983,29 @@ class Signal (AbstractSignal):
 
 
     def disconnect (self, handler, *arguments):
-        if self._handlers is None or not callable (handler):
+        handlers = self._handlers
+        if handlers is None or not callable (handler):
             return False
 
         if arguments:
             handler = Binding (handler, arguments)
 
-        for index, _handler in enumerate (self._handlers):
-            if _handler == handler:
+        # Note: we must disconnect _last_ of equal connected handlers, in order to make
+        # connect()/disconnect() a no-op.  We use a custom loop because of that (and since
+        # reversed() only appeared in 2.4.)
+
+        index = len (handlers) - 1
+        while index >= 0:
+            if handlers[index] != handler:
+                index -= 1
+            else:
                 if self.__emission_level == 0:
-                    del self._handlers[index]
+                    del handlers[index]
                 else:
-                    self._handlers[index] = None
+                    handlers[index] = None
 
                 if (    self._blocked_handlers is not _EMPTY_TUPLE
-                    and handler not in self._handlers[index:]):
+                    and handler not in handlers[:index]):
                     # This is the last handler, need to make sure it is not listed in
                     # `_blocked_handlers'.
                     self._blocked_handlers = [_handler for _handler in self._blocked_handlers
@@ -1006,7 +1014,7 @@ class Signal (AbstractSignal):
                     if not self._blocked_handlers:
                         self._blocked_handlers = _EMPTY_TUPLE
 
-                if not self._handlers:
+                if not handlers:
                     self._handlers = None
 
                 return True

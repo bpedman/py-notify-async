@@ -1,5 +1,17 @@
 2007-06-23  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	* notify/signal.py (Signal.disconnect): Remove first equal handler
+	from the end of the list, not from the beginning.
+
+	* test/signal.py (SimpleSignalTestCase.test_connect_disconnect):
+	New test.
+
+	* test/__common.py (NotifyTestCase.simple_handler_100)
+	(NotifyTestCase.simple_handler_200): Move here from
+	`RecursiveEmissionSignalTestCase'.
+
+	* docs/tutorial.txt: Add one section.  Reorganize a little.
+
 	* notify/base.py (AbstractValueObject): Import methods from new
 	_base_2_5 module if Python features allow.
 	* notify/_base_2_5.py: New file.
