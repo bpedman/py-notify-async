@@ -144,7 +144,7 @@ classifiers = ['Topic :: Software Development :: Libraries :: Python Modules',
 
 
 
-from distutils.core              import *
+from distutils.core              import setup, Extension
 from distutils.command.build_ext import build_ext as _build_ext
 
 import distutils.util

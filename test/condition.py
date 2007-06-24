@@ -33,9 +33,10 @@ import unittest
 import weakref
 import operator
 
-from notify.condition import *
-from notify.variable  import *
-from test.__common    import *
+from notify.condition import AbstractStateTrackingCondition, Condition, \
+                             PredicateCondition, WatcherCondition
+from notify.variable  import Variable
+from test.__common    import NotifyTestCase
 
 
 

@@ -31,8 +31,8 @@ if __name__ == '__main__':
 
 import unittest
 
-from notify.variable  import *
-from test.__common    import *
+from notify.variable import AbstractValueTrackingVariable, Variable, WatcherVariable
+from test.__common   import NotifyTestCase
 
 
 

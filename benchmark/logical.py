@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
 
 from benchmark        import benchmarking
-from notify.condition import *
+from notify.condition import Condition
 
 
 

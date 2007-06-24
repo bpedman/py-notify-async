@@ -31,9 +31,7 @@ if __name__ == '__main__':
 
 import unittest
 
-from notify.condition import *
-from notify.variable  import *
-from test.__common    import *
+from test.__common import NotifyTestCase
 
 
 
@@ -45,7 +43,7 @@ from test.__common    import *
 import __future__
 
 if NotifyTestCase.note_skipped_tests ('with_statement' in __future__.all_feature_names):
-    from _base_2_5 import BaseContextManagerTestCase
+    from test._2_5.base import BaseContextManagerTestCase
 
 
 

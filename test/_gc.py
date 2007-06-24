@@ -32,8 +32,8 @@ if __name__ == '__main__':
 import unittest
 import weakref
 
-from notify.gc     import *
-from test.__common import *
+from notify.gc     import AbstractGCProtector, FastGCProtector, DebugGCProtector, RaisingGCProtector
+from test.__common import NotifyTestCase
 
 
 

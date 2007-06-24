@@ -31,8 +31,9 @@ if __name__ == '__main__':
 
 import unittest
 
-from notify.bind   import *
-from test.__common import *
+from notify.bind   import Binding, WeakBinding, RaisingWeakBinding, \
+                          CannotWeakReferenceError, GarbageCollectedError
+from test.__common import NotifyTestCase
 
 
 

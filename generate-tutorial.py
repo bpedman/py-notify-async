@@ -27,12 +27,19 @@ import os
 import sys
 import re
 
-from urlparse import *
+from urlparse import urlunsplit
 
 
 if not os.path.isfile (os.path.join ('notify', 'all.py')):
     sys.exit ("%s: cannot find `%s', strange..."
               % (sys.argv[0], os.path.join ('notify', 'all.py')))
+
+
+try:
+    from docutils.core import publish_cmdline
+except:
+    sys.exit ('%s: docutils not found; get them from http://docutils.sourceforge.net/'
+              % sys.argv[0])
 
 
 input_file_name  = os.path.join ('docs', 'tutorial.txt')
@@ -48,8 +55,6 @@ sys.argv.extend (['--stylesheet-path=%s' % os.path.join ('docs', 'reST.css'),
                   '--no-file-insertion',
                   input_file_name, output_file_name])
 
-
-from docutils.core import publish_cmdline
 
 publish_cmdline (writer_name = 'html', description = 'Generate Py-notify tutorial')
 

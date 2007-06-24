@@ -22,17 +22,15 @@
 #--------------------------------------------------------------------#
 
 
-# TODO: Merge this file into `base.py' test file when Py-notify relies on Python 2.5 or
-#       later.
+# TODO: Merge this file into `test/base.py' when Py-notify relies on Python 2.5 or later.
 
 
-from __future__       import with_statement
+from __future__      import with_statement
 
-from contextlib       import nested
+from contextlib      import nested
 
-from notify.condition import *
-from notify.variable  import *
-from test.__common    import *
+from notify.variable import Variable
+from test.__common   import NotifyTestCase, ignoring_exceptions
 
 
 __all__ = ('BaseContextManagerTestCase',)

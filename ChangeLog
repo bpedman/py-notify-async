@@ -1,5 +1,29 @@
 2007-06-24  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	* generate-reference.py: Get rid of `import *'.
+	* generate-tutorial.py: Likewise.
+	* setup.py: Likewise.
+	* benchmark/benchmarking.py: Likewise.
+	* benchmark/emission.py: Likewise.
+	* benchmark/logical.py: Likewise.
+	* test/_gc.py: Likewise.
+	* test/base.py: Likewise.
+	* test/condition.py: Likewise.
+	* test/mediator.py: Likewise.
+	* test/signal.py: Likewise.
+	* test/utils.py: Likewise.
+	* test/variable.py: Likewise.
+	* test/_2_5/signal.py: Likewise.
+	* test/_2_5/base.py: Likewise.
+
+	* test/_2_5: New directory.
+	* test/_2_5/__init__.py: New file.
+	* test/_2_5/base.py: Rename from `test/_base_2_5.py'
+	* test/_2_5/signal.py: Rename from `test/_signal_2_5.py'
+
+	* generate-tutorial.py: If importing docutils fails, print a
+	helpful message.
+
 	* notify/_2_5/base.py: Improve documentation.
 	* notify/_2_5/signal.py: Likewise.
 

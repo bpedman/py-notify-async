@@ -27,7 +27,7 @@ import os
 import sys
 import re
 
-from urlparse import *
+from urlparse import urlunsplit
 
 
 try:

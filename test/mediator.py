@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
 import unittest
 
-from notify.mediator import *
+from notify.mediator import BooleanMediator, FunctionalMediator
 
 
 def wrap_argument (argument):

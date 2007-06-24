@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
 import unittest
 
-from notify.utils import *
+from notify.utils import raise_not_implemented_exception, is_valid_identifier, DummyReference
 
 
 

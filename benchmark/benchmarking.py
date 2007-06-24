@@ -29,11 +29,11 @@ import sys
 import time
 
 from configobj    import ConfigObj
-from types        import *
+from types        import ClassType, ModuleType, TypeType
 
 import notify
 
-from notify.utils import *
+from notify.utils import raise_not_implemented_exception
 
 
 __all__ = ('main', 'load_benchmarks', 'Benchmark', 'BenchmarkSuite', 'BenchmarkProgram')
@@ -58,7 +58,7 @@ def load_benchmarks (source, *benchmark_names):
                     toplevel_names[parts[0]].append (parts[1])
             else:
                 toplevel_names[parts[0]] = [parts[1]]
-                
+
     suite = BenchmarkSuite ()
 
     if isinstance (source, ModuleType) or toplevel_names:

@@ -31,8 +31,8 @@ if __name__ == '__main__':
 
 import unittest
 
-from notify.signal import *
-from test.__common import *
+from notify.signal import AbstractSignal, Signal
+from test.__common import NotifyTestCase
 
 
 
@@ -659,7 +659,7 @@ class ExoticSignalTestCase (NotifyTestCase):
 import __future__
 
 if NotifyTestCase.note_skipped_tests ('with_statement' in __future__.all_feature_names):
-    from _signal_2_5 import SignalContextManagerTestCase
+    from test._2_5.signal import SignalContextManagerTestCase
 
 
 

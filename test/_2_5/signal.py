@@ -22,7 +22,7 @@
 #--------------------------------------------------------------------#
 
 
-# TODO: Merge this file into `signal.py' test file when Py-notify relies on Python 2.5 or
+# TODO: Merge this file into `test/signal.py' when Py-notify relies on Python 2.5 or
 #       later.
 
 
@@ -30,8 +30,8 @@ from __future__    import with_statement
 
 from contextlib    import nested
 
-from notify.signal import *
-from test.__common import *
+from notify.signal import Signal
+from test.__common import NotifyTestCase, ignoring_exceptions
 
 
 __all__ = ('SignalContextManagerTestCase',)
