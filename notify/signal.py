@@ -562,7 +562,23 @@ class AbstractSignal (object):
 
 
     if 'contextlib' in globals ():
-        from _signal_2_5 import connecting, connecting_safely, blocking
+        # This is a collection of gross hacks aimed at making this work (obviously) _and_
+        # tricking Epydoc into not noticing that we import stuff from a different module.
+
+        from notify._2_5 import signal as _2_5
+
+        if (    hasattr (sys.stdout, '__module__')
+            and sys.stdout.__module__.startswith ('epydoc')
+            and sys.stdout.__class__.__name__ == '_DevNull'):
+            connecting        = _2_5.connecting
+            connecting_safely = _2_5.connecting_safely
+            blocking          = _2_5.blocking
+        else:
+            connecting        = contextlib.contextmanager (_2_5.connecting)
+            connecting_safely = contextlib.contextmanager (_2_5.connecting_safely)
+            blocking          = contextlib.contextmanager (_2_5.blocking)
+
+        del _2_5
 
 
     def emit (self, *arguments):

@@ -484,7 +484,27 @@ class AbstractValueObject (object):
  
  
     if 'contextlib' in globals ():
-        from _base_2_5 import storing, storing_safely, synchronizing, synchronizing_safely
+        # This is a collection of gross hacks aimed at making this work (obviously) _and_
+        # tricking Epydoc into not noticing that we import stuff from a different module.
+
+        from notify._2_5 import base as _2_5
+        import sys
+
+        if (    hasattr (sys.stdout, '__module__')
+            and sys.stdout.__module__.startswith ('epydoc')
+            and sys.stdout.__class__.__name__ == '_DevNull'):
+            storing              = _2_5.storing
+            storing_safely       = _2_5.storing_safely
+            synchronizing        = _2_5.synchronizing
+            synchronizing_safely = _2_5.synchronizing_safely
+        else:
+            storing              = contextlib.contextmanager (_2_5.storing)
+            storing_safely       = contextlib.contextmanager (_2_5.storing_safely)
+            synchronizing        = contextlib.contextmanager (_2_5.synchronizing)
+            synchronizing_safely = contextlib.contextmanager (_2_5.synchronizing_safely)
+
+        del _2_5
+        del sys
 
 
     def _value_changed (self, new_value):

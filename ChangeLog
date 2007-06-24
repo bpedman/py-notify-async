@@ -1,3 +1,22 @@
+2007-06-24  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/_2_5/base.py: Improve documentation.
+	* notify/_2_5/signal.py: Likewise.
+
+	* notify/signal.py (AbstractSignal): Reimplement importing from
+	2.5 support modules to trick Epydoc into not noticing it.
+	* notify/base.py (AbstractValueObject): Likewise.
+
+	* generate-reference.py: Don't document new `notify._2_5' package.
+
+	* setup.py: Also install new `notify._2_5' package.  Take care to
+	not byte-compile 2.5-dependent files on earlier Python versions.
+
+	* notify/_2_5: New directory.
+	* notify/_2_5/__init__.py: New file.
+	* notify/_2_5/base.py: Rename from `notify/_base_2_5.py'
+	* notify/_2_5/signal.py: Rename from `notify/_signal_2_5.py'
+
 2007-06-23  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/signal.py (Signal.disconnect): Remove first equal handler
@@ -152,7 +171,7 @@
 	(AllTestCase.test_signal): Likewise for `AbstractSignal'.
 	(AllTestCase.test_variable): Likewise for
 	`AbstractValueTrackingVariable'.
-	
+
 	* notify/bind.py: Don't assume that empty tuple is a singleton.
 	* notify/signal.py: Likewise.
 

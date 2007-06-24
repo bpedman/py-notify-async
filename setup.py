@@ -3,12 +3,12 @@
 
 # This file is part of Py-notify.
 #
-# Unlike the rest of Py-notify, it is explicitely put in Public
-# Domain.  Use as you please.
+# Unlike the rest of Py-notify, it is explicitely put in Public Domain.  Use as you
+# please.
 
 
-# In particular, we heavily use True and False, there are uses of
-# enumerate(), file coding is explicitly set etc.
+# In particular, we heavily use True and False, there are uses of enumerate(), file coding
+# is explicitly set etc.
 
 REQUIRED_PYTHON_VERSION = (2, 3)
 
@@ -125,10 +125,14 @@ changes. They can be combined using standard logical operators (*not*, *and*, et
 compound conditions. Variables, unlike conditions, can hold any Python object, not just
 booleans, but they cannot be combined.
 
+For more verbose introduction, please refer to the tutorial_.
+
 .. _Observer programming pattern:
    http://en.wikipedia.org/wiki/Observer_pattern
 
-""";
+.. _tutorial
+   http://home.gna.org/py-notify/tutorial.html
+"""
 
 classifiers = ['Topic :: Software Development :: Libraries :: Python Modules',
                'Intended Audience :: Developers',
@@ -142,6 +146,8 @@ classifiers = ['Topic :: Software Development :: Libraries :: Python Modules',
 
 from distutils.core              import *
 from distutils.command.build_ext import build_ext as _build_ext
+
+import distutils.util
 
 
 
@@ -184,6 +190,27 @@ class build_ext (_build_ext):
 
 
 
+# Note: the goal of the below function and manipulation of distuils.util module contents
+# is to not byte-compile files that use 2.5 features on earlier Python versions.  Python
+# 2.3 will be baffled by function decorators already, 2.4 --- by `yield' inside `try
+# ... finally'.
+
+import __future__
+
+def should_be_byte_compiled (filename):
+    package_name = os.path.basename (os.path.split (filename) [0])
+    return package_name != '_2_5' or 'with_statement' in __future__.all_feature_names
+
+def custom_byte_compile (filenames, *arguments, **keywords):
+    original_byte_compile ([filename for filename in filenames
+                            if should_be_byte_compiled (filename)],
+                           *arguments, **keywords)
+
+original_byte_compile       = distutils.util.byte_compile
+distutils.util.byte_compile = custom_byte_compile
+
+
+
 gc_extension = Extension (name    = 'notify.gc',
                           sources = [os.path.join ('notify', 'gc.c')])
 
@@ -199,7 +226,7 @@ setup (name             = 'py-notify',
        download_url     = 'http://download.gna.org/py-notify/',
        license          = "GNU Lesser General Public License v2.1 (see `COPYING')",
        classifiers      = classifiers,
-       packages         = ['notify'],
+       packages         = ['notify', 'notify._2_5'],
        ext_modules      = [gc_extension],
        cmdclass         = { 'build_ext': build_ext })
 

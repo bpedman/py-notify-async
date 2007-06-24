@@ -60,6 +60,7 @@ if fast_mode:
 
 sys.argv.extend (['--name=Py-notify',
                   '--url=http://home.gna.org/py-notify/',
+                  '--exclude=notify._2_5',
                   '--inheritance=grouped',
                   '--no-sourcecode',
                   '--css=%s'    % os.path.join ('docs', 'epydoc.css'),
