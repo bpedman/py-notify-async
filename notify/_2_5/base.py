@@ -221,6 +221,67 @@ def synchronizing_safely (self, value_object, mediator = None):
         yield self
 
 
+def changes_frozen (self):
+    """
+    Create a context manager that will temporarily disable all emissions of ‘changed’
+    signal for this object.  However, if object value changes while the context manager is
+    in effect, it will emit ‘changed’ signal once, upon exiting.
+
+    Returned context managers can be nested.  In this case, any nested freezing manager
+    will I{not} emit ‘changed’ signal, leaving it for the outmost one.
+
+    This method is useful in the following cases:
+
+      - you expect many changes in object’s value, but want interested parties be informed
+        about final result only, not about all intermediate states;
+
+      - you expect at least two changes and the final result may be “no changes” compared
+        to original;
+
+      - you expect many changes, don’t care about intermediate states and want to improve
+        performance.
+
+    In the second case, if the result is indeed “no changes”, context manager ensures that
+    ‘changed’ signal is not emitted at all.
+
+    Example usage:
+       >>> variable = Variable ()
+       ... variable.changed.connect (lambda value: sys.stdout.write ('%s\\n' % value))
+       ...
+       ... with variable.changes_frozen ():
+       ...     a_method_that_can_modify_value (variable)
+       ...     another_similar_method (variable)
+
+    @note:
+    This method is available only in Python 2.5 or newer.
+
+    @note:
+    To enable C{with} statement in Python 2.5 you need to add this line at the top of your
+    module:
+        >>> from __future__ import with_statement
+    """
+
+    # Note: keep in sync with with_changes_frozen() in `notify/base.py'.
+
+    if self._AbstractValueObject__freeze_flag is None:
+        original_value                         = self.get ()
+        self._AbstractValueObject__freeze_flag = False
+
+        try:
+            yield original_value
+        finally:
+            if self._AbstractValueObject__freeze_flag:
+                self._AbstractValueObject__freeze_flag = None
+                new_value                              = self.get ()
+
+                if new_value != original_value:
+                    self._value_changed (new_value)
+            else:
+                self._AbstractValueObject__freeze_flag = None
+    else:
+        yield
+
+
 
 # Local variables:
 # mode: python

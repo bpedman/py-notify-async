@@ -1,3 +1,18 @@
+2007-06-26  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* test/base.py (BaseWithChangesFrozenTestCase): New test case.
+
+	* notify/_2_5/base.py (changes_frozen): New function.
+
+	* notify/base.py (AbstractValueObject.__init__): Initialize new
+	`__freeze_flag' field to zero.
+	(AbstractValueObject._value_changed): Use `emit' method instead of
+	just calling the signal (this is faster.)  Don't reference
+	`__signal' field three times, fetch it to a local variable.  Check
+	new `__freeze_flag' before emitting.
+	(AbstractValueObject.is_frozen)
+	(AbstractValueObject.with_changes_frozen): New methods.
+
 2007-06-24  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* generate-reference.py: Get rid of `import *'.

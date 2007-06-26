@@ -31,19 +31,135 @@ if __name__ == '__main__':
 
 import unittest
 
-from test.__common import NotifyTestCase
+from notify.variable import Variable
+from test.__common   import NotifyTestCase
 
 
 
-# Note: since base class (AbstractValueObject) is abstract, we actually test variables and
-# sometimes conditions here.  However, tested functionality comes from the base class.
+# Note: since base class (AbstractValueObject) is abstract, we actually test variables.
+# However, tested functionality comes from the base class.
+
+class BaseWithChangesFrozenTestCase (NotifyTestCase):
+
+    def test_with_changes_frozen_1 (self):
+        variable     = Variable ()
+        self.results = []
+
+        variable.changed.connect (self.simple_handler)
+        variable.with_changes_frozen (lambda: None)
+
+        # Must not emit `changed' signal: no changes at all.
+        self.assert_results ()
+
+
+    def test_with_changes_frozen_2 (self):
+        variable     = Variable ()
+        self.results = []
+
+        variable.changed.connect (self.simple_handler)
+
+        def do_changes ():
+            variable.value = 1
+
+        variable.with_changes_frozen (do_changes)
+
+        self.assert_results (1)
+
+
+    def test_with_changes_frozen_3 (self):
+        variable     = Variable ()
+        self.results = []
+
+        variable.changed.connect (self.simple_handler)
+
+        def do_changes ():
+            variable.value = 1
+            variable.value = 2
+
+        variable.with_changes_frozen (do_changes)
+
+        self.assert_results (2)
+
+
+    def test_with_changes_frozen_4 (self):
+        variable     = Variable ()
+        self.results = []
+
+        variable.changed.connect (self.simple_handler)
+
+        def do_changes ():
+            variable.value = 1
+            variable.value = None
+
+        variable.with_changes_frozen (do_changes)
+
+        # Must not emit: value returned to original.
+        self.assert_results ()
+
+
+    def test_with_changes_frozen_5 (self):
+        variable     = Variable ()
+        self.results = []
+
+        variable.changed.connect (self.simple_handler)
+
+        def do_changes_1 ():
+            variable.value = 1
+
+            def do_changes_2 ():
+                variable.value = 2
+
+            variable.with_changes_frozen (do_changes_2)
+
+        variable.with_changes_frozen (do_changes_1)
+
+        self.assert_results (2)
+
+
+    def test_with_changes_frozen_6 (self):
+        variable     = Variable ()
+        self.results = []
+
+        variable.changed.connect (self.simple_handler)
+
+        def do_changes_1 ():
+            def do_changes_2 ():
+                variable.value = 1
+
+            variable.with_changes_frozen (do_changes_2)
+
+            variable.value = 2
+
+        variable.with_changes_frozen (do_changes_1)
+
+        self.assert_results (2)
+
+
+    def test_with_changes_frozen_7 (self):
+        variable     = Variable ()
+        self.results = []
+
+        variable.changed.connect (self.simple_handler)
+
+        def do_changes_1 ():
+            def do_changes_2 ():
+                variable.value = 1
+
+            variable.with_changes_frozen (do_changes_2)
+
+            variable.value = None
+
+        variable.with_changes_frozen (do_changes_1)
+
+        # Must not emit: value returned to original.
+        self.assert_results ()
 
 
 
 import __future__
 
 if NotifyTestCase.note_skipped_tests ('with_statement' in __future__.all_feature_names):
-    from test._2_5.base import BaseContextManagerTestCase
+    from test._2_5.base import BaseContextManagerTestCase, BaseChangesFrozenContextManagerTestCase
 
 
 

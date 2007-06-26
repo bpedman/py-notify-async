@@ -33,7 +33,7 @@ from notify.variable import Variable
 from test.__common   import NotifyTestCase, ignoring_exceptions
 
 
-__all__ = ('BaseContextManagerTestCase',)
+__all__ = ('BaseContextManagerTestCase', 'BaseChangesFrozenContextManagerTestCase')
 
 
 
@@ -183,6 +183,104 @@ class BaseContextManagerTestCase (NotifyTestCase):
         variable2.value = 400
 
         self.assert_results (200, 300, 400)
+
+
+
+class BaseChangesFrozenContextManagerTestCase (NotifyTestCase):
+
+    def test_changes_frozen_1 (self):
+        variable     = Variable ()
+        self.results = []
+
+        variable.changed.connect (self.simple_handler)
+
+        with variable.changes_frozen ():
+            pass
+
+        # Must not emit `changed' signal: no changes at all.
+        self.assert_results ()
+
+
+    def test_changes_frozen_2 (self):
+        variable     = Variable ()
+        self.results = []
+
+        variable.changed.connect (self.simple_handler)
+
+        with variable.changes_frozen ():
+            variable.value = 1
+
+        self.assert_results (1)
+
+
+    def test_changes_frozen_3 (self):
+        variable     = Variable ()
+        self.results = []
+
+        variable.changed.connect (self.simple_handler)
+
+        with variable.changes_frozen ():
+            variable.value = 1
+            variable.value = 2
+
+        self.assert_results (2)
+
+
+    def test_changes_frozen_4 (self):
+        variable     = Variable ()
+        self.results = []
+
+        variable.changed.connect (self.simple_handler)
+
+        with variable.changes_frozen ():
+            variable.value = 1
+            variable.value = None
+
+        # Must not emit: value returned to original.
+        self.assert_results ()
+
+
+    def test_changes_frozen_5 (self):
+        variable     = Variable ()
+        self.results = []
+
+        variable.changed.connect (self.simple_handler)
+
+        with variable.changes_frozen ():
+            variable.value = 1
+            with variable.changes_frozen ():
+                variable.value = 2
+
+        self.assert_results (2)
+
+
+    def test_changes_frozen_6 (self):
+        variable     = Variable ()
+        self.results = []
+
+        variable.changed.connect (self.simple_handler)
+
+        with variable.changes_frozen ():
+            with variable.changes_frozen ():
+                variable.value = 1
+            variable.value = 2
+
+        self.assert_results (2)
+
+
+    def test_changes_frozen_7 (self):
+        variable     = Variable ()
+        self.results = []
+
+        variable.changed.connect (self.simple_handler)
+
+        with variable.changes_frozen ():
+            with variable.changes_frozen ():
+                variable.value = 1
+            variable.value = None
+
+        # Must not emit: value returned to original.
+        self.assert_results ()
 
 
 

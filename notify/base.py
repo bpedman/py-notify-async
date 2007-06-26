@@ -55,7 +55,12 @@ class AbstractValueObject (object):
     C{L{AbstractVariable <variable.AbstractVariable>}} implementing common functionality.
     """
 
-    __slots__ = ('_AbstractValueObject__signal', '__weakref__')
+    __slots__ = ('__weakref__',
+                 '_AbstractValueObject__signal', '_AbstractValueObject__freeze_flag')
+
+
+    # Implementation note: `__freeze_flag' can be None (no freezing), False (frozen, but
+    # no changes) or True (frozen and changed at least once.)
 
 
     def __init__(self):
@@ -70,7 +75,8 @@ class AbstractValueObject (object):
         # For optimization reasons, `__signal' is created only when it is needed for the
         # first time.  This may improve memory consumption if there are many unused
         # properties.
-        self.__signal = None
+        self.__signal      = None
+        self.__freeze_flag = None
 
 
     def get (self):
@@ -497,11 +503,13 @@ class AbstractValueObject (object):
             storing_safely       = _2_5.storing_safely
             synchronizing        = _2_5.synchronizing
             synchronizing_safely = _2_5.synchronizing_safely
+            changes_frozen       = _2_5.changes_frozen
         else:
             storing              = contextlib.contextmanager (_2_5.storing)
             storing_safely       = contextlib.contextmanager (_2_5.storing_safely)
             synchronizing        = contextlib.contextmanager (_2_5.synchronizing)
             synchronizing_safely = contextlib.contextmanager (_2_5.synchronizing_safely)
+            changes_frozen       = contextlib.contextmanager (_2_5.changes_frozen)
 
         del _2_5
         del sys
@@ -526,21 +534,99 @@ class AbstractValueObject (object):
         @returns:         Always C{True}.
         """
 
-        if self.__signal is not None:
-            if isinstance (self.__signal, AbstractSignal):
-                self.__signal (new_value)
-            else:
-                self.__signal () (new_value)
+        if self.__freeze_flag is None:
+            signal = self.__signal
+            if signal is not None:
+                if isinstance (signal, AbstractSignal):
+                    signal.emit (new_value)
+                else:
+                    signal ().emit (new_value)
+
+        else:
+            self.__freeze_flag = True
 
         return True
+
+
+    def is_frozen (self):
+        """
+        Determine if C{self}’s changes are currently frozen, i.e. if changing C{self}’s
+        value will not emit ‘changed’ signal.  However, if the value is changed from the
+        time the object is frozen to the time it is “thawed”, ‘changed’ signal will be
+        emitted, once.
+
+        @rtype: C{bool}
+
+        @see:   C{L{with_changes_frozen}}
+        @see:   C{L{changes_frozen}}
+        """
+
+        return self.__freeze_flag is not None
+
+
+    def with_changes_frozen (self, callback, *arguments):
+        """
+        Execute C{callback} with optional C{arguments}, freezing ‘changed’ signal of this
+        object.  In other words, any changes to object’s value until C{callback} returns
+        don’t cause emission of ‘changed’ signal.  However, if object value changes during
+        C{callback} execution, C{with_changes_frozen} method will emit ‘changed’ signal
+        once, after C{callback} returns.
+
+        Calls to this method can be nested, i.e. C{callback} can call
+        C{with_changes_frozen} on the same object too.  In this case, any nested calls
+        will I{not} emit ‘changed’ signal, leaving it for the outmost call.
+
+        This method is useful in the following cases:
+
+          - you expect many changes in object’s value, but want interested parties be
+            informed about final result only, not about all intermediate states;
+
+          - you expect at least two changes and the final result may be “no changes”
+            compared to original;
+
+          - you expect many changes, don’t care about intermediate states and want to
+            improve performance.
+
+        In the second case, if the result is indeed “no changes”, this method ensures that
+        ‘changed’ signal is not emitted at all.
+
+        @note:
+        There exists C{L{changes_frozen}} method with the same semantics.  It is only
+        available on Python 2.5 and later, but allows to use the C{with} language
+        statement and is preferred, if available.  This method is provided only since
+        Py-notify supports Python versions starting with 2.3.
+
+        @rtype:   C{object}
+        @returns: Whatever C{callback} returns, unchanged. 
+        """
+
+        # Note: keep in sync with changes_frozen() in `notify/_2_5/base.py'.
+
+        if self.__freeze_flag is None:
+            original_value     = self.get ()
+            self.__freeze_flag = False
+
+            try:
+                return callback (*arguments)
+            finally:
+                if self.__freeze_flag:
+                    self.__freeze_flag = None
+                    new_value          = self.get ()
+
+                    if new_value != original_value:
+                        self._value_changed (new_value)
+                else:
+                    self.__freeze_flag = None
+        else:
+            return callback (*arguments)
 
 
     changed = property (__get_changed_signal,
                         doc = ("""
                         The ‘changed’ signal for this object.  ‘Changed’ signal is emitted
-                        if and only if the current value is changed.  User of the object
-                        must never emit the signal herself, but may operate with its
-                        handlers.
+                        if and only if the current value is changed and the object is not
+                        L{frozen <is_frozen>}.  User of the object must never emit the
+                        signal herself, but may operate with its handlers.
                         
                         Internally, reading this property creates the signal if it hasn’t
                         been created yet.  Derived classes may assume this behaviour.
