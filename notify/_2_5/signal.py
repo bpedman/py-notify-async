@@ -37,9 +37,15 @@ __docformat__ = 'epytext en'
 __all__       = ('connecting', 'connecting_safely', 'blocking')
 
 
+from contextlib import contextmanager
 
+
+
+@contextmanager
 def connecting (self, handler, *arguments):
     """
+    connecting(self, handler, *arguments)
+
     Create a context manager temporarily connecting C{handler} with C{arguments} to the
     signal.  Upon exit, returned context manager disconnects the handler.
 
@@ -66,8 +72,8 @@ def connecting (self, handler, *arguments):
     module:
         >>> from __future__ import with_statement
 
-    @see:  C{L{connect <notify.signal.AbstractSignal.connect>}}
-    @see:  C{L{disconnect <notify.signal.AbstractSignal.disconnect>}}
+    @see:  C{L{connect}}
+    @see:  C{L{disconnect}}
     """
 
     self.connect (handler, *arguments)
@@ -78,12 +84,15 @@ def connecting (self, handler, *arguments):
         self.disconnect (handler, *arguments)
 
 
+@contextmanager
 def connecting_safely (self, handler, *arguments):
     """
+    connecting_safely(self, handler, *arguments)
+
     Create a context manager temporarily connecting C{handler} with C{arguments} to the
     signal, but only if it is not connected already.  Only if the handler is connected,
-    returned context manager will disconnect it again upon exit.  See C{L{connecting
-    <notify.signal.AbstractSignal.connecting>}} for details.
+    returned context manager will disconnect it again upon exit.  See C{L{connecting}} for
+    details.
 
     @note:
     This method is available only in Python 2.5 or newer.
@@ -93,8 +102,8 @@ def connecting_safely (self, handler, *arguments):
     module:
         >>> from __future__ import with_statement
 
-    @see:  C{L{connect_safe <notify.signal.AbstractSignal.connect_safe>}}
-    @see:  C{L{disconnect <notify.signal.AbstractSignal.disconnect>}}
+    @see:  C{L{connect_safe}}
+    @see:  C{L{disconnect}}
     """
 
     if self.connect_safe (handler, *arguments):
@@ -106,8 +115,11 @@ def connecting_safely (self, handler, *arguments):
         yield self
 
 
+@contextmanager
 def blocking (self, handler, *arguments):
     """
+    blocking(self, handler, *arguments)
+
     Create a context manager temporarily blocking C{handler} with C{arguments}.  Upon
     exit, returned context manager unblocks the handler.
 
@@ -136,8 +148,8 @@ def blocking (self, handler, *arguments):
     module:
         >>> from __future__ import with_statement
 
-    @see:  C{L{block <notify.signal.AbstractSignal.block>}}
-    @see:  C{L{unblock <notify.signal.AbstractSignal.unblock>}}
+    @see:  C{L{block}}
+    @see:  C{L{unblock}}
     """
 
     if self.block (handler, *arguments):

@@ -53,6 +53,35 @@ class AbstractValueObject (object):
     """
     Base class for C{L{AbstractCondition <condition.AbstractCondition>}} and
     C{L{AbstractVariable <variable.AbstractVariable>}} implementing common functionality.
+
+    @group Basic:
+    get, set, mutable, changed
+
+    @group Storing Using Handlers:
+    store, store_safe, storing, storing_safely
+
+    @group Synchronizing Two Objects:
+    synchronize, synchronize_safe, desynchronize, desynchronize_fully, synchronizing,
+    synchronizing_safely
+
+    @group Freezing Value Changes:
+    is_frozen, changes_frozen, with_changes_frozen
+
+    @group Methods for Subclasses:
+    _is_mutable, _value_changed, _create_signal, _has_signal, _remove_signal,
+    _additional_description
+
+    @group Internals:
+    __get_changed_signal, __to_string, __freeze_flag, __signal
+
+    @sort:
+    get, set, mutable, changed,
+    store, store_safe, storing, storing_safely,
+    synchronize, synchronize_safe, desynchronize, desynchronize_fully, synchronizing,
+    synchronizing_safely,
+    is_frozen, changes_frozen, with_changes_frozen,
+    _is_mutable, _value_changed, _create_signal, _has_signal, _remove_signal,
+    _additional_description
     """
 
     __slots__ = ('__weakref__',
@@ -490,29 +519,22 @@ class AbstractValueObject (object):
  
  
     if 'contextlib' in globals ():
-        # This is a collection of gross hacks aimed at making this work (obviously) _and_
-        # tricking Epydoc into not noticing that we import stuff from a different module.
-
         from notify._2_5 import base as _2_5
-        import sys
 
-        if (    hasattr (sys.stdout, '__module__')
-            and sys.stdout.__module__.startswith ('epydoc')
-            and sys.stdout.__class__.__name__ == '_DevNull'):
-            storing              = _2_5.storing
-            storing_safely       = _2_5.storing_safely
-            synchronizing        = _2_5.synchronizing
-            synchronizing_safely = _2_5.synchronizing_safely
-            changes_frozen       = _2_5.changes_frozen
-        else:
-            storing              = contextlib.contextmanager (_2_5.storing)
-            storing_safely       = contextlib.contextmanager (_2_5.storing_safely)
-            synchronizing        = contextlib.contextmanager (_2_5.synchronizing)
-            synchronizing_safely = contextlib.contextmanager (_2_5.synchronizing_safely)
-            changes_frozen       = contextlib.contextmanager (_2_5.changes_frozen)
+        storing                         = _2_5.storing
+        storing_safely                  = _2_5.storing_safely
+        synchronizing                   = _2_5.synchronizing
+        synchronizing_safely            = _2_5.synchronizing_safely
+        changes_frozen                  = _2_5.changes_frozen
+
+        # This is needed so that Epydoc sees docstrings as UTF-8 encoded.
+        storing.__module__              = __module__
+        storing_safely.__module__       = __module__
+        synchronizing.__module__        = __module__
+        synchronizing_safely.__module__ = __module__
+        changes_frozen.__module__       = __module__
 
         del _2_5
-        del sys
 
 
     def _value_changed (self, new_value):

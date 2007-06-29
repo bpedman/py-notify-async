@@ -39,13 +39,18 @@ __docformat__ = 'epytext en'
 __all__       = ('storing', 'storing_safely', 'synchronizing', 'synchronizing_safely')
 
 
+from contextlib import contextmanager
 
+
+
+@contextmanager
 def storing (self, handler, *arguments):
     """
+    storing(self, handler, *arguments)
+
     Create a context manager that will temporarily store object value using C{handler}
     with C{arguments}.  Upon exit, returned context manager disconnects the handler from
-    ‘changed’ signal, cancelling effect of C{L{store
-    <notify.base.AbstractValueObject.store>}}.
+    ‘changed’ signal, cancelling effect of C{L{store}}.
 
     It is legal to modify handler list of ‘changed’ signal inside a C{with} block.  In
     particular, you can disconnect the handler yourself, before the context manager does
@@ -87,8 +92,8 @@ def storing (self, handler, *arguments):
     @raises TypeError: if C{handler} is not callable or cannot be called with
                        C{arguments} and current object value.
 
-    @see:  C{L{store <notify.base.AbstractValueObject.store>}}
-    @see:  C{L{AbstractSignal.disconnect <notify.signal.AbstractSignal.disconnect>}}
+    @see:  C{L{store}}
+    @see:  C{L{AbstractSignal.disconnect}}
     """
 
     self.store (handler, *arguments)
@@ -99,13 +104,15 @@ def storing (self, handler, *arguments):
         self.changed.disconnect (handler, *arguments)
 
 
+@contextmanager
 def storing_safely (self, handler, *arguments):
     """
+    storing_safely(self, handler, *arguments)
+
     Create a context manager that will temporarily store object value using C{handler}
     with C{arguments}, but only if it is not connected to ‘changed’ signal already.  Upon
     exit, returned context manager disconnects the handler from ‘changed’ signal,
-    cancelling effect of C{L{store_safe <notify.base.AbstractValueObject.store_safe>}}.
-    See C{L{storing <notify.base.AbstractValueObject.storing>}} for more information.
+    cancelling effect of C{L{store_safe}}.  See C{L{storing}} for more information.
 
     @note:
     This method is available only in Python 2.5 or newer.
@@ -124,8 +131,8 @@ def storing_safely (self, handler, *arguments):
     @raises TypeError: if C{handler} is not callable or cannot be called with
                        C{arguments} and current object value.
 
-    @see:  C{L{store_safe <notify.base.AbstractValueObject.store_safe>}}
-    @see:  C{L{AbstractSignal.disconnect <notify.signal.AbstractSignal.disconnect>}}
+    @see:  C{L{store_safe}}
+    @see:  C{L{AbstractSignal.disconnect}}
     """
 
     if self.store_safe (handler, *arguments):
@@ -137,8 +144,11 @@ def storing_safely (self, handler, *arguments):
         yield self
 
 
+@contextmanager
 def synchronizing (self, value_object, mediator = None):
     """
+    synchronizing(self, value_object, mediator=None)
+
     Create a context manager that will temporarily synchronize object to another
     C{value_object}, optionally using C{mediator}.  Upon exit, returned context manager
     desynchronizes the two objects.
@@ -160,13 +170,13 @@ def synchronizing (self, value_object, mediator = None):
 
     @raises TypeError:    if C{value_object} is not an C{AbstractValueObject} or
                           C{mediator} is neither C{None} nor an instance of
-                          C{L{AbstractMediator <mediator.AbstractMediator>}}.
+                          C{L{AbstractMediator}}.
     @raises ValueError:   if C{self} and C{value_object} are the same object.
     @raises ValueError:   if either C{self} or C{value_object} is not mutable.
     @raises ValueError:   if current value of C{value_object} is not suitable for C{self}.
 
-    @see:  C{L{synchronize <notify.base.AbstractValueObject.synchronize>}}
-    @see:  C{L{desynchronize <notify.base.AbstractValueObject.desynchronize>}}
+    @see:  C{L{synchronize}}
+    @see:  C{L{desynchronize}}
     """
 
     self.synchronize (value_object, mediator)
@@ -177,14 +187,14 @@ def synchronizing (self, value_object, mediator = None):
         self.desynchronize (value_object, mediator)
 
 
+@contextmanager
 def synchronizing_safely (self, value_object, mediator = None):
     """
-    Like C{L{synchronizing <notify.base.AbstractValueObject.synchronizing>}}, but uses
-    C{L{synchronize_safe <notify.base.AbstractValueObject.synchronize_safe>}} /
-    C{L{desynchronize <notify.base.AbstractValueObject.desynchronize>}} method pair.  Only
-    if C{synchronize_safe} returns C{True}, returned context manager will call
-    C{desynchronize} upon exit.  See C{L{synchronizing
-    <notify.base.AbstractValueObject.synchronizing>}} for more information.
+    synchronizing_safely(self, value_object, mediator=None)
+
+    Like C{L{synchronizing}}, but uses C{L{synchronize_safe}} / C{L{desynchronize}} method
+    pair.  Only if C{synchronize_safe} returns C{True}, returned context manager will call
+    C{desynchronize} upon exit.  See C{L{synchronizing}} for more information.
 
     @note:
     This method is available only in Python 2.5 or newer.
@@ -203,13 +213,13 @@ def synchronizing_safely (self, value_object, mediator = None):
 
     @raises TypeError:    if C{value_object} is not an C{AbstractValueObject} or
                           C{mediator} is neither C{None} nor an instance of
-                          C{L{AbstractMediator <mediator.AbstractMediator>}}.
+                          C{L{AbstractMediator}}.
     @raises ValueError:   if C{self} and C{value_object} are the same object.
     @raises ValueError:   if either C{self} or C{value_object} is not mutable.
     @raises ValueError:   if current value of C{value_object} is not suitable for C{self}.
 
-    @see:  C{L{synchronize_safe <notify.base.AbstractValueObject.synchronize_safe>}}
-    @see:  C{L{desynchronize <notify.base.AbstractValueObject.desynchronize>}}
+    @see:  C{L{synchronize_safe}}
+    @see:  C{L{desynchronize}}
     """
 
     if self.synchronize_safe (value_object, mediator):
@@ -221,8 +231,11 @@ def synchronizing_safely (self, value_object, mediator = None):
         yield self
 
 
+@contextmanager
 def changes_frozen (self):
     """
+    changes_frozen(self)
+
     Create a context manager that will temporarily disable all emissions of ‘changed’
     signal for this object.  However, if object value changes while the context manager is
     in effect, it will emit ‘changed’ signal once, upon exiting.

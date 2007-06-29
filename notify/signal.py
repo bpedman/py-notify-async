@@ -127,22 +127,32 @@ class AbstractSignal (object):
     """
     Abstract interface all signal classes must implement.
 
-    Methods of this interface can be roughly grouped into the following groups:
+    @group Connecting Handlers:
+    is_connected, connect, connect_safe, do_connect, do_connect_safe, disconnect,
+    disconnect_all, connecting, connecting_safely
 
-      - Query methods: C{L{has_handlers}} (or just C{L{__nonzero__}}) and
-        C{L{count_handlers}}.
+    @group Blocking Handlers:
+    is_blocked, block, unblock, blocking
 
-      - Adding and removing handlers: C{L{is_connected}}, C{L{connect}},
-        C{L{connect_safe}}, C{L{do_connect}}, C{L{do_connect_safe}}, C{L{disconnect}} and
-        C{L{disconnect_all}}
+    @group Emission:
+    __call__, emit, stop_emission, emission_level, emission_stopped
 
-      - Blocking connected handlers from being invoked: C{L{is_blocked}}, C{L{block}} and
-        C{L{unblock}}.
+    @group Handler List Maintenance:
+    has_handlers, __nonzero__, count_handlers, collect_garbage
 
-      - Emission: C{L{emit}} (or just C{L{__call__}}), C{L{emission_level}},
-        C{L{emission_stopped}} and C{L{stop_emission}}.
+    @group Methods for Subclasses:
+    _wrap_handler, _additional_description
 
-      - Rarely needed: C{L{_wrap_handler}} and C{L{collect_garbage}}.
+    @group Internals:
+    _get_emission_level, _is_emission_stopped, __to_string
+
+    @sort:
+    is_connected, connect, connect_safe, do_connect, do_connect_safe, disconnect,
+    disconnect_all, connecting, connecting_safely,
+    is_blocked, block, unblock, blocking,
+    __call__, emit, stop_emission, emission_level, emission_stopped,
+    has_handlers, __nonzero__, count_handlers, collect_garbage,
+    _wrap_handler, _additional_description
     """
 
     __slots__ = ()
@@ -155,7 +165,7 @@ class AbstractSignal (object):
         values, post-process values after all handlers run (or emission stops for some
         reason) or stop emission based on the values.
 
-        Note that accumulator should I{not} contain the accumulated value or have any
+        Note that accumulator must I{not} contain the accumulated value or have any
         internal state (except that specified by C{__init__} arguments) whatsoever.  This
         no-OOP design is required to make accumulators thread- and reentrance-safe, so
         that the same accumulator can be used from multiple threads or nested signal
@@ -567,16 +577,14 @@ class AbstractSignal (object):
 
         from notify._2_5 import signal as _2_5
 
-        if (    hasattr (sys.stdout, '__module__')
-            and sys.stdout.__module__.startswith ('epydoc')
-            and sys.stdout.__class__.__name__ == '_DevNull'):
-            connecting        = _2_5.connecting
-            connecting_safely = _2_5.connecting_safely
-            blocking          = _2_5.blocking
-        else:
-            connecting        = contextlib.contextmanager (_2_5.connecting)
-            connecting_safely = contextlib.contextmanager (_2_5.connecting_safely)
-            blocking          = contextlib.contextmanager (_2_5.blocking)
+        connecting                   = _2_5.connecting
+        connecting_safely            = _2_5.connecting_safely
+        blocking                     = _2_5.blocking
+
+        # This is needed so that Epydoc sees docstrings as UTF-8 encoded.
+        connecting.__module__        = __module__
+        connecting_safely.__module__ = __module__
+        blocking.__module__          = __module__
 
         del _2_5
 
@@ -602,6 +610,9 @@ class AbstractSignal (object):
     def __call__(self, *arguments):
         """
         Same as C{L{emit}} method.
+
+        @note:
+        Don’t override this method, override C{emit} instead, if really needed.
 
         @rtype:   C{object}
         @returns: Value, determined by subclass and, possibly, by its

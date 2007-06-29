@@ -1,3 +1,16 @@
+2007-06-29  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* docs/tutorial.txt: Add one section.
+
+	* notify/base.py: Improve documentation.
+	* notify/signal.py: Likewise.
+	* notify/_2_5/base.py: Likewise.
+	* notify/_2_5/signal.py: Likewise.
+
+	* notify/base.py (AbstractValueObject): One more, cleaner
+	reimplementation of importing of 2.5 features.
+	* notify/signal.py (AbstractSignal): Likewise.
+
 2007-06-26  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* test/base.py (BaseWithChangesFrozenTestCase): New test case.
@@ -5,7 +18,7 @@
 	* notify/_2_5/base.py (changes_frozen): New function.
 
 	* notify/base.py (AbstractValueObject.__init__): Initialize new
-	`__freeze_flag' field to zero.
+	`__freeze_flag' field to None.
 	(AbstractValueObject._value_changed): Use `emit' method instead of
 	just calling the signal (this is faster.)  Don't reference
 	`__signal' field three times, fetch it to a local variable.  Check

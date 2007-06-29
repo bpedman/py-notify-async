@@ -557,6 +557,54 @@ leak here.
 
 
 
+Temporary Freezing Changes
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Sometimes conditions and variables emitting ‘changed’ signal on each
+change is too much.  Maybe you are not interested in intermediate
+values, just in the final result.  Or maybe intermediate emissions are
+just ‘side effect’ and actually screw something, like object
+synchronization.  In this case it may be handy to temporarily *freeze*
+changes.
+
+While a condition or variable is in frozen state, it will not emit
+‘changed’ signal.  However, when first becoming frozen, it remembers
+its state or value and, if it changes by the time it is thawed,
+‘changed’ is emitted, but only once.  Thus, freezing is not a way to
+slip some changes in completely unnoticed.  Rather, it allows to have
+a set of consecutive changes to be viewed as a single change.
+
+Here is a short demonstration::
+
+    from notify.all import *
+
+    def note (value):
+        print value
+
+    variable = Variable (1)
+    variable.changed.connect (note)
+
+    def do_change ():
+        variable.value = 2
+        variable.value = 3
+
+    variable.with_changes_frozen (do_change)
+
+It will print only 3, because assignment of 2 gets overriden by the
+time variable is thawed.
+
+The syntax above is not very nice, but I decided that providing
+freezing/thawing method pair would be too error-prone, since you would
+need to pass original value between them manually.  However, if your
+program runs with Python 2.5 or later, you can use a nicer context
+manager (see `Context Managers`_ section for details)::
+
+    with variable.changes_frozen ():
+        variable.value = 2
+        variable.value = 3
+
+
+
 Deriving New Types
 ~~~~~~~~~~~~~~~~~~
 
