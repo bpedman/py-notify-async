@@ -29,7 +29,7 @@ from __future__      import with_statement
 
 from contextlib      import nested
 
-from notify.variable import Variable
+from notify.variable import AbstractVariable, Variable
 from test.__common   import NotifyTestCase, ignoring_exceptions
 
 
@@ -281,6 +281,23 @@ class BaseChangesFrozenContextManagerTestCase (NotifyTestCase):
 
         # Must not emit: value returned to original.
         self.assert_results ()
+
+
+    def test_derived_variable_changes_frozen_1 (self):
+        DerivedVariable = AbstractVariable.derive_type ('DerivedVariable',
+                                                        getter = lambda variable: x)
+        x            = 1
+        variable     = DerivedVariable ()
+        self.results = []
+
+        variable.store (self.simple_handler)
+
+        with variable.changes_frozen ():
+            x = 2
+
+        # Though we never call _value_changed(), changes_frozen() promises to call it
+        # itself in such cases.
+        self.assert_results (1, 2)
 
 
 

@@ -88,8 +88,7 @@ class AbstractValueObject (object):
                  '_AbstractValueObject__signal', '_AbstractValueObject__freeze_flag')
 
 
-    # Implementation note: `__freeze_flag' can be None (no freezing), False (frozen, but
-    # no changes) or True (frozen and changed at least once.)
+    # Implementation note: `__freeze_flag' can be None (not frozen) or True (frozen.)
 
 
     def __init__(self):
@@ -564,9 +563,6 @@ class AbstractValueObject (object):
                 else:
                     signal ().emit (new_value)
 
-        else:
-            self.__freeze_flag = True
-
         return True
 
 
@@ -626,19 +622,16 @@ class AbstractValueObject (object):
 
         if self.__freeze_flag is None:
             original_value     = self.get ()
-            self.__freeze_flag = False
+            self.__freeze_flag = True
 
             try:
                 return callback (*arguments)
             finally:
-                if self.__freeze_flag:
-                    self.__freeze_flag = None
-                    new_value          = self.get ()
+                self.__freeze_flag = None
+                new_value          = self.get ()
 
-                    if new_value != original_value:
-                        self._value_changed (new_value)
-                else:
-                    self.__freeze_flag = None
+                if new_value != original_value:
+                    self._value_changed (new_value)
         else:
             return callback (*arguments)
 

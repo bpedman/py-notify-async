@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
 import unittest
 
-from notify.variable import Variable
+from notify.variable import AbstractVariable, Variable
 from test.__common   import NotifyTestCase
 
 
@@ -153,6 +153,25 @@ class BaseWithChangesFrozenTestCase (NotifyTestCase):
 
         # Must not emit: value returned to original.
         self.assert_results ()
+
+
+    def test_with_derived_variable_changes_frozen_1 (self):
+        DerivedVariable = AbstractVariable.derive_type ('DerivedVariable',
+                                                        getter = lambda variable: values['x'])
+        values       = { 'x': 1 }
+        variable     = DerivedVariable ()
+        self.results = []
+
+        variable.store (self.simple_handler)
+
+        def do_changes (values):
+            values['x'] = 2
+
+        variable.with_changes_frozen (do_changes, values)
+
+        # Though we never call _value_changed(), with_changes_frozen() promises to call it
+        # itself in such cases.
+        self.assert_results (1, 2)
 
 
 

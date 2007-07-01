@@ -1,3 +1,22 @@
+2007-07-01  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* docs/tutorial.txt: Add one section.
+
+	* test/_2_5/base.py
+	(BaseChangesFrozenContextManagerTestCase.test_derived_variable_changes_frozen_1):
+	New test.
+
+	* test/base.py
+	(BaseWithChangesFrozenTestCase.test_with_derived_variable_changes_frozen_1):
+	New test.
+
+	* notify/base.py (AbstractValueObject._value_changed): Don't
+	change `__freeze_flag' anymore.
+	(AbstractValueObject.with_changes_frozen): Don't check
+	`__freeze_flag', always decide whether to emit by comparing new
+	and original values.
+	* notify/_2_5/base.py (changes_frozen): Likewise.
+
 2007-06-29  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* docs/tutorial.txt: Add one section.

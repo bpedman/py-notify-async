@@ -278,19 +278,16 @@ def changes_frozen (self):
 
     if self._AbstractValueObject__freeze_flag is None:
         original_value                         = self.get ()
-        self._AbstractValueObject__freeze_flag = False
+        self._AbstractValueObject__freeze_flag = True
 
         try:
             yield original_value
         finally:
-            if self._AbstractValueObject__freeze_flag:
-                self._AbstractValueObject__freeze_flag = None
-                new_value                              = self.get ()
+            self._AbstractValueObject__freeze_flag = None
+            new_value                              = self.get ()
 
-                if new_value != original_value:
-                    self._value_changed (new_value)
-            else:
-                self._AbstractValueObject__freeze_flag = None
+            if new_value != original_value:
+                self._value_changed (new_value)
     else:
         yield
 

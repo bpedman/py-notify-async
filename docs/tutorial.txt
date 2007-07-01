@@ -648,6 +648,61 @@ standard derivation is possible as well.
 
 
 
+Using Changes Freeze for New Types
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Changes freezing methods always compare original and new value, even
+if the object never tried to emit ‘changed’ signal while freeze was in
+effect.  While this is somewhat less efficient than not comparing in
+such cases at all, it was judged helpful enough to live with somewhat
+non-optimal efficiency.  Besides, comparing identical (as with ``is``
+operator) values must be fast anyway.
+
+What is helpful about such behavior is best demonstrated with some
+code::
+
+    from notify.all import *
+
+    class BopContainer (object):
+
+        __NumBops = (AbstractVariable.derive_type
+                     ('__NumBops', object = 'container',
+                      getter = lambda container: len (container.__bops)))
+
+        def __init__(self):
+            self.__bops   = ()
+            self.num_bops = BopContainer.__NumBops (self)
+
+        def set_bops (self, *bops):
+            def do_set_bops ():
+                self.__bops = bops
+
+            self.num_bops.with_changes_frozen (do_set_bops)
+
+
+    def note (num_bops):
+        print num_bops
+
+    bops = BopContainer ()
+    bops.num_bops.changed.connect (note)
+
+    bops.set_bops ('foo', 'bar', 'baz')
+
+When run, this code prints number 3, the number of ‘bops’ set in the
+last line.  However, ``BopContainer`` never uses ``_value_changed()``,
+instead it relies on ``with_changes_frozen()`` to emit the signal
+itself.  So, the class doesn’t have to compare old and new values
+anymore, it uses this feature of the freezing method.
+
+With Python 2.5 you could rewrite ``set_bops()`` method in a nicer and
+more readable fashion::
+
+    def set_bops (self, *bops):
+        with self.num_bops.changes_frozen ():
+            self.__bops = bops
+
+
+
 .. _Observer programming pattern:
    http://en.wikipedia.org/wiki/Observer_pattern
 
