@@ -1,5 +1,9 @@
 2007-07-01  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	* version: Release 0.1.10.
+
+	* NEWS: Update.
+
 	* docs/tutorial.txt: Add one section.
 
 	* test/_2_5/base.py

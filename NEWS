@@ -1,3 +1,18 @@
+--- New in Py-notify 0.1.10 ------------------------------------------
+
+* Possibility to freeze changes in conditions and variabes.
+
+* For Python 2.5+ only: 8 context manager methods for signals,
+  conditions and variables.
+
+* Expanded tutorial.
+
+* Other small improvements and fixes.
+
+* 31 more unit tests (151 in total.)  Now not all tests run under
+  Python 2.3 or 2.4; for them there are only 129 tests.
+
+
 --- New in Py-notify 0.1.9 -------------------------------------------
 
 * Fixed and improved `setup.py' script.
