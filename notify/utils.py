@@ -25,16 +25,47 @@
 """
 A collection of utilities that can also be used from outside, if wanted.  Functions and
 classes here can be assumed public and won’t disappear in future Py-notify versions.
+
+@var is_callable:
+Determine if C{object} is callable.  E.g. if it is a function, method, class, instance of
+a class with C{__call__}, etc.  This is the same as built-in function C{callable} does.
+C{is_callable} is provided since C{callable} is going to disappear in Python 3000 and may
+issue warnings in 2.6.
 """
 
 __docformat__ = 'epytext en'
-__all__       = ('raise_not_implemented_exception',
-                 'is_valid_identifier',
+__all__       = ('is_callable', 'is_valid_identifier',
+                 'raise_not_implemented_exception',
                  'DummyReference')
 
 
 import re
 import sys
+
+
+
+if sys.version_info[:3] < (2, 6, 0):
+    is_callable = callable
+
+else:
+    def is_callable (object):
+        return hasattr (object, '__call__')
+
+
+
+def is_valid_identifier (identifier):
+    """
+    Determine if C{identifier} is a valid Python identifier.  This function never raises
+    any exceptions.  If C{identifier} is not a string, it simply returns C{False}.
+
+    @param identifier: identifier to determin if it is valid
+    @type  identifier: C{basestring}
+
+    @rtype:            C{bool}
+    """
+
+    return (isinstance (identifier, basestring)
+            and re.match ('^[_a-zA-Z][_a-zA-Z0-9]*$', identifier) is not None)
 
 
 
@@ -119,22 +150,6 @@ def _find_declaration_classes (_class, function_name):
                        [])
     else:
         return [_class]
-
-
-
-def is_valid_identifier (identifier):
-    """
-    Determine if C{identifier} is a valid Python identifier.  This function never raises
-    any exceptions.  If C{identifier} is not a string, it simply returns C{False}.
-
-    @param identifier: identifier to determin if it is valid
-    @type  identifier: C{basestring}
-
-    @rtype:            C{bool}
-    """
-
-    return (isinstance (identifier, basestring)
-            and re.match ('^[_a-zA-Z][_a-zA-Z0-9]*$', identifier) is not None)
 
 
 

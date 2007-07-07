@@ -1,4 +1,27 @@
+2007-07-07  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* MANIFEST.in: Include `generate-tutorial.py' in distribution.
+
+	* test/utils.py (UtilsTestCase.test_is_callable): New test case.
+	(UtilsTestCase.test_dummy_reference): Use new is_callable().
+
+	* test/all.py (AllTestCase.assert_is_function): Allow functions to
+	be built-in.
+	(AllTestCase.test_util): Also test new is_callable().
+
+	* notify/utils.py (is_callable): New function.
+
+	* notify/base.py: Use it instead of built-in callable(), since
+	latter is deprecated in 2.6 and will be removed in Python 3000.
+	* notify/bind.py: Likewise.
+	* notify/condition.py: Likewise.
+	* notify/mediator.py: Likewise.
+	* notify/signal.py: Likewise.
+	* notify/variable.py: Likewise.
+
 2007-07-01  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* setup.py: Fix reST in package long description.
 
 	* version: Release 0.1.10.
 

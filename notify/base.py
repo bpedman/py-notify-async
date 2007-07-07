@@ -36,7 +36,7 @@ from types           import NoneType
 
 from notify.mediator import AbstractMediator
 from notify.signal   import AbstractSignal, Signal
-from notify.utils    import is_valid_identifier, raise_not_implemented_exception
+from notify.utils    import is_callable, is_valid_identifier, raise_not_implemented_exception
  
 try:
     import contextlib
@@ -851,14 +851,14 @@ class AbstractValueObject (object):
             del object
 
         if 'getter' in options:
-            if not callable (options['getter']):
+            if not is_callable (options['getter']):
                 raise TypeError ("`getter' must be a callable")
 
             exec ('def get (self): return getter (%s)'
                   % AbstractValueObject._get_object (options)) in options, functions
 
         if 'setter' in options:
-            if not callable (options['setter']):
+            if not is_callable (options['setter']):
                 raise TypeError ("`setter' must be a callable")
 
             exec ('def set (self, value): return setter (%s, value)'

@@ -39,7 +39,7 @@ import weakref
 from notify.base   import AbstractValueObject
 from notify.gc     import AbstractGCProtector
 from notify.signal import CleanSignal
-from notify.utils  import raise_not_implemented_exception, DummyReference
+from notify.utils  import is_callable, raise_not_implemented_exception, DummyReference
 
 
 
@@ -465,7 +465,7 @@ class PredicateCondition (AbstractStateTrackingCondition):
         @raises exception:     whatever C{predicate} raises, if anything.
         """
 
-        if not callable (predicate):
+        if not is_callable (predicate):
             raise TypeError ('predicate must be callable')
 
         super (PredicateCondition, self).__init__(predicate (initial_object))

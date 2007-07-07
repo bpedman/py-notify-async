@@ -6,7 +6,7 @@ include		   MANIFEST MANIFEST.in
 include            version
 include		   ChangeLog
 
-include            generate-reference.py run-tests.py benchmark.py
+include            generate-reference.py generate-tutorial.py run-tests.py benchmark.py
 
 include		   notify/__init__.py.in
 exclude		   notify/__init__.py

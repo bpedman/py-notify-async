@@ -41,6 +41,7 @@ from notify.base      import AbstractValueObject
 from notify.condition import AbstractStateTrackingCondition
 from notify.gc        import AbstractGCProtector
 from notify.signal    import CleanSignal
+from notify.utils     import is_callable
 
 
 
@@ -488,7 +489,7 @@ class _PredicateOverVariable (AbstractStateTrackingCondition):
 
 
     def __init__(self, predicate, variable):
-        if not callable (predicate):
+        if not is_callable (predicate):
             raise TypeError ('predicate must be callable')
 
         super (_PredicateOverVariable, self).__init__(predicate (variable.get ()))

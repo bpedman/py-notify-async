@@ -56,7 +56,7 @@ __docformat__ = 'epytext en'
 __all__       = ('AbstractMediator', 'BooleanMediator', 'FunctionalMediator')
 
 
-from notify.utils import raise_not_implemented_exception
+from notify.utils import is_callable, raise_not_implemented_exception
 
 
 
@@ -126,7 +126,7 @@ class AbstractMediator (object):
         @raises TypeError: if C{function} is not callable.
         """
 
-        if callable (function):
+        if is_callable (function):
             return _Forward (self, function)
         else:
             raise TypeError ("`function' must be callable")
@@ -149,7 +149,7 @@ class AbstractMediator (object):
         @raises TypeError: if C{function} is not callable.
         """
 
-        if callable (function):
+        if is_callable (function):
             return _Back (self, function)
         else:
             raise TypeError ("`function' must be callable")
@@ -241,7 +241,7 @@ class BooleanMediator (AbstractMediator):
         if fallback is None:
             fallback = bool
         else:
-            if not callable (fallback):
+            if not is_callable (fallback):
                 raise TypeError ("`fallback' must be a callable")
 
         super (BooleanMediator, self).__init__()
@@ -292,8 +292,8 @@ class FunctionalMediator (AbstractMediator):
 
 
     def __init__(self, forward_function = None, back_function = None, *arguments):
-        if (   not (forward_function is None or callable (forward_function))
-            or not (back_function    is None or callable (back_function))):
+        if (   not (forward_function is None or is_callable (forward_function))
+            or not (back_function    is None or is_callable (back_function))):
             raise TypeError ('both functions must be callable or None')
 
         super (FunctionalMediator, self).__init__()

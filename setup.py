@@ -130,7 +130,7 @@ For more verbose introduction, please refer to the tutorial_.
 .. _Observer programming pattern:
    http://en.wikipedia.org/wiki/Observer_pattern
 
-.. _tutorial
+.. _tutorial:
    http://home.gna.org/py-notify/tutorial.html
 """
 

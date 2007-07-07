@@ -110,7 +110,7 @@ import weakref
 
 from notify.bind  import Binding, WeakBinding
 from notify.gc    import AbstractGCProtector
-from notify.utils import raise_not_implemented_exception
+from notify.utils import is_callable, raise_not_implemented_exception
 
 try:
     import contextlib
@@ -976,7 +976,7 @@ class Signal (AbstractSignal):
 
 
     def is_connected (self, handler, *arguments):
-        if self._handlers is not None and callable (handler):
+        if self._handlers is not None and is_callable (handler):
             if arguments:
                 handler = Binding (handler, arguments)
 
@@ -987,7 +987,7 @@ class Signal (AbstractSignal):
 
 
     def is_blocked (self, handler, *arguments):
-        if self._blocked_handlers is not _EMPTY_TUPLE and callable (handler):
+        if self._blocked_handlers is not _EMPTY_TUPLE and is_callable (handler):
             if arguments:
                 handler = Binding (handler, arguments)
 
@@ -1011,7 +1011,7 @@ class Signal (AbstractSignal):
 
     def disconnect (self, handler, *arguments):
         handlers = self._handlers
-        if handlers is None or not callable (handler):
+        if handlers is None or not is_callable (handler):
             return False
 
         if arguments:
@@ -1052,7 +1052,7 @@ class Signal (AbstractSignal):
     # Overriden for efficiency.
 
     def disconnect_all (self, handler, *arguments):
-        if self._handlers is None or not callable (handler):
+        if self._handlers is None or not is_callable (handler):
             return False
 
         if arguments:
@@ -1088,7 +1088,7 @@ class Signal (AbstractSignal):
 
 
     def block (self, handler, *arguments):
-        if callable (handler) and self._handlers is not None:
+        if is_callable (handler) and self._handlers is not None:
             if arguments:
                 handler = Binding (handler, arguments)
 
@@ -1104,7 +1104,7 @@ class Signal (AbstractSignal):
 
 
     def unblock (self, handler, *arguments):
-        if self._blocked_handlers is _EMPTY_TUPLE or not callable (handler):
+        if self._blocked_handlers is _EMPTY_TUPLE or not is_callable (handler):
             return False
 
         if arguments:

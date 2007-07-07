@@ -69,7 +69,7 @@ __all__       = ('Binding', 'WeakBinding', 'RaisingWeakBinding',
 from types        import FunctionType, MethodType
 import weakref
 
-from notify.utils import DummyReference
+from notify.utils import is_callable, DummyReference
 
 
 
@@ -116,7 +116,7 @@ class Binding (object):
                                  not iterable.
         """
 
-        if not callable (callable_object):
+        if not is_callable (callable_object):
             raise TypeError ("`callable_object' must be callable")
 
         # This raises `TypeError' if `arguments' type is inappropriate.
@@ -165,7 +165,7 @@ class Binding (object):
         if arguments:
             return cls (callable_object, arguments)
         else:
-            if not callable (callable_object):
+            if not is_callable (callable_object):
                 raise TypeError ("`callable_object' must be callable")
 
             return callable_object
@@ -494,7 +494,7 @@ class WeakBinding (Binding):
         super (WeakBinding, self).__init__(callable_object, arguments)
 
         if self._object is not None:
-            if callback is not None and not callable (callback):
+            if callback is not None and not is_callable (callback):
                 raise TypeError ("`callback' must be callable")
 
             try:

@@ -31,21 +31,22 @@ if __name__ == '__main__':
 
 import unittest
 
-from notify.utils import raise_not_implemented_exception, is_valid_identifier, DummyReference
+from notify.utils import is_callable, is_valid_identifier, raise_not_implemented_exception, \
+                         DummyReference
 
 
 
 class UtilsTestCase (unittest.TestCase):
 
-    def test_raise_non_implemented_exception (self):
-        self.assertRaises (NotImplementedError,
-                           lambda: raise_not_implemented_exception ())
-        self.assertRaises (NotImplementedError,
-                           lambda: raise_not_implemented_exception (self))
-        self.assertRaises (NotImplementedError,
-                           lambda: raise_not_implemented_exception (self, 'foo'))
-        self.assertRaises (NotImplementedError,
-                           lambda: raise_not_implemented_exception (self, 1))
+    def test_is_callable (self):
+        self.assert_(is_callable (is_callable))
+        self.assert_(is_callable (UtilsTestCase))
+        self.assert_(is_callable (UtilsTestCase.test_is_callable))
+
+        self.assert_(not is_callable (None))
+        self.assert_(not is_callable (5))
+        self.assert_(not is_callable ('foo'))
+        self.assert_(not is_callable ([]))
 
 
     def test_is_valid_identifier (self):
@@ -70,11 +71,22 @@ class UtilsTestCase (unittest.TestCase):
         self.assert_(not is_valid_identifier ([]))
 
 
+    def test_raise_non_implemented_exception (self):
+        self.assertRaises (NotImplementedError,
+                           lambda: raise_not_implemented_exception ())
+        self.assertRaises (NotImplementedError,
+                           lambda: raise_not_implemented_exception (self))
+        self.assertRaises (NotImplementedError,
+                           lambda: raise_not_implemented_exception (self, 'foo'))
+        self.assertRaises (NotImplementedError,
+                           lambda: raise_not_implemented_exception (self, 1))
+
+
     def test_dummy_reference (self):
-        self.assert_(callable (DummyReference (None)))
+        self.assert_(is_callable (DummyReference (None)))
         self.assert_(DummyReference (None) () is None)
 
-        self.assert_(callable (DummyReference (self)))
+        self.assert_(is_callable (DummyReference (self)))
         self.assert_(DummyReference (self) () is self)
 
 
