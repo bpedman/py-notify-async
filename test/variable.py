@@ -31,7 +31,8 @@ if __name__ == '__main__':
 
 import unittest
 
-from notify.variable import AbstractValueTrackingVariable, Variable, WatcherVariable
+from notify.variable import AbstractVariable, AbstractValueTrackingVariable, Variable, \
+                            WatcherVariable
 from test.__common   import NotifyTestCase
 
 
@@ -288,6 +289,17 @@ class VariableDerivationTestCase (NotifyTestCase):
 
         # There is no getter at all, so setter must be called during variable creation.
         self.assert_results (None, 100, 'abc')
+
+
+    def test_derivation_slots (self):
+        DerivedVariable = AbstractVariable.derive_type ('DerivedVariable')
+        self.assertRaises (AttributeError, self.non_existing_attribute_setter (DerivedVariable ()))
+
+        DerivedVariable = AbstractValueTrackingVariable.derive_type ('DerivedVariable')
+        self.assertRaises (AttributeError, self.non_existing_attribute_setter (DerivedVariable ()))
+
+        DerivedVariable = Variable.derive_type ('DerivedVariable')
+        self.assertRaises (AttributeError, self.non_existing_attribute_setter (DerivedVariable ()))
 
 
     def test_multiple_derivation (self):

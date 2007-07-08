@@ -1,5 +1,22 @@
 2007-07-08  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	* notify/base.py (AbstractValueObject.derive_type): Revamp derived
+	type slot calculation algorithm, so that types are not create with
+	dictionary unless specifically requested.
+
+	* test/base.py (BaseDerivationTestCase): New test case.
+
+	* test/condition.py
+	(ConditionDerivationTestCase.test_derivation_slots): New test.
+
+	* test/variable.py
+	(VariableDerivationTestCase.test_derivation_slots): New test.
+
+	* test/__common.py (NotifyTestCase.non_existing_attribute_setter):
+	New method.
+
+	* test/all.py (AllTestCase.assert_is_class): Use it.
+
 	* test/utils.py (UtilsTestCase.test_as_string)
 	(UtilsTestCase.test_as_string_attributes): New tests.
 

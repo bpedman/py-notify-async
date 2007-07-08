@@ -763,15 +763,12 @@ class AbstractValueObject (object):
         full_options['cls']            = cls
         full_options['new_class_name'] = new_class_name
 
-        dictionary = {}
+        dictionary = { '__slots__': () }
 
         for value in cls._generate_derived_type_dictionary (full_options):
             if value[0] != '__slots__':
                 dictionary[value[0]] = value[1]
             else:
-                if not '__slots__' in dictionary:
-                    dictionary['__slots__'] = ()
-
                 dictionary['__slots__'] += tuple (value[1])
 
         try:

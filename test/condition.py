@@ -33,7 +33,7 @@ import unittest
 import weakref
 import operator
 
-from notify.condition import AbstractStateTrackingCondition, Condition, \
+from notify.condition import AbstractCondition, AbstractStateTrackingCondition, Condition, \
                              PredicateCondition, WatcherCondition
 from notify.variable  import Variable
 from test.__common    import NotifyTestCase
@@ -621,6 +621,20 @@ class ConditionDerivationTestCase (NotifyTestCase):
 
         # There is no getter at all, so setter must be called during condition creation.
         self.assert_results (False, True, False)
+
+
+    def test_derivation_slots (self):
+        DerivedCondition = AbstractCondition.derive_type ('DerivedCondition')
+        self.assertRaises (AttributeError,
+                           self.non_existing_attribute_setter (DerivedCondition ()))
+
+        DerivedCondition = AbstractStateTrackingCondition.derive_type ('DerivedCondition')
+        self.assertRaises (AttributeError,
+                           self.non_existing_attribute_setter (DerivedCondition (False)))
+
+        DerivedCondition = Condition.derive_type ('DerivedCondition')
+        self.assertRaises (AttributeError,
+                           self.non_existing_attribute_setter (DerivedCondition (False)))
 
 
 

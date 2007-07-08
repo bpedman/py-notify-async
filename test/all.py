@@ -33,11 +33,12 @@ import unittest
 
 import types
 
-from notify.all import *
+from notify.all    import *
+from test.__common import NotifyTestCase
 
 
 
-class AllTestCase (unittest.TestCase):
+class AllTestCase (NotifyTestCase):
 
     def assert_is_function (self, function):
         self.assert_(isinstance (function, (types.FunctionType, types.BuiltinFunctionType)))
@@ -60,10 +61,7 @@ class AllTestCase (unittest.TestCase):
                 except:
                     continue
 
-                def set_non_existing_attribute ():
-                    object.this_attribute_sure_doesnt_exist = None
-
-                self.assertRaises (AttributeError, set_non_existing_attribute)
+                self.assertRaises (AttributeError, self.non_existing_attribute_setter (object))
                 break
 
 

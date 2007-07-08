@@ -31,6 +31,7 @@ if __name__ == '__main__':
 
 import unittest
 
+from notify.base     import AbstractValueObject
 from notify.variable import AbstractVariable, Variable
 from test.__common   import NotifyTestCase
 
@@ -172,6 +173,14 @@ class BaseWithChangesFrozenTestCase (NotifyTestCase):
         # Though we never call _value_changed(), with_changes_frozen() promises to call it
         # itself in such cases.
         self.assert_results (1, 2)
+
+
+
+class BaseDerivationTestCase (NotifyTestCase):
+
+    def test_derivation_slots (self):
+        DerivedType = AbstractValueObject.derive_type ('DerivedType')
+        self.assertRaises (AttributeError, self.non_existing_attribute_setter (DerivedType ()))
 
 
 

@@ -40,6 +40,10 @@ class NotifyTestCase (unittest.TestCase):
         super (NotifyTestCase, self).setUp ()
 
 
+    def non_existing_attribute_setter (self, object, name = 'this_attribute_sure_doesnt_exist'):
+        return lambda: setattr (object, name, None)
+
+
     def assert_equal_thoroughly (self, value1, value2):
         self.assert_(    value1 == value2)
         self.assert_(not value1 != value2)
