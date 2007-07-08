@@ -31,8 +31,8 @@ if __name__ == '__main__':
 
 import unittest
 
-from notify.utils import is_callable, is_valid_identifier, raise_not_implemented_exception, \
-                         DummyReference
+from notify.utils import is_callable, is_valid_identifier, as_string, \
+                         raise_not_implemented_exception, DummyReference
 
 
 
@@ -69,6 +69,26 @@ class UtilsTestCase (unittest.TestCase):
         self.assert_(not is_valid_identifier (1))
         self.assert_(not is_valid_identifier (()))
         self.assert_(not is_valid_identifier ([]))
+
+
+    def test_as_string (self):
+        self.assertEqual  (as_string.foo,     'foo')
+        self.assertEqual  (as_string._foo,    '_foo')
+        self.assertEqual  (as_string.__foo,   '_UtilsTestCase__foo')
+        self.assertEqual  (as_string.__foo__, '__foo__')
+
+
+    def test_as_string_attributes (self):
+        def set_as_string_attribute ():
+            as_string.foo = 'bar'
+
+        def del_as_string_attribute ():
+            del as_string.foo
+
+        self.assertRaises (TypeError, set_as_string_attribute)
+        self.assertRaises (TypeError, del_as_string_attribute)
+
+        self.assertEqual  (dir (as_string), [])
 
 
     def test_raise_non_implemented_exception (self):

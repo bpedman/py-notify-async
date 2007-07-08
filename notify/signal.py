@@ -110,7 +110,7 @@ import weakref
 
 from notify.bind  import Binding, WeakBinding
 from notify.gc    import AbstractGCProtector
-from notify.utils import is_callable, raise_not_implemented_exception
+from notify.utils import is_callable, as_string, raise_not_implemented_exception
 
 try:
     import contextlib
@@ -917,7 +917,7 @@ class Signal (AbstractSignal):
     # references must be a really weird thing to do, so if you really
     # need them, you should use your own `Signal' subclass.
     __slots__ = ('_handlers', '_blocked_handlers',
-                 '_Signal__accumulator', '_Signal__emission_level')
+                 as_string.__accumulator, as_string.__emission_level)
 
 
     def __init__(self, accumulator = None):
@@ -1226,7 +1226,7 @@ class CleanSignal (Signal):
     least one handler.
     """
 
-    __slots__ = ('_CleanSignal__parent', '__weakref__')
+    __slots__ = (as_string.__parent, '__weakref__')
 
 
     def __init__(self, parent = None, accumulator = None):

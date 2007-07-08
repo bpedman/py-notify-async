@@ -1,3 +1,20 @@
+2007-07-08  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* test/utils.py (UtilsTestCase.test_as_string)
+	(UtilsTestCase.test_as_string_attributes): New tests.
+
+	* test/all.py (AllTestCase.test_util): Test `as_string' presence.
+
+	* notify/utils.py (_AsString): New helper class.
+	(as_string): New constant object of the class above.
+
+	* notify/base.py: Use it.
+	* notify/bind.py: Likewise.
+	* notify/condition.py: Likewise.
+	* notify/mediator.py: Likewise.
+	* notify/signal.py: Likewise.
+	* notify/variable.py: Likewise.
+
 2007-07-07  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* MANIFEST.in: Include `generate-tutorial.py' in distribution.

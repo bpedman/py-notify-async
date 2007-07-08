@@ -36,7 +36,8 @@ from types           import NoneType
 
 from notify.mediator import AbstractMediator
 from notify.signal   import AbstractSignal, Signal
-from notify.utils    import is_callable, is_valid_identifier, raise_not_implemented_exception
+from notify.utils    import is_callable, is_valid_identifier, as_string, \
+                            raise_not_implemented_exception
  
 try:
     import contextlib
@@ -84,8 +85,7 @@ class AbstractValueObject (object):
     _additional_description
     """
 
-    __slots__ = ('__weakref__',
-                 '_AbstractValueObject__signal', '_AbstractValueObject__freeze_flag')
+    __slots__ = ('__weakref__', as_string.__signal, as_string.__freeze_flag)
 
 
     # Implementation note: `__freeze_flag' can be None (not frozen) or True (frozen.)

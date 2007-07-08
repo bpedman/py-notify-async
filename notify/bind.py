@@ -69,7 +69,7 @@ __all__       = ('Binding', 'WeakBinding', 'RaisingWeakBinding',
 from types        import FunctionType, MethodType
 import weakref
 
-from notify.utils import is_callable, DummyReference
+from notify.utils import is_callable, as_string, DummyReference
 
 
 
@@ -457,7 +457,7 @@ class WeakBinding (Binding):
     @see:  RaisingWeakBinding
     """
 
-    __slots__ = ('_WeakBinding__callback', '_WeakBinding__hash')
+    __slots__ = (as_string.__callback, as_string.__hash)
 
 
     def __init__(self, callable_object, arguments = (), callback = None):

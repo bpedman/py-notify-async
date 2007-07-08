@@ -35,6 +35,7 @@ issue warnings in 2.6.
 
 __docformat__ = 'epytext en'
 __all__       = ('is_callable', 'is_valid_identifier',
+                 'as_string',
                  'raise_not_implemented_exception',
                  'DummyReference')
 
@@ -66,6 +67,27 @@ def is_valid_identifier (identifier):
 
     return (isinstance (identifier, basestring)
             and re.match ('^[_a-zA-Z][_a-zA-Z0-9]*$', identifier) is not None)
+
+
+
+class _AsString (object):
+
+    __slots__ = ()
+
+    def __getattribute__(self, name):
+        return name
+
+    def __setattr__(self, name, value):
+        raise TypeError ("'as_string' attributes cannot be set")
+
+    def __delattr__(self, name):
+        raise TypeError ("'as_string' attributes cannot be deleted")
+
+    def __repr__(self):
+        return 'notify.utils.as_string'
+
+
+as_string = _AsString ()
 
 
 
@@ -164,7 +186,7 @@ class DummyReference (object):
     way.
     """
 
-    __slots__ = ('_DummyReference__object')
+    __slots__ = (as_string.__object)
 
 
     def __init__(self, object):

@@ -112,6 +112,10 @@ class AllTestCase (unittest.TestCase):
     def test_util (self):
         self.assert_is_function (is_callable)
         self.assert_is_function (is_valid_identifier)
+
+         # It is not a function, not a class...  Just test it is there.
+        self.assert_            (as_string)
+
         self.assert_is_function (raise_not_implemented_exception)
         self.assert_is_class    (DummyReference)
 
