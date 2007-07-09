@@ -737,6 +737,10 @@ class AbstractValueObject (object):
                                inside the created instance.  It will be used for calling
                                C{getter} and C{setter} functions.
 
+        @option:               C{dict} — if true, derived type will have a C{__dict__}
+                               slot, allowing setting any attribute on it.  This is
+                               silently ignored if this class objects already have a dict.
+
         @option:               C{getter} — a callable accepting one argument, whose return
                                value will be used as C{L{get}} method result.  If
                                C{object} option is specified, the only argument will be
@@ -769,7 +773,10 @@ class AbstractValueObject (object):
             if value[0] != '__slots__':
                 dictionary[value[0]] = value[1]
             else:
-                dictionary['__slots__'] += tuple (value[1])
+                if isinstance (value[1], basestring):
+                    dictionary['__slots__'] += (value[1],)
+                else:
+                    dictionary['__slots__'] += tuple (value[1])
 
         try:
             return type (new_class_name, (cls,), dictionary)
@@ -837,7 +844,7 @@ class AbstractValueObject (object):
             if not is_valid_identifier (object):
                 raise ValueError ("`%s' is not a valid Python identifier" % object)
 
-            yield '__slots__', ('_%s__%s' % (options['new_class_name'].lstrip ('_'), object),)
+            yield '__slots__', '_%s__%s' % (options['new_class_name'].lstrip ('_'), object)
 
             exec (('def __init__(self, %s):\n'
                    '    cls.__init__(self)\n'
@@ -846,6 +853,11 @@ class AbstractValueObject (object):
                   in options, functions
 
             del object
+
+        if 'dict' in options and options['dict']:
+            # Gracefully ignore if this type already has a dict.
+            if not cls.__dictoffset__:
+                yield '__slots__', '__dict__'
 
         if 'getter' in options:
             if not is_callable (options['getter']):

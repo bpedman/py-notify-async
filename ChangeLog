@@ -1,3 +1,14 @@
+2007-07-09  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/base.py
+	(AbstractValueObject._generate_derived_type_dictionary): Add and
+	implement `dict' option.
+
+	* test/base.py (BaseDerivationTestCase.test_derivation_dict_1)
+	(BaseDerivationTestCase.test_derivation_dict_2)
+	(BaseDerivationTestCase.test_derivation_dict_3)
+	(BaseDerivationTestCase.test_derivation_dict_4): New tests.
+
 2007-07-08  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/base.py (AbstractValueObject.derive_type): Revamp derived

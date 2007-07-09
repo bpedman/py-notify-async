@@ -183,6 +183,37 @@ class BaseDerivationTestCase (NotifyTestCase):
         self.assertRaises (AttributeError, self.non_existing_attribute_setter (DerivedType ()))
 
 
+    def test_derivation_dict_1 (self):
+        DerivedType1 = AbstractValueObject.derive_type ('DerivedType1', dict = True)
+        DerivedType1 ().this_attribute_isnt_declared_but_there_is_a_dict = None
+
+
+    def test_derivation_dict_2 (self):
+        # Test that derivation mechanism gracefully ignores second `dict'.
+        DerivedType2 = (AbstractValueObject
+                        .derive_type ('DerivedType1', dict = True)
+                        .derive_type ('DerivedType2', dict = True))
+        DerivedType2 ().this_attribute_isnt_declared_but_there_is_a_dict = None
+
+
+    def test_derivation_dict_3 (self):
+        # But test it notices there is a dict already over intermediate type.
+        DerivedType3 = (AbstractValueObject
+                        .derive_type ('DerivedType1', dict = True)
+                        .derive_type ('DerivedType2')
+                        .derive_type ('DerivedType3', dict = True))
+        DerivedType3 ().this_attribute_isnt_declared_but_there_is_a_dict = None
+
+
+    def test_derivation_dict_4 (self):
+        class DerivedType1 (AbstractValueObject):
+            pass
+
+        # Test it notices there is a dict already in a no-slots intermediate type.
+        DerivedType2 = DerivedType1.derive_type ('DerivedType2', dict = True)
+        DerivedType2 ().this_attribute_isnt_declared_but_there_is_a_dict = None
+
+
 
 import __future__
 
