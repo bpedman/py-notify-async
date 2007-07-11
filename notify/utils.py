@@ -34,7 +34,7 @@ issue warnings in 2.6.
 """
 
 __docformat__ = 'epytext en'
-__all__       = ('is_callable', 'is_valid_identifier',
+__all__       = ('is_callable', 'is_valid_identifier', 'mangle_identifier',
                  'as_string',
                  'raise_not_implemented_exception',
                  'DummyReference')
@@ -67,6 +67,37 @@ def is_valid_identifier (identifier):
 
     return (isinstance (identifier, basestring)
             and re.match ('^[_a-zA-Z][_a-zA-Z0-9]*$', identifier) is not None)
+
+
+def mangle_identifier (class_name, identifier):
+    """
+    Mangle C{identifier} as how would be done if it appeared in a class with
+    C{class_name}.  This function allows to mimic standard Python mangling of
+    pseudo-private attributes, i.e. those which names start with two underscores and don’t
+    end in two.  If C{identifier} is not considered a private name, it is returned
+    unchanged.
+
+    @param  class_name: name of Python class.
+    @type   class_name: C{basestring}
+
+    @param  identifier: name of an attribute of that class.
+    @type   class_name: C{basestring}
+
+    @rtype: C{str}
+
+    @raises ValueError: if either C{class_name} or C{identifier} is not valid from
+                        Python’s point of view.
+    """
+
+    if not (is_valid_identifier (class_name) and is_valid_identifier (identifier)):
+        raise ValueError ("`class_name' and `identifier' must be valid Python identifiers")
+
+    if (identifier.startswith ('__')
+        and not identifier.endswith ('__')
+        and class_name != '_' * len (class_name)):
+        return '_%s%s' % (class_name.lstrip ('_'), identifier)
+    else:
+        return identifier
 
 
 

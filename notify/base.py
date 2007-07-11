@@ -36,7 +36,7 @@ from types           import NoneType
 
 from notify.mediator import AbstractMediator
 from notify.signal   import AbstractSignal, Signal
-from notify.utils    import is_callable, is_valid_identifier, as_string, \
+from notify.utils    import is_callable, is_valid_identifier, mangle_identifier, as_string, \
                             raise_not_implemented_exception
  
 try:
@@ -737,6 +737,10 @@ class AbstractValueObject (object):
                                inside the created instance.  It will be used for calling
                                C{getter} and C{setter} functions.
 
+        @option:               C{property} — valid Python identifier.  If specified,
+                               C{object}’s value will be readable through a property, but
+                               not writable.
+
         @option:               C{dict} — if true, derived type will have a C{__dict__}
                                slot, allowing setting any attribute on it.  This is
                                silently ignored if this class objects already have a dict.
@@ -844,15 +848,33 @@ class AbstractValueObject (object):
             if not is_valid_identifier (object):
                 raise ValueError ("`%s' is not a valid Python identifier" % object)
 
-            yield '__slots__', '_%s__%s' % (options['new_class_name'].lstrip ('_'), object)
+            yield '__slots__', mangle_identifier (options['new_class_name'], object)
 
             exec (('def __init__(self, %s):\n'
                    '    cls.__init__(self)\n'
                    '    %s = %s')
                   % (object, AbstractValueObject._get_object (options), object)) \
-                  in options, functions
+                  in functions
+
+            if 'property' in options:
+                property = options['property']
+                if property == object:
+                    raise ValueError ("`property' option cannot be the same as `object'")
+
+                if not is_valid_identifier (property):
+                    raise ValueError ("`%s' is not a valid Python identifier" % property)
+
+                exec ('%s = property (lambda self: %s)'
+                      % (property, AbstractValueObject._get_object (options))) \
+                      in functions
+
+                del property
 
             del object
+
+        else:
+            if 'property' in options:
+                raise ValueError ("`property' without `object' option doesn't make sense")
 
         if 'dict' in options and options['dict']:
             # Gracefully ignore if this type already has a dict.
@@ -896,7 +918,7 @@ class AbstractValueObject (object):
         """
 
         if 'object' in options:
-            return 'self._%s__%s' % (options['new_class_name'].lstrip ('_'), options['object'])
+            return 'self.%s' % mangle_identifier (options['new_class_name'], options['object'])
         else:
             return 'self'
 

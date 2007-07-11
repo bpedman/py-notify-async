@@ -291,6 +291,62 @@ class VariableDerivationTestCase (NotifyTestCase):
         self.assert_results (None, 100, 'abc')
 
 
+    def test_object_derivation_1 (self):
+        class MainObject (object):
+            def __init__(self, x):
+                self.__x = x
+
+            def get_x (self):
+                return self.__x
+
+        XVariable = AbstractValueTrackingVariable.derive_type ('XVariable', object = 'main',
+                                                               getter = MainObject.get_x)
+
+        main     = MainObject (100)
+        variable = XVariable (main)
+
+        self.assert_(variable.main  is main)
+        self.assert_(variable.value is main.get_x ())
+
+        main.x = 200
+        self.assert_(variable.value is main.get_x ())
+
+
+    def test_object_derivation_2 (self):
+        class MainObject (object):
+            def __init__(self, x):
+                self.__x          = x
+                self.__x_variable = XVariable (self)
+
+            def get_x (self):
+                return self.__x
+
+            def _set_x (self, x):
+                self.__x = x
+
+            x = property (lambda self: self.__x_variable)
+
+        XVariable = AbstractValueTrackingVariable.derive_type ('XVariable',
+                                                               object   = '__main',
+                                                               property = 'main',
+                                                               getter   = MainObject.get_x,
+                                                               setter   = MainObject._set_x)
+
+        main = MainObject (100)
+
+        self.assert_(main.x.main  is main)
+        self.assert_(main.x.value is main.get_x ())
+
+        main.x.value = 200
+        self.assert_(main.x.value is main.get_x ())
+
+        def set_main_x ():
+            main.x = None
+
+        self.assertRaises (AttributeError, set_main_x)
+
+
+
     def test_derivation_slots (self):
         DerivedVariable = AbstractVariable.derive_type ('DerivedVariable')
         self.assertRaises (AttributeError, self.non_existing_attribute_setter (DerivedVariable ()))

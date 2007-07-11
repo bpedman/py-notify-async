@@ -1,3 +1,21 @@
+2007-07-11  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/base.py
+	(AbstractValueObject._generate_derived_type_dictionary): Don't
+	hide `object' attribute of new class, unless its name is to be
+	`private' by Python rules.  Add `property' option.
+
+	* test/variable.py
+	(VariableDerivationTestCase.test_object_derivation_1)
+	(VariableDerivationTestCase.test_object_derivation_2): New tests.
+
+	* test/utils.py (UtilsTestCase.test_mangle_identifier): New test.
+
+	* test/all.py (AllTestCase.test_util): Test mangle_identifier()
+	presence.
+
+	* notify/utils.py (mangle_identifier): New function.
+
 2007-07-09  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/base.py

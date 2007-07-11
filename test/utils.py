@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
 import unittest
 
-from notify.utils import is_callable, is_valid_identifier, as_string, \
+from notify.utils import is_callable, is_valid_identifier, mangle_identifier, as_string, \
                          raise_not_implemented_exception, DummyReference
 
 
@@ -71,11 +71,37 @@ class UtilsTestCase (unittest.TestCase):
         self.assert_(not is_valid_identifier ([]))
 
 
+    def test_mangle_identifier (self):
+        self.assertEqual (mangle_identifier ('Foo',     'bar'),     'bar')
+        self.assertEqual (mangle_identifier ('_Foo',    'bar'),     'bar')
+        self.assertEqual (mangle_identifier ('__Foo',   'bar'),     'bar')
+        self.assertEqual (mangle_identifier ('__Foo__', 'bar'),     'bar')
+        self.assertEqual (mangle_identifier ('Foo',     '_bar'),    '_bar')
+        self.assertEqual (mangle_identifier ('_Foo',    '_bar'),    '_bar')
+        self.assertEqual (mangle_identifier ('__Foo',   '_bar'),    '_bar')
+        self.assertEqual (mangle_identifier ('__Foo__', '_bar'),    '_bar')
+        self.assertEqual (mangle_identifier ('Foo',     '__bar'),   '_Foo__bar')
+        self.assertEqual (mangle_identifier ('_Foo',    '__bar'),   '_Foo__bar')
+        self.assertEqual (mangle_identifier ('__Foo',   '__bar'),   '_Foo__bar')
+        self.assertEqual (mangle_identifier ('__Foo__', '__bar'),   '_Foo____bar')
+        self.assertEqual (mangle_identifier ('Foo',     '__bar__'), '__bar__')
+        self.assertEqual (mangle_identifier ('_Foo',    '__bar__'), '__bar__')
+        self.assertEqual (mangle_identifier ('__Foo',   '__bar__'), '__bar__')
+        self.assertEqual (mangle_identifier ('__Foo__', '__bar__'), '__bar__')
+
+        # Special cases.
+        self.assertEqual (mangle_identifier ('_',     '__bar'),   '__bar')
+        self.assertEqual (mangle_identifier ('__',    '__bar'),   '__bar')
+        self.assertEqual (mangle_identifier ('___',   '__bar'),   '__bar')
+        self.assertEqual (mangle_identifier ('Foo',   '__'),      '__')
+        self.assertEqual (mangle_identifier ('___',   '_____'),   '_____')
+
+
     def test_as_string (self):
-        self.assertEqual  (as_string.foo,     'foo')
-        self.assertEqual  (as_string._foo,    '_foo')
-        self.assertEqual  (as_string.__foo,   '_UtilsTestCase__foo')
-        self.assertEqual  (as_string.__foo__, '__foo__')
+        self.assertEqual (as_string.foo,     'foo')
+        self.assertEqual (as_string._foo,    '_foo')
+        self.assertEqual (as_string.__foo,   '_UtilsTestCase__foo')
+        self.assertEqual (as_string.__foo__, '__foo__')
 
 
     def test_as_string_attributes (self):
