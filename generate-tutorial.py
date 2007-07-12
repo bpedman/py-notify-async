@@ -31,7 +31,7 @@ from urlparse import urlunsplit
 
 
 if not os.path.isfile (os.path.join ('notify', 'all.py')):
-    sys.exit ("%s: cannot find `%s', strange..."
+    sys.exit ("%s: cannot find '%s', strange..."
               % (sys.argv[0], os.path.join ('notify', 'all.py')))
 
 
@@ -59,7 +59,7 @@ sys.argv.extend (['--stylesheet-path=%s' % os.path.join ('docs', 'reST.css'),
 publish_cmdline (writer_name = 'html', description = 'Generate Py-notify tutorial')
 
 
-sys.stdout.write ("Tutorial has been generated as file `%s'\n" % output_file_name)
+sys.stdout.write ("Tutorial has been generated as file '%s'\n" % output_file_name)
 sys.stdout.write ("Point your browser to %s\n"
                   % urlunsplit (('file', None, os.path.abspath (output_file_name), None, None)))
 

@@ -38,7 +38,7 @@ except:
 
 
 if not os.path.isfile (os.path.join ('notify', 'all.py')):
-    sys.exit ("%s: cannot find `%s', strange..."
+    sys.exit ("%s: cannot find '%s', strange..."
               % (sys.argv[0], os.path.join ('notify', 'all.py')))
 
 
@@ -143,7 +143,7 @@ for root, directories, filenames in os.walk (output_directory):
             file.close ()
 
 
-print "Reference has been generated in `%s'" % output_directory
+print "Reference has been generated in '%s'" % output_directory
 print ("Point your browser to %s"
        % urlunsplit (('file', None,
                       os.path.join (os.path.abspath (output_directory), 'index.html'),

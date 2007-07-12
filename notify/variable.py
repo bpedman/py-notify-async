@@ -121,7 +121,7 @@ class AbstractValueTrackingVariable (AbstractVariable):
         """
 
         if not self.is_allowed_value (initial_value):
-            raise ValueError ("`%s' is not allowed as value of the variable" % initial_value)
+            raise ValueError ("'%s' is not allowed as value of the variable" % initial_value)
 
         super (AbstractValueTrackingVariable, self).__init__()
         self.__value = initial_value
@@ -158,7 +158,7 @@ class AbstractValueTrackingVariable (AbstractVariable):
 
         if self.get () != value:
             if not self.is_allowed_value (value):
-                raise ValueError ("`%s' is not allowed as value of the variable" % value)
+                raise ValueError ("'%s' is not allowed as value of the variable" % value)
 
             self.__value = value
             return self._value_changed (value)
@@ -193,7 +193,7 @@ class AbstractValueTrackingVariable (AbstractVariable):
 
             for allowed_type in allowed_value_types:
                 if not isinstance (allowed_type, (type, types.ClassType)):
-                    raise TypeError ("`allowed_value_types' must be a tuple of types and classes")
+                    raise TypeError ("'allowed_value_types' must be a tuple of types and classes")
 
         for attribute in (super (AbstractValueTrackingVariable, cls)
                           ._generate_derived_type_dictionary (options)):
@@ -236,7 +236,7 @@ class AbstractValueTrackingVariable (AbstractVariable):
             if 'default_value' in options:
                 if (    'is_allowed_value' in functions
                     and not functions['is_allowed_value'] (None, options['default_value'])):
-                   raise ValueError ("`default_value' of `%s' is not within allowed value set"
+                   raise ValueError ("'default_value' of '%s' is not within allowed value set"
                                      % (options['default_value'],))
 
                 initial_default = ' = default_value'
@@ -274,7 +274,7 @@ class AbstractValueTrackingVariable (AbstractVariable):
                    '    if self.get () != value:\n'
                    '        if not self.is_allowed_value (value):\n'
                    '            raise ValueError \\\n'
-                   '                ("`%%s\' is not allowed as value of the variable" %% value)\n'
+                   '                ("\'%%s\' is not allowed as value of the variable" %% value)\n'
                    '        setter (%s, value)\n'
                    '        self._AbstractValueTrackingVariable__value = value\n'
                    '        return self._value_changed (value)\n'
@@ -475,7 +475,7 @@ class WatcherVariable (AbstractValueTrackingVariable):
 
 
     def _generate_derived_type_dictionary (cls, options):
-        raise TypeError ("`WatcherVariable' doesn't support derive_type() method")
+        raise TypeError ("'WatcherVariable' doesn't support derive_type() method")
 
     _generate_derived_type_dictionary = classmethod (_generate_derived_type_dictionary)
 

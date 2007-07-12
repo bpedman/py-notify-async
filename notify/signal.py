@@ -934,7 +934,7 @@ class Signal (AbstractSignal):
         """
 
         if not (accumulator is None or isinstance (accumulator, Signal.AbstractAccumulator)):
-            raise TypeError ("you must provide a `Signal.AbstractAccumulator' or None")
+            raise TypeError ("you must provide a 'Signal.AbstractAccumulator' or None")
 
         super (Signal, self).__init__()
 

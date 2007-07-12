@@ -1,3 +1,9 @@
+2007-07-12  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/condition.py
+	(WatcherCondition._generate_derived_type_dictionary): Fix
+	exception message.
+
 2007-07-11  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/base.py

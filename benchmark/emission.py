@@ -111,7 +111,7 @@ try:
 
 
         def get_description (self, scale = 1.0):
-            return ("%d emissions of gtk.Adjustment `changed' signal with 4 function handlers"
+            return ("%d emissions of gtk.Adjustment 'changed' signal with 4 function handlers"
                     % int (scale * _NUM_EMISSIONS))
 
         def get_version (self):
@@ -144,7 +144,7 @@ try:
 
 
         def get_description (self, scale = 1.0):
-            return ("%d emissions of gtk.Adjustment `changed' signal with 4 method handlers"
+            return ("%d emissions of gtk.Adjustment 'changed' signal with 4 method handlers"
                     % int (scale * _NUM_EMISSIONS))
 
         def get_version (self):

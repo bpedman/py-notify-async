@@ -30,7 +30,7 @@ if os.path.dirname (sys.argv[0]):
     os.chdir (os.path.dirname (sys.argv[0]))
 
 if not os.path.isfile (os.path.join ('notify', 'all.py')):
-    sys.exit ("%s: cannot find `%s', strange..."
+    sys.exit ("%s: cannot find '%s', strange..."
               % (sys.argv[0], os.path.join ('notify', 'all.py')))
 
 
@@ -224,7 +224,7 @@ setup (name             = 'py-notify',
        author_email     = 'py-notify-dev@gna.org',
        url              = 'http://home.gna.org/py-notify/',
        download_url     = 'http://download.gna.org/py-notify/',
-       license          = "GNU Lesser General Public License v2.1 (see `COPYING')",
+       license          = "GNU Lesser General Public License v2.1",
        classifiers      = classifiers,
        packages         = ['notify', 'notify._2_5'],
        ext_modules      = [gc_extension],

@@ -256,7 +256,7 @@ class AbstractCondition (AbstractValueObject):
             else:
                 return true_condition
         else:
-            raise TypeError ("`true_condition' and `false_condition' must be conditions")
+            raise TypeError ("'true_condition' and 'false_condition' must be conditions")
 
 
 
@@ -495,7 +495,7 @@ class PredicateCondition (AbstractStateTrackingCondition):
 
 
     def _generate_derived_type_dictionary (cls, options):
-        raise TypeError ("`PredicateCondition' doesn't support derive_type() method")
+        raise TypeError ("'PredicateCondition' doesn't support derive_type() method")
 
     _generate_derived_type_dictionary = classmethod (_generate_derived_type_dictionary)
 
@@ -647,7 +647,7 @@ class WatcherCondition (AbstractStateTrackingCondition):
 
 
     def _generate_derived_type_dictionary (cls, options):
-        raise TypeError ("`PredicateCondition' doesn't support derive_type() method")
+        raise TypeError ("'WatcherCondition' doesn't support derive_type() method")
 
     _generate_derived_type_dictionary = classmethod (_generate_derived_type_dictionary)
 
@@ -694,7 +694,7 @@ class _True (AbstractCondition):
              and isinstance (false_condition, AbstractCondition)):
             return true_condition
         else:
-            raise TypeError ("`true_condition' and `false_condition' must be conditions")
+            raise TypeError ("'true_condition' and 'false_condition' must be conditions")
 
 
     def __repr__(self):
@@ -746,7 +746,7 @@ class _False (AbstractCondition):
              and isinstance (false_condition, AbstractCondition)):
             return false_condition
         else:
-            raise TypeError ("`true_condition' and `false_condition' must be conditions")
+            raise TypeError ("'true_condition' and 'false_condition' must be conditions")
 
 
     def __repr__(self):

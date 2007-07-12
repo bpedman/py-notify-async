@@ -30,7 +30,7 @@ from benchmark import benchmarking
 
 
 if not os.path.isfile (os.path.join ('notify', 'all.py')):
-    sys.exit ("%s: cannot find `%s', strange..."
+    sys.exit ("%s: cannot find '%s', strange..."
               % (sys.argv[0], os.path.join ('notify', 'all.py')))
 
 

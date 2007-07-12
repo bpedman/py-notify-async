@@ -117,7 +117,7 @@ class Binding (object):
         """
 
         if not is_callable (callable_object):
-            raise TypeError ("`callable_object' must be callable")
+            raise TypeError ("'callable_object' must be callable")
 
         # This raises `TypeError' if `arguments' type is inappropriate.
         arguments = tuple (arguments)
@@ -166,7 +166,7 @@ class Binding (object):
             return cls (callable_object, arguments)
         else:
             if not is_callable (callable_object):
-                raise TypeError ("`callable_object' must be callable")
+                raise TypeError ("'callable_object' must be callable")
 
             return callable_object
 
@@ -495,7 +495,7 @@ class WeakBinding (Binding):
 
         if self._object is not None:
             if callback is not None and not is_callable (callback):
-                raise TypeError ("`callback' must be callable")
+                raise TypeError ("'callback' must be callable")
 
             try:
                 self.__callback = callback

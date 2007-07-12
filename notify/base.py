@@ -319,16 +319,16 @@ class AbstractValueObject (object):
         """
 
         if not isinstance (value_object, AbstractValueObject):
-            raise TypeError ("can only synchronize with other `AbstractValueObject' instances")
+            raise TypeError ("can only synchronize with other 'AbstractValueObject' instances")
 
         if value_object is self:
-            raise ValueError ("can only synchronize with other `AbstractValueObject' instances")
+            raise ValueError ("can only synchronize with other 'AbstractValueObject' instances")
 
         if not self._is_mutable ():
-            raise ValueError ("`%s' is not mutable" % self)
+            raise ValueError ("'%s' is not mutable" % self)
 
         if not value_object._is_mutable ():
-            raise ValueError ("`%s' is not mutable" % value_object)
+            raise ValueError ("'%s' is not mutable" % value_object)
 
         if mediator is None:
             # Note: order is important!
@@ -366,13 +366,13 @@ class AbstractValueObject (object):
         """
 
         if not isinstance (value_object, AbstractValueObject):
-            raise TypeError ("can only synchronize with other `AbstractValueObject' instances")
+            raise TypeError ("can only synchronize with other 'AbstractValueObject' instances")
 
         if value_object is self:
-            raise ValueError ("can only synchronize with other `AbstractValueObject' instances")
+            raise ValueError ("can only synchronize with other 'AbstractValueObject' instances")
 
         if not value_object._is_mutable ():
-            raise ValueError ("target `AbstractValueObject' instance is not mutable")
+            raise ValueError ("target 'AbstractValueObject' instance is not mutable")
 
         if mediator is None:
             # Note: order is important!
@@ -765,7 +765,7 @@ class AbstractValueObject (object):
         """
 
         if not is_valid_identifier (new_class_name):
-            raise TypeError ("`%s' is not a valid Python identifier" % new_class_name)
+            raise TypeError ("'%s' is not a valid Python identifier" % new_class_name)
 
         full_options                   = dict (options)
         full_options['cls']            = cls
@@ -846,7 +846,7 @@ class AbstractValueObject (object):
         if 'object' in options:
             object = options['object']
             if not is_valid_identifier (object):
-                raise ValueError ("`%s' is not a valid Python identifier" % object)
+                raise ValueError ("'%s' is not a valid Python identifier" % object)
 
             yield '__slots__', mangle_identifier (options['new_class_name'], object)
 
@@ -859,10 +859,10 @@ class AbstractValueObject (object):
             if 'property' in options:
                 property = options['property']
                 if property == object:
-                    raise ValueError ("`property' option cannot be the same as `object'")
+                    raise ValueError ("'property' option cannot be the same as 'object'")
 
                 if not is_valid_identifier (property):
-                    raise ValueError ("`%s' is not a valid Python identifier" % property)
+                    raise ValueError ("'%s' is not a valid Python identifier" % property)
 
                 exec ('%s = property (lambda self: %s)'
                       % (property, AbstractValueObject._get_object (options))) \
@@ -874,7 +874,7 @@ class AbstractValueObject (object):
 
         else:
             if 'property' in options:
-                raise ValueError ("`property' without `object' option doesn't make sense")
+                raise ValueError ("'property' without 'object' option doesn't make sense")
 
         if 'dict' in options and options['dict']:
             # Gracefully ignore if this type already has a dict.
@@ -883,14 +883,14 @@ class AbstractValueObject (object):
 
         if 'getter' in options:
             if not is_callable (options['getter']):
-                raise TypeError ("`getter' must be a callable")
+                raise TypeError ("'getter' must be a callable")
 
             exec ('def get (self): return getter (%s)'
                   % AbstractValueObject._get_object (options)) in options, functions
 
         if 'setter' in options:
             if not is_callable (options['setter']):
-                raise TypeError ("`setter' must be a callable")
+                raise TypeError ("'setter' must be a callable")
 
             exec ('def set (self, value): return setter (%s, value)'
                   % AbstractValueObject._get_object (options)) in options, functions

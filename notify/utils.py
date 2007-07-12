@@ -90,7 +90,7 @@ def mangle_identifier (class_name, identifier):
     """
 
     if not (is_valid_identifier (class_name) and is_valid_identifier (identifier)):
-        raise ValueError ("`class_name' and `identifier' must be valid Python identifiers")
+        raise ValueError ("'class_name' and 'identifier' must be valid Python identifiers")
 
     if (identifier.startswith ('__')
         and not identifier.endswith ('__')

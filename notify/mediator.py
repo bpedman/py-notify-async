@@ -129,7 +129,7 @@ class AbstractMediator (object):
         if is_callable (function):
             return _Forward (self, function)
         else:
-            raise TypeError ("`function' must be callable")
+            raise TypeError ("'function' must be callable")
 
     def back (self, function):
         """
@@ -152,7 +152,7 @@ class AbstractMediator (object):
         if is_callable (function):
             return _Back (self, function)
         else:
-            raise TypeError ("`function' must be callable")
+            raise TypeError ("'function' must be callable")
 
 
     def reverse (self):
@@ -241,7 +241,7 @@ class BooleanMediator (AbstractMediator):
             fallback = bool
         else:
             if not is_callable (fallback):
-                raise TypeError ("`fallback' must be a callable")
+                raise TypeError ("'fallback' must be a callable")
 
         super (BooleanMediator, self).__init__()
 

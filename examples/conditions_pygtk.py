@@ -47,7 +47,7 @@ if __name__ == '__main__':
 try:
     from notify.all import *
 except ImportError:
-    sys.exit ("Please build Py-notify by running `python setup.py build' first")
+    sys.exit ("Please build Py-notify by running 'python setup.py build' first")
 
 
 import pygtk

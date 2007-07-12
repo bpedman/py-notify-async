@@ -79,7 +79,7 @@ def load_benchmarks (source, *benchmark_names):
                     suite.append (load_benchmarks (object, *toplevel_names[name]))
 
     else:
-        raise TypeError ("unsupported `source' type (%s)" % type (source))
+        raise TypeError ("unsupported 'source' type (%s)" % type (source))
 
     return suite
 
@@ -91,7 +91,7 @@ class Benchmark (object):
         pass
 
     def get_description (self, scale):
-        return ("Benchmark `%s.%s', with scale %s"
+        return ("Benchmark '%s.%s', with scale %s"
                 % (self.__module__, self.__class__.__name__, scale))
 
     def get_version (self):
