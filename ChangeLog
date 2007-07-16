@@ -1,3 +1,18 @@
+2007-07-16  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/base.py
+	(AbstractValueObject._generate_derived_type_dictionary): Never use
+	`options' as locals or globals for evaluation.
+	* notify/condition.py
+	(AbstractStateTrackingCondition._generate_derived_type_dictionary):
+	Likewise.
+	* notify/variable.py
+	(AbstractValueTrackingVariable._generate_derived_type_dictionary):
+	Likewise.
+
+	* notify/base.py (AbstractValueObject._filter_options): New
+	method.
+
 2007-07-12  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/condition.py

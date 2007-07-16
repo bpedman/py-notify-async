@@ -332,8 +332,9 @@ class AbstractStateTrackingCondition (AbstractCondition):
             if attribute[0] not in ('get', 'set'):
                 yield attribute
 
-        functions = {}
-        object    = options.get ('object')
+        functions        = {}
+        object           = options.get ('object')
+        filtered_options = AbstractValueObject._filter_options (options, 'cls', 'getter', 'setter')
 
         if 'getter' in options:
             if object is not None:
@@ -341,14 +342,14 @@ class AbstractStateTrackingCondition (AbstractCondition):
                        '    cls.__init__(self, getter (%s))\n'
                        '    %s = %s')
                       % (object, object, AbstractValueObject._get_object (options), object)) \
-                      in options, functions
+                      in filtered_options, functions
             else:
                 exec ('def __init__(self):\n'
-                      '    cls.__init__(self, getter (self))\n') in options, functions
+                      '    cls.__init__(self, getter (self))\n') in filtered_options, functions
 
             exec (('def resynchronize_with_backend (self):\n'
                    '    self._set (getter (%s))')
-                  % AbstractValueObject._get_object (options)) in options, functions
+                  % AbstractValueObject._get_object (options)) in filtered_options, functions
 
         else:
             if 'setter' in options:
@@ -364,13 +365,13 @@ class AbstractStateTrackingCondition (AbstractCondition):
                        '    %s\n')
                       % (object, AbstractValueObject._get_object (options), object,
                          setter_statement)) \
-                      in options, functions
+                      in filtered_options, functions
             else:
                 exec (('def __init__(self, initial_state):\n'
                        '    cls.__init__(self, initial_state)\n'
                        '    %s\n')
                       % setter_statement) \
-                      in options, functions
+                      in filtered_options, functions
 
         if 'setter' in options:
             exec (('def _set (self, value):\n'
@@ -381,15 +382,12 @@ class AbstractStateTrackingCondition (AbstractCondition):
                    '        return self._value_changed (state)\n'
                    '    else:\n'
                    '        return False')
-                  % AbstractValueObject._get_object (options)) in options, functions
+                  % AbstractValueObject._get_object (options)) in filtered_options, functions
 
-            exec 'def set (self, value): return self._set (value)' in options, functions
+            exec 'def set (self, value): return self._set (value)' in functions
 
         for function in functions.iteritems ():
             yield function
-
-        del functions
-        del object
 
 
     _generate_derived_type_dictionary = classmethod  (_generate_derived_type_dictionary)

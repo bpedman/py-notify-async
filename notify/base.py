@@ -820,7 +820,8 @@ class AbstractValueObject (object):
             ...     functions = {}
             ...
             ...     if 'foo_value' in options:
-            ...         exec 'def foo (self): return foo_value' in options, functions
+            ...         exec 'def foo (self): return foo_value' \
+            ...              in { 'foo_value': options['foo_value'] }, functions
             ...
             ...     ...
             ...
@@ -829,7 +830,13 @@ class AbstractValueObject (object):
 
         Returned value for C{__slots__} is treated specially.  While normally values
         associated with the same name override previous values, values for C{__slots__}
-        are combined in to a tuple instead.
+        are combined into a tuple instead.
+
+        Note that it is not recommended to use C{options} for execution globals or locals
+        dictionary directly.  This way your code may become vulnerable to other option
+        addition, e.g. for some derivative of the class.  For instance, you may use
+        C{property} built-in, then setting it in C{options} will hide the built-in from
+        your code.  Consider using C{L{_filter_options}} utility method.
 
         @param options:    dictionary of options passed to C{L{derive_type}} method, plus
                            C{cls} and C{new_class_name}.
@@ -865,12 +872,9 @@ class AbstractValueObject (object):
                     raise ValueError ("'%s' is not a valid Python identifier" % property)
 
                 exec ('%s = property (lambda self: %s)'
-                      % (property, AbstractValueObject._get_object (options))) \
+                      % (mangle_identifier (options['new_class_name'], property),
+                         AbstractValueObject._get_object (options))) \
                       in functions
-
-                del property
-
-            del object
 
         else:
             if 'property' in options:
@@ -881,24 +885,26 @@ class AbstractValueObject (object):
             if not cls.__dictoffset__:
                 yield '__slots__', '__dict__'
 
+        filtered_options = AbstractValueObject._filter_options (options, 'getter', 'setter')
+
         if 'getter' in options:
             if not is_callable (options['getter']):
                 raise TypeError ("'getter' must be a callable")
 
             exec ('def get (self): return getter (%s)'
-                  % AbstractValueObject._get_object (options)) in options, functions
+                  % AbstractValueObject._get_object (options)) \
+                  in filtered_options, functions
 
         if 'setter' in options:
             if not is_callable (options['setter']):
                 raise TypeError ("'setter' must be a callable")
 
             exec ('def set (self, value): return setter (%s, value)'
-                  % AbstractValueObject._get_object (options)) in options, functions
+                  % AbstractValueObject._get_object (options)) \
+                  in filtered_options, functions
 
         for function in functions.iteritems ():
             yield function
-
-        del functions
 
 
     def _get_object (options):
@@ -923,9 +929,34 @@ class AbstractValueObject (object):
             return 'self'
 
 
+    def _filter_options (options, *names):
+        """
+        Return a subset of C{options} including only those listed in C{names}.  This is a
+        utility method.  Its main purpose is to build a subset of options dictionary for
+        C{L{_generate_derived_type_dictionary}} method, which is safe to use as locals or
+        globals for evaluating method definitions.
+
+        @param options: full dictionary of options.
+        @type  options: C{dict}
+
+        @param name:    permitted options.
+
+        @rtype:         C{dict}
+        """
+
+        filtered_options = {}
+
+        for name in names:
+            if name in options:
+                filtered_options[name] = options[name]
+
+        return filtered_options
+
+
     derive_type                       = classmethod  (derive_type)
     _generate_derived_type_dictionary = classmethod  (_generate_derived_type_dictionary)
     _get_object                       = staticmethod (_get_object)
+    _filter_options                   = staticmethod (_filter_options)
 
 
 

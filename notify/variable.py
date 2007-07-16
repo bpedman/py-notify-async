@@ -200,8 +200,14 @@ class AbstractValueTrackingVariable (AbstractVariable):
             if attribute[0] not in ('get', 'set'):
                 yield attribute
 
-        functions = {}
-        object    = options.get ('object')
+        functions        = {}
+        object           = options.get ('object')
+        filtered_options = AbstractValueObject._filter_options (options,
+                                                                'cls',
+                                                                'allowed_values',
+                                                                'allowed_value_types',
+                                                                'getter', 'setter',
+                                                                'default_value')
 
         if allowed_values is not None or allowed_value_types is not None:
             if allowed_values is not None:
@@ -209,13 +215,14 @@ class AbstractValueTrackingVariable (AbstractVariable):
                     exec ('def is_allowed_value (self, value):\n'
                           '    return value in allowed_values\n'
                           '           and isinstance (value, allowed_value_types)') \
-                          in options, functions
+                          in filtered_options, functions
                 else:
                     exec ('def is_allowed_value (self, value):\n'
-                          '    return value in allowed_values\n') in options, functions
+                          '    return value in allowed_values\n') in filtered_options, functions
             else:
                 exec ('def is_allowed_value (self, value):\n'
-                      '    return isinstance (value, allowed_value_types)') in options, functions
+                      '    return isinstance (value, allowed_value_types)') \
+                      in filtered_options, functions
 
         if 'getter' in options:
             if object is not None:
@@ -223,14 +230,14 @@ class AbstractValueTrackingVariable (AbstractVariable):
                        '    cls.__init__(self, getter (%s))\n'
                        '    %s = %s')
                       % (object, object, AbstractValueObject._get_object (options), object)) \
-                      in options, functions
+                      in filtered_options, functions
             else:
                 exec ('def __init__(self):\n'
-                      '    cls.__init__(self, getter (self))\n') in options, functions
+                      '    cls.__init__(self, getter (self))\n') in filtered_options, functions
 
             exec (('def resynchronize_with_backend (self):\n'
                    '    self._set (getter (%s))')
-                  % AbstractValueObject._get_object (options)) in options, functions
+                  % AbstractValueObject._get_object (options)) in filtered_options, functions
 
         else:
             if 'default_value' in options:
@@ -262,12 +269,12 @@ class AbstractValueTrackingVariable (AbstractVariable):
                        '    %s\n')
                       % (object, initial_default,
                          AbstractValueObject._get_object (options), object), setter_statement) \
-                      in options, functions
+                      in filtered_options, functions
             else:
                 exec (('def __init__(self, initial_value%s):\n'
                        '    cls.__init__(self, initial_value)\n'
                        '    %s\n')
-                      % (initial_default, setter_statement)) in options, functions
+                      % (initial_default, setter_statement)) in filtered_options, functions
 
         if 'setter' in options:
             exec (('def _set (self, value):\n'
@@ -280,15 +287,12 @@ class AbstractValueTrackingVariable (AbstractVariable):
                    '        return self._value_changed (value)\n'
                    '    else:\n'
                    '        return False')
-                  % AbstractValueObject._get_object (options)) in options, functions
+                  % AbstractValueObject._get_object (options)) in filtered_options, functions
 
-            exec 'def set (self, value): return self._set (value)' in options, functions
+            exec 'def set (self, value): return self._set (value)' in functions
 
         for function in functions.iteritems ():
             yield function
-
-        del functions
-        del object
 
 
     _generate_derived_type_dictionary = classmethod (_generate_derived_type_dictionary)
