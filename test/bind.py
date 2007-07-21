@@ -72,6 +72,15 @@ class BindingTestCase (NotifyTestCase):
         self.assertEqual (RaisingWeakBinding (DUMMY.identity_function) (33, 'test'), (33, 'test'))
 
 
+    def test_creation_with_arguments (self):
+        self.assertEqual (Binding (DUMMY.identity_function, (33,)) ('test'),
+                          (33, 'test'))
+        self.assertEqual (WeakBinding (DUMMY.identity_function, (33,)) ('test'),
+                          (33, 'test'))
+        self.assertEqual (RaisingWeakBinding (DUMMY.identity_function, (33,)) ('test'),
+                          (33, 'test'))
+
+
     def test_unreferencable_object_method_failure (self):
         class Test (object):
             __slots__ = ()
@@ -243,6 +252,14 @@ class BindingWrapTestCase (NotifyTestCase):
         self.assert_(Binding.wrap (callable).im_self  is callable.im_self)
         self.assert_(Binding.wrap (callable).im_func  is callable.im_func)
         self.assert_(Binding.wrap (callable).im_class is callable.im_class)
+
+
+    def test_wrap_with_arguments_1 (self):
+        callable = lambda a, b, c: None
+
+        self.assert_(Binding           .wrap (callable, (1, 2)) is not callable)
+        self.assert_(WeakBinding       .wrap (callable, (1, 2)) is not callable)
+        self.assert_(RaisingWeakBinding.wrap (callable, (1, 2)) is not callable)
 
 
 

@@ -317,13 +317,18 @@ class AbstractStateTrackingCondition (AbstractCondition):
         @returns:      Whether condition state changed as a result.
         """
 
-        state = bool (value)
-
-        if self.get () != state:
-            self.__state = state
-            return self._value_changed (state)
+        # This seems to be a little faster than more generic _set() as in variable branch.
+        # Only possible since there are just two possible states.
+        if value:
+            if not self.get ():
+                self.__state = True
+                return self._value_changed (True)
         else:
-            return False
+            if self.get ():
+                self.__state = False
+                return self._value_changed (False)
+
+        return False
 
 
     def _generate_derived_type_dictionary (cls, options):
@@ -762,20 +767,30 @@ AbstractCondition.FALSE = _False ()
 
 
 
-class _Not (AbstractStateTrackingCondition):
+# Previously derived from `AbstractStateTrackingCondition', but this is a tiny little bit
+# more efficient.
 
-    __slots__ = (as_string.__negated_condition)
+class _Not (AbstractCondition):
+
+    # We need to save our state, since `negated_condition' may be gc-collected.
+    __slots__ = (as_string.__state, as_string.__negated_condition)
 
 
     def __init__(self, negated_condition):
-        super (_Not, self).__init__(not negated_condition)
+        super (_Not, self).__init__()
 
+        self.__state             = not negated_condition
         self.__negated_condition = weakref.ref (negated_condition, self.__on_usage_change)
+
         negated_condition.changed.connect (self.__on_negated_condition_change)
 
 
+    def get (self):
+        return self.__state
+
     def __on_negated_condition_change (self, new_state):
-        self._set (not new_state)
+        self.__state = not new_state
+        self._value_changed (not new_state)
 
 
     def __get_negated_condition (self):
@@ -784,7 +799,7 @@ class _Not (AbstractStateTrackingCondition):
         if negated_condition is not None:
             return negated_condition
         else:
-            return AbstractCondition.to_constant (self.get ())
+            return AbstractCondition.to_constant (self.__state)
 
 
     def _create_signal (self):
@@ -830,8 +845,9 @@ class _Binary (AbstractCondition):
     def __init__(self, condition1, condition2):
         super (_Binary, self).__init__()
 
-        self.__condition1 = weakref.ref (condition1, self.__on_usage_change)
-        self.__condition2 = weakref.ref (condition2, self.__on_usage_change)
+        on_usage_change   = self.__on_usage_change
+        self.__condition1 = weakref.ref (condition1, on_usage_change)
+        self.__condition2 = weakref.ref (condition2, on_usage_change)
 
         condition1.changed.connect (self._on_term1_change)
         condition2.changed.connect (self._on_term2_change)
@@ -977,9 +993,10 @@ class _IfElse (AbstractCondition):
     def __init__(self, _if, _then, _else):
         super (_IfElse, self).__init__()
 
-        self.__if         = weakref.ref (_if,   self.__on_usage_change)
-        self.__then       = weakref.ref (_then, self.__on_usage_change)
-        self.__else       = weakref.ref (_else, self.__on_usage_change)
+        on_usage_change   = self.__on_usage_change
+        self.__if         = weakref.ref (_if,   on_usage_change)
+        self.__then       = weakref.ref (_then, on_usage_change)
+        self.__else       = weakref.ref (_else, on_usage_change)
         self.__term_state = (_if.get () * 4 + _then.get () * 2 + _else.get ())
 
         _if  .changed.connect (self.__on_if_term_change)

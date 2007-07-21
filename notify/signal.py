@@ -1151,20 +1151,22 @@ class Signal (AbstractSignal):
                     if self.__emission_level < 0:
                         break
 
-                    try:
-                        handler_value = handler (*arguments)
-
-                    # To also catch old-style string-only exceptions.
-                    except:
-                        AbstractSignal.exception_handler (self, sys.exc_info () [1], handler)
-                        continue
-
-                    if accumulator is not None:
-                        value = accumulator.accumulate_value (value, handler_value)
-
-                        if not accumulator.should_continue (value):
-                            break
-
+                    # Another speed optimization, check if we even need that
+                    # `handler_value' first.
+                    if accumulator is None:
+                        try:
+                            handler (*arguments)
+                        except:
+                            AbstractSignal.exception_handler (self, sys.exc_info () [1], handler)
+                    else:
+                        try:
+                            handler_value = handler (*arguments)
+                        except:
+                            AbstractSignal.exception_handler (self, sys.exc_info () [1], handler)
+                        else:
+                            value = accumulator.accumulate_value (value, handler_value)
+                            if not accumulator.should_continue (value):
+                                break
             finally:
                 self.__emission_level = saved_emission_level
                 self.collect_garbage ()
@@ -1197,12 +1199,10 @@ class Signal (AbstractSignal):
         # Don't remove disconnected or garbage-collected handlers if in nested emission,
         # it will spoil emit() calls completely.
         if self._handlers is not None and self.__emission_level == 0:
-            self._handlers = [handler for handler in self._handlers
-                              if handler is not None and (not isinstance (handler, WeakBinding)
-                                                          or handler)]
-
-            if not self._handlers:
-                self._handlers = None
+            self._handlers = ([handler for handler in self._handlers
+                               if handler is not None and (not isinstance (handler, WeakBinding)
+                                                           or handler)]
+                              or None)
 
 
     def _additional_description (self, formatter):

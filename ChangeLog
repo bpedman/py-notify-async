@@ -1,3 +1,19 @@
+2007-07-21  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* test/bind.py (BindingTestCase.test_creation_with_arguments)
+	(BindingWrapTestCase.test_wrap_with_arguments_1): New tests.
+
+	* notify/signal.py (Signal.emit): Small speed optimization.
+	(Signal.collect_garbage): Likewise.
+
+	* notify/condition.py (AbstractStateTrackingCondition._set):
+	Reimplement in a little more efficient way.
+	(_Not): Derive directly from `AbstractCondition' for efficiency;
+	adjust implementation as necessary.
+	(_Binary.__init__): Don't create equal but not identical bound
+	method objects.
+	(_IfElse.__init__): Likewise.
+
 2007-07-16  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/base.py
