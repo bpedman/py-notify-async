@@ -1135,10 +1135,12 @@ class Signal (AbstractSignal):
             try:
                 saved_emission_level  = self.__emission_level
                 self.__emission_level = abs (saved_emission_level) + 1
+                might_have_garbage    = False
 
                 for handler in handlers:
                     # Disconnected while in emission handlers are temporary set to None.
                     if handler is None or handler in self._blocked_handlers:
+                        might_have_garbage = (handler is None)
                         continue
 
                     # This somewhat illogical transposition of terms is for speed
@@ -1146,9 +1148,11 @@ class Signal (AbstractSignal):
                     # doesn't matter which term is evaluated first.
                     if not handler and isinstance (handler, WeakBinding):
                         # Handler will be removed in collect_garbage(), don't bother now.
+                        might_have_garbage = True
                         continue
 
                     if self.__emission_level < 0:
+                        might_have_garbage = True
                         break
 
                     # Another speed optimization, check if we even need that
@@ -1166,10 +1170,12 @@ class Signal (AbstractSignal):
                         else:
                             value = accumulator.accumulate_value (value, handler_value)
                             if not accumulator.should_continue (value):
+                                might_have_garbage = True
                                 break
             finally:
                 self.__emission_level = saved_emission_level
-                self.collect_garbage ()
+                if might_have_garbage and saved_emission_level == 0:
+                    self.collect_garbage ()
 
         if accumulator is None:
             return None

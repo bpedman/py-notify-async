@@ -588,6 +588,101 @@ class AccumulatorSignalTestCase (NotifyTestCase):
 
 
 
+# Note: we explicitly test protected field of `Signal' class, because there is nothing
+# public that indicates number of garbage-collected, but not yet removed handlers.  Yet we
+# want that a call to emit() does remove such handlers, so that list of signal handlers
+# doesn't grow over time if implicit disconnection is used.
+
+class HandlerGarbageCollectionTestCase (NotifyTestCase):
+
+    class HandlerObject (object):
+
+        def __init__(self, test_case):
+            self.__test_case = test_case
+
+        def simple_handler (self, *arguments):
+            self.__test_case.simple_handler (*arguments)
+
+
+    def test_handler_garbage_collection_1 (self):
+        signal       = Signal ()
+        self.results = []
+
+        handler = HandlerGarbageCollectionTestCase.HandlerObject (self)
+        signal.connect (handler.simple_handler)
+
+        self.assert_(signal._handlers is not None)
+
+        signal.emit (1)
+
+        del handler
+        self.collect_garbage ()
+
+        self.assert_(signal._handlers is not None)
+
+        signal.emit (2)
+
+        self.assert_(signal._handlers is None)
+        self.assert_results (1)
+
+
+    def test_handler_garbage_collection_2 (self):
+        signal       = Signal ()
+        self.results = []
+
+        handler = HandlerGarbageCollectionTestCase.HandlerObject (self)
+
+        signal.connect (lambda *ignored: signal.stop_emission ())
+        signal.connect (handler.simple_handler)
+
+        self.assertEqual (len (signal._handlers), 2)
+
+        signal.emit (1)
+
+        del handler
+        self.collect_garbage ()
+
+        self.assertEqual (len (signal._handlers), 2)
+
+        signal.emit (2)
+
+        # Even though emission is stopped by the first handler, signal must still notice
+        # that it should remove the second one.
+        self.assertEqual (len (signal._handlers), 1)
+        self.assert_results ()
+
+
+    def test_handler_garbage_collection_3 (self):
+        signal       = Signal (AbstractSignal.ANY_ACCEPTS)
+        self.results = []
+
+        handler = HandlerGarbageCollectionTestCase.HandlerObject (self)
+
+        def accepting_handler (*arguments):
+            self.simple_handler_100 (*arguments)
+            return arguments[0]
+
+        signal.connect (accepting_handler)
+        signal.connect (handler.simple_handler)
+
+        self.assertEqual (len (signal._handlers), 2)
+
+        signal.emit (1)
+
+        del handler
+        self.collect_garbage ()
+
+        self.assertEqual (len (signal._handlers), 2)
+
+        signal.emit (2)
+
+        # This time emission is stopped by accumulator, but still the gc-collected handler
+        # must be removed.
+        self.assertEqual (len (signal._handlers), 1)
+        self.assert_results (101, 102)
+
+
+
 class ExoticSignalTestCase (NotifyTestCase):
 
     def test_disconnect_blocked_handler_1 (self):

@@ -176,6 +176,7 @@ class AbstractMediator (object):
         return _ReverseMediator (self)
 
 
+    # Note: only present as a means for stating that ``mediators are comparable.''
     def __eq__(self, other):
         """
         Determine if two mediators are equal.  This function is not required to catch all
@@ -202,9 +203,6 @@ class AbstractMediator (object):
             return not equal
         else:
             return NotImplemented
-
-    def __hash__(self):
-        return id (self)
 
 
 
@@ -399,7 +397,7 @@ class _Function (object):
         return not self.__eq__(other)
 
     def __hash__(self):
-        return id (self.__class__) ^ hash (self._mediator) ^ hash (self._function)
+        return hash (type (self)) ^ hash (self._mediator) ^ hash (self._function)
 
 
 

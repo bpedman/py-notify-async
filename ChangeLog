@@ -1,3 +1,19 @@
+2007-07-22  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* test/signal.py (HandlerGarbageCollectionTestCase): New test
+	case.
+
+	* notify/signal.py (Signal.emit): Gross speed optimization: only
+	call collect_garbage() if there might be garbage.  Actually, this
+	is only a heuristic, because a handler can be GC-collected just
+	after we find it is not a garbage, but such optimization is well
+	worth it.
+
+	* notify/bind.py (Binding.__hash__): Don't use id(), not
+	recommended.
+	* notify/mediator.py (_Function.__hash__): Likewise.
+	(__hash__): Remove altogether, not needed.
+
 2007-07-21  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* test/bind.py (BindingTestCase.test_creation_with_arguments)

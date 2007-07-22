@@ -306,7 +306,7 @@ class Binding (object):
         if _class is not None or object is not None:
             _hash = hash (MethodType (self._get_function (), object, _class))
         else:
-            _hash = id (self._get_function ())
+            _hash = hash (self._get_function ())
 
         if arguments:
             return _hash ^ hash (arguments)
@@ -586,7 +586,7 @@ class WeakBinding (Binding):
 
     def __hash__(self):
         if self.__hash is None:
-            if bool (self):
+            if self:
                 self.__hash = super (WeakBinding, self).__hash__()
             else:
                 raise TypeError (("%s's object had been garbage-collected"
