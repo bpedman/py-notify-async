@@ -31,6 +31,19 @@ Determine if C{object} is callable.  E.g. if it is a function, method, class, in
 a class with C{__call__}, etc.  This is the same as built-in function C{callable} does.
 C{is_callable} is provided since C{callable} is going to disappear in Python 3000 and may
 issue warnings in 2.6.
+
+@var as_string:
+Convert any attribute to its name as string.  Main use of this utility object is to
+perform Python ‘private’ identifier mangling.  E.g. you can write::
+
+    class MyClass (object):
+        __slots__ = (as_string.__x, as_string.__y)
+        def __init__(self):
+            self.__x, self__y = 0, 0
+
+Advantage is that you don’t have to do mangling ‘by hands’ and hence there is less chance
+for a typing error.  Furthermore, this code does not require changes if you change
+C{MyClass} name to anything else, whereas custom mangling does.
 """
 
 __docformat__ = 'epytext en'
@@ -81,7 +94,7 @@ def mangle_identifier (class_name, identifier):
     @type   class_name: C{basestring}
 
     @param  identifier: name of an attribute of that class.
-    @type   class_name: C{basestring}
+    @type   identifier: C{basestring}
 
     @rtype: C{str}
 
@@ -102,6 +115,10 @@ def mangle_identifier (class_name, identifier):
 
 
 class _AsString (object):
+
+    """
+    Internal helper class for C{L{as_string}}.  Don’t use directly.
+    """
 
     __slots__ = ()
 

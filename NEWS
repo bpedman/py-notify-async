@@ -1,3 +1,15 @@
+--- New in Py-notify 0.1.11 ------------------------------------------
+
+* Major speed optimization in signal emission.  Now all benchmarks run
+  about 30% faster.
+
+* Many small improvements and fixes in derive_type() machinery.
+
+* Minor internal code improvements.
+
+* 18 more unit tests (147/169 in total.)
+
+
 --- New in Py-notify 0.1.10 ------------------------------------------
 
 * Possibility to freeze changes in conditions and variabes.

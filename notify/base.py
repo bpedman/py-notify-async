@@ -939,7 +939,7 @@ class AbstractValueObject (object):
         @param options: full dictionary of options.
         @type  options: C{dict}
 
-        @param name:    permitted options.
+        @param names:   permitted options.
 
         @rtype:         C{dict}
         """

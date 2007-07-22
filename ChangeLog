@@ -1,5 +1,12 @@
 2007-07-22  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	* version: Release 0.1.11.
+
+	* NEWS: Update.
+
+	* notify/base.py: Improve documentation.
+	* notify/utils.py: Likewise.
+
 	* test/signal.py (HandlerGarbageCollectionTestCase): New test
 	case.
 
