@@ -1,3 +1,12 @@
+2007-07-30  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/base.py
+	(AbstractValueObject._generate_derived_type_dictionary): Fix
+	initializer for derived classes.
+
+	* test/variable.py
+	(VariableDerivationTestCase.test_derivation_10): New test.
+
 2007-07-22  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* version: Release 0.1.11.

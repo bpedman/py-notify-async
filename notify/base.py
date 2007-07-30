@@ -848,7 +848,9 @@ class AbstractValueObject (object):
         @raises exception: if there is any error in C{options}.
         """
 
-        functions = {}
+        functions        = {}
+        filtered_options = AbstractValueObject._filter_options (options, 'cls', 'getter', 'setter')
+
 
         if 'object' in options:
             object = options['object']
@@ -861,7 +863,7 @@ class AbstractValueObject (object):
                    '    cls.__init__(self)\n'
                    '    %s = %s')
                   % (object, AbstractValueObject._get_object (options), object)) \
-                  in functions
+                  in filtered_options, functions
 
             if 'property' in options:
                 property = options['property']
@@ -884,8 +886,6 @@ class AbstractValueObject (object):
             # Gracefully ignore if this type already has a dict.
             if not cls.__dictoffset__:
                 yield '__slots__', '__dict__'
-
-        filtered_options = AbstractValueObject._filter_options (options, 'getter', 'setter')
 
         if 'getter' in options:
             if not is_callable (options['getter']):

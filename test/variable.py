@@ -291,6 +291,25 @@ class VariableDerivationTestCase (NotifyTestCase):
         self.assert_results (None, 100, 'abc')
 
 
+    def test_derivation_10 (self):
+        def set_value (list, value):
+            list[0] = value
+
+        DerivedVariable = AbstractVariable.derive_type ('DerivedVariable',
+                                                        object = '__list', property = 'list',
+                                                        getter = lambda list: list[0],
+                                                        setter = set_value)
+
+        a = DerivedVariable ([123])
+
+        self.assertEqual (a.value, 123)
+
+        a.value = 'foo'
+
+        self.assertEqual (a.value, 'foo')
+        self.assertEqual (a.list,  ['foo'])
+
+
     def test_object_derivation_1 (self):
         class MainObject (object):
             def __init__(self, x):
