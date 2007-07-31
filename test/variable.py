@@ -29,6 +29,7 @@ if __name__ == '__main__':
     sys.path.insert (0, os.path.join (sys.path[0], os.pardir))
 
 
+import math
 import unittest
 
 from notify.variable import AbstractVariable, AbstractValueTrackingVariable, Variable, \
@@ -45,7 +46,7 @@ class BaseVariableTestCase (NotifyTestCase):
         self.assert_(mutable_variable.mutable)
 
 
-    def test_predicate (self):
+    def test_predicate_1 (self):
         variable        = Variable (0)
         is_single_digit = variable.predicate (lambda value: 0 <= value < 10)
 
@@ -60,6 +61,21 @@ class BaseVariableTestCase (NotifyTestCase):
 
         variable.value = 100
         self.assert_(not is_single_digit)
+
+
+    def test_predicate_2 (self):
+        self.results = []
+
+        variable = Variable (0)
+        variable.predicate (lambda value: 0 <= value < 10).store (self.simple_handler)
+
+        variable.value = 5
+        variable.value = 15
+        variable.value = -1
+        variable.value = 9
+        variable.value = 3
+
+        self.assert_results (True, False, True)
 
 
     def test_is_true (self):
@@ -79,6 +95,36 @@ class BaseVariableTestCase (NotifyTestCase):
 
         variable.value = 25
         self.assert_(is_true)
+
+
+    def test_transformation_1 (self):
+        variable = Variable (0)
+        floor    = variable.transform (math.floor)
+
+        self.assertEqual (floor.value, 0)
+        self.assert_(not floor.mutable)
+
+        variable.value = 10.5
+        self.assertEqual (floor.value, 10)
+
+        variable.value = 15
+        self.assertEqual (floor.value, 15)
+
+
+    def test_transformation_2 (self):
+        self.results = []
+
+        variable = Variable (0)
+        variable.transform (math.floor).store (self.simple_handler)
+
+        variable.value = 5
+        variable.value = 5.6
+        variable.value = 15.7
+        variable.value = 16
+        variable.value = 16.5
+        variable.value = 16.2
+
+        self.assert_results (0, 5, 15, 16)
 
 
     def test_is_allowed_value (self):

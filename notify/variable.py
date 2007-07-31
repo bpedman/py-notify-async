@@ -84,6 +84,22 @@ class AbstractVariable (AbstractValueObject):
         return _PredicateOverVariable (predicate, self)
 
 
+    def transform (self, transformer):
+        """
+        Construct a variable, whose state is always given transformation of this variable
+        value.
+
+        @param  transformer: a callable accepting one argument (current value) which
+                             computes derived value of the returned variable.
+
+        @rtype:              C{L{AbstractVariable}}
+
+        @raises TypeError:   if C{transformer} is not callable.
+        """
+
+        return _VariableTransformation (transformer, self)
+
+
     def is_true (self):
         """
         Identical to C{L{predicate} (bool)}.  It was decided to have a separate function
@@ -487,6 +503,8 @@ class WatcherVariable (AbstractValueTrackingVariable):
 
 #-- Internal variable classes -----------------------------------------
 
+# FIXME: There is code duplication in these classes.  Use multiple inheritance?
+
 class _PredicateOverVariable (AbstractStateTrackingCondition):
 
     __slots__ = (as_string.__predicate, as_string.__variable)
@@ -529,8 +547,54 @@ class _PredicateOverVariable (AbstractStateTrackingCondition):
     def _additional_description (self, formatter):
         return (['predicate: %s' % formatter (self.__predicate),
                  'variable: %s'  % formatter (self.__get_variable ())]
-                + (super (_PredicateOverVariable, self)
-                   ._additional_description (formatter)))
+                + super (_PredicateOverVariable, self)._additional_description (formatter))
+
+
+
+class _VariableTransformation (AbstractValueTrackingVariable):
+
+    __slots__ = (as_string.__transformer, as_string.__variable)
+
+
+    def __init__(self, transformer, variable):
+        if not is_callable (transformer):
+            raise TypeError ('transformer must be callable')
+
+        super (_VariableTransformation, self).__init__(transformer (variable.get ()))
+
+        self.__transformer = transformer
+        self.__variable    = weakref.ref (variable, self.__on_usage_change)
+
+        variable.changed.connect (self.__update)
+
+
+    def __get_variable (self):
+        return self.__variable ()
+
+
+    def __update (self, new_value):
+        self._set (self.__transformer (new_value))
+
+
+    def _create_signal (self):
+        if self.__variable () is not None:
+            AbstractGCProtector.default.protect (self)
+
+        signal = CleanSignal (self)
+        return signal, weakref.ref (signal, self.__on_usage_change)
+
+
+    def __on_usage_change (self, object):
+        self._remove_signal (object)
+
+        if self._has_signal () or self.__variable () is not None:
+            AbstractGCProtector.default.unprotect (self)
+
+
+    def _additional_description (self, formatter):
+        return (['transformer: %s' % formatter (self.__transformer),
+                 'variable: %s'  % formatter (self.__get_variable ())]
+                + super (_VariableTransformation, self)._additional_description (formatter))
 
 
 
