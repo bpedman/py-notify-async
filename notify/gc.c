@@ -446,12 +446,12 @@ PyTypeObject  DebugGCProtector_Type
 
 /*- Static variables -----------------------------------------------*/
 
-static PyObject *  raise_not_implemented_exception;
+static PyObject *  raise_not_implemented_exception = NULL;
 
 static char *      no_keywords[]     = { NULL };
 static char *      object_keywords[] = { "object", NULL };
 
-static PyObject *  unprotection_exception_type;
+static PyObject *  unprotection_exception_type = NULL;
 
 
 
@@ -504,7 +504,8 @@ AbstractGCProtector_set_default (PyObject *null, PyObject *arguments, PyObject *
                                     protector_keywords, &AbstractGCProtector_Type, &new_protector))
     return NULL;
 
-  PyDict_SetItemString (AbstractGCProtector_Type.tp_dict, "default", new_protector);
+  if (PyDict_SetItemString (AbstractGCProtector_Type.tp_dict, "default", new_protector) == -1)
+    return NULL;
 
   Py_INCREF (Py_None);
   return Py_None;
@@ -600,6 +601,9 @@ RaisingGCProtector_init (RaisingGCProtector *self, PyObject *arguments, PyObject
   Py_XDECREF (self->protected_objects_dict);
   self->protected_objects_dict = PyDict_New ();
 
+  if (!self->protected_objects_dict)
+    return -1;
+
   return 0;
 }
 
@@ -607,7 +611,7 @@ RaisingGCProtector_init (RaisingGCProtector *self, PyObject *arguments, PyObject
 static void
 RaisingGCProtector_dealloc (RaisingGCProtector *self)
 {
-  Py_DECREF (self->protected_objects_dict);
+  Py_XDECREF (self->protected_objects_dict);
   self->ob_type->tp_free ((PyObject *) self);
 }
 
@@ -628,7 +632,10 @@ RaisingGCProtector_protect (RaisingGCProtector *self, PyObject *arguments, PyObj
       PyObject *num_protections;
       int       num_protections_new;
 
-      id              = PyLong_FromVoidPtr (object);
+      id = PyLong_FromVoidPtr (object);
+      if (!id)
+        return NULL;
+
       num_protections = PyDict_GetItem (self->protected_objects_dict, id);
 
       if (num_protections)
@@ -637,6 +644,12 @@ RaisingGCProtector_protect (RaisingGCProtector *self, PyObject *arguments, PyObj
         num_protections_new = 1;
 
       num_protections = PyInt_FromLong (num_protections_new);
+      if (!num_protections)
+        {
+          Py_DECREF (id);
+          return NULL;
+        }
+
       PyDict_SetItem (self->protected_objects_dict, id, num_protections);
       Py_DECREF (num_protections);
 
@@ -667,7 +680,10 @@ RaisingGCProtector_unprotect (RaisingGCProtector *self, PyObject *arguments, PyO
       PyObject *id;
       PyObject *num_protections;
 
-      id              = PyLong_FromVoidPtr (object);
+      id = PyLong_FromVoidPtr (object);
+      if (!id)
+        return NULL;
+
       num_protections = PyDict_GetItem (self->protected_objects_dict, id);
 
       if (num_protections)
@@ -677,12 +693,19 @@ RaisingGCProtector_unprotect (RaisingGCProtector *self, PyObject *arguments, PyO
           if (num_protections_new)
             {
               num_protections = PyInt_FromLong (num_protections_new);
+              if (!num_protections)
+                {
+                  Py_DECREF (id);
+                  return NULL;
+                }
+
               PyDict_SetItem (self->protected_objects_dict, id, num_protections);
               Py_DECREF (num_protections);
             }
           else
             PyDict_DelItem (self->protected_objects_dict, id);
 
+          Py_DECREF (id);
           --self->num_active_protections;
         }
       else
@@ -704,11 +727,9 @@ RaisingGCProtector_unprotect (RaisingGCProtector *self, PyObject *arguments, PyO
           PyErr_Format (unprotection_exception_type,
                         "object is not protected by this %s", type_name);
 
-          /* Cause exception to be raised. */
-          object = NULL;
+          Py_DECREF (id);
+          return NULL;
         }
-
-      Py_DECREF (id);
     }
   else
     {
@@ -734,7 +755,10 @@ RaisingGCProtector_get_num_object_protections (RaisingGCProtector *self,
                                     object_keywords, &object))
     return NULL;
 
-  id              = PyLong_FromVoidPtr (object);
+  id = PyLong_FromVoidPtr (object);
+  if (!id)
+    return NULL;
+
   num_protections = PyDict_GetItem (self->protected_objects_dict, id);
 
   if (num_protections)
@@ -769,8 +793,8 @@ DebugGCProtector_unprotect (DebugGCProtector *self, PyObject *arguments, PyObjec
 {
   PyObject *object;
 
-  /* For the proper exception message and so we can assume that if super unprotect()
-   * method fails, than it is because object is not protected.
+  /* For a proper exception message and so we can assume that if super unprotect() method
+   * fails, than it is because object is not protected, not because of wrong arguments.
    */
   if (!PyArg_ParseTupleAndKeywords (arguments, keywords,
                                     "O:notify.gc.DebugGCProtector.unprotect",
@@ -793,14 +817,17 @@ DebugGCProtector_unprotect (DebugGCProtector *self, PyObject *arguments, PyObjec
 
 /*- Module initialization ------------------------------------------*/
 
-#define REGISTER_TYPE(dictionary, type, name)                           \
+#define REGISTER_TYPE(dictionary, type, name, error_label)              \
   do                                                                    \
     {                                                                   \
       type.ob_type  = &PyType_Type;                                     \
       type.tp_alloc = PyType_GenericAlloc;                              \
       type.tp_new   = PyType_GenericNew;                                \
-      if (PyType_Ready (&type) == 0)                                    \
-        PyDict_SetItemString (dictionary, name, (PyObject *) &type);    \
+      if (PyType_Ready (&type) == -1                                    \
+          || (PyDict_SetItemString (dictionary, name,                   \
+                                    (PyObject *) &type)                 \
+              == -1))                                                   \
+        goto error_label;                                               \
     }                                                                   \
   while (0)
 
@@ -808,33 +835,75 @@ DebugGCProtector_unprotect (DebugGCProtector *self, PyObject *arguments, PyObjec
 DL_EXPORT (void)
 initgc (void)
 {
-  PyObject *module;
+  PyObject *module            = NULL;
   PyObject *dictionary;
-  PyObject *utilities;
-  PyObject *default_protector;
+  PyObject *utilities         = NULL;
+  PyObject *default_protector = NULL;
 
-  module     = Py_InitModule ("notify.gc", NULL);
+  module = Py_InitModule ("notify.gc", NULL);
+  if (!module)
+    goto error;
+
   dictionary = PyModule_GetDict (module);
+  if (!dictionary)
+    goto error;
 
-  utilities                       = PyImport_ImportModule ("notify.utils");
+  utilities = PyImport_ImportModule ("notify.utils");
+  if (!utilities)
+    goto error;
+
   raise_not_implemented_exception = PyDict_GetItemString (PyModule_GetDict (utilities),
                                                           "raise_not_implemented_exception");
+  if (!raise_not_implemented_exception)
+    {
+      if (!PyErr_Occurred ())
+        {
+          PyErr_SetString (PyExc_ImportError,
+                           ("notify.gc: cannot import "
+                            "raise_not_implemented_exception from notify.utils"));
+        }
 
-  unprotection_exception_type     = PyErr_NewException ("notify.gc.UnprotectionError",
-                                                        PyExc_ValueError, NULL);
-  PyDict_SetItemString (dictionary, "UnprotectionError", unprotection_exception_type);
+      goto error;
+    }
 
-  REGISTER_TYPE (dictionary, AbstractGCProtector_Type, "AbstractGCProtector");
-  REGISTER_TYPE (dictionary, FastGCProtector_Type,     "FastGCProtector");
-  REGISTER_TYPE (dictionary, RaisingGCProtector_Type,  "RaisingGCProtector");
-  REGISTER_TYPE (dictionary, DebugGCProtector_Type,    "DebugGCProtector");
+  Py_DECREF (utilities);
+
+  unprotection_exception_type = PyErr_NewException ("notify.gc.UnprotectionError",
+                                                    PyExc_ValueError, NULL);
+  if (!unprotection_exception_type)
+    goto error;
+
+  if (PyDict_SetItemString (dictionary, "UnprotectionError", unprotection_exception_type) == -1)
+    goto error;
+
+  REGISTER_TYPE (dictionary, AbstractGCProtector_Type, "AbstractGCProtector", error);
+  REGISTER_TYPE (dictionary, FastGCProtector_Type,     "FastGCProtector",     error);
+  REGISTER_TYPE (dictionary, RaisingGCProtector_Type,  "RaisingGCProtector",  error);
+  REGISTER_TYPE (dictionary, DebugGCProtector_Type,    "DebugGCProtector",    error);
 
   default_protector = FastGCProtector_new ();
-  PyDict_SetItemString (AbstractGCProtector_Type.tp_dict, "default", default_protector);
+  if (!default_protector)
+    goto error;
+
+  if (PyDict_SetItemString (AbstractGCProtector_Type.tp_dict, "default", default_protector) == -1)
+    goto error;
+
   Py_DECREF (default_protector);
 
-  PyModule_AddStringConstant (module, "__doc__", MODULE_DOC);
-  PyModule_AddStringConstant (module, "__docformat__", "epytext en");
+  if (PyModule_AddStringConstant (module, "__doc__", MODULE_DOC) == -1)
+    goto error;
+  if (PyModule_AddStringConstant (module, "__docformat__", "epytext en") == -1)
+    goto error;
+
+  return;
+
+ error:
+
+  Py_XDECREF (module);
+  Py_XDECREF (utilities);
+  Py_XDECREF (raise_not_implemented_exception);
+  Py_XDECREF (unprotection_exception_type);
+  Py_XDECREF (default_protector);
 }
 
 

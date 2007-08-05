@@ -910,12 +910,12 @@ class Signal (AbstractSignal):
 
     Signal can have an L{accumulator <AbstractAccumulator>} for values, returned by its
     handlers.  By default, these values are just ignored.
+
+    Note that standard signals cannot be weakly referenced.  For standard signals weak
+    references don’t make much sense anyway.  If you need them, you are probably
+    interested in C{L{CleanSignal}}.
     """
 
-
-    # Note that standard signals cannot be weak-referenced.  Such
-    # references must be a really weird thing to do, so if you really
-    # need them, you should use your own `Signal' subclass.
     __slots__ = ('_handlers', '_blocked_handlers',
                  as_string.__accumulator, as_string.__emission_level)
 
@@ -1139,8 +1139,17 @@ class Signal (AbstractSignal):
 
                 for handler in handlers:
                     # Disconnected while in emission handlers are temporary set to None.
-                    if handler is None or handler in self._blocked_handlers:
-                        might_have_garbage = (handler is None)
+                    if handler is None:
+                        might_have_garbage = True
+                        continue
+
+                    if self.__emission_level < 0:
+                        might_have_garbage = True
+                        break
+
+                    # We need to refetch that blocked handlers list before processing each
+                    # handler, because it may change during emission.
+                    if handler in self._blocked_handlers:
                         continue
 
                     # This somewhat illogical transposition of terms is for speed
@@ -1150,10 +1159,6 @@ class Signal (AbstractSignal):
                         # Handler will be removed in collect_garbage(), don't bother now.
                         might_have_garbage = True
                         continue
-
-                    if self.__emission_level < 0:
-                        might_have_garbage = True
-                        break
 
                     # Another speed optimization, check if we even need that
                     # `handler_value' first.
@@ -1230,6 +1235,8 @@ class CleanSignal (Signal):
     ones are detected instantly.  Clean signals also have a notion of I{parent}, which
     they L{prevent from being garbage-collected <notify.gc>}, but only if there is at
     least one handler.
+
+    Also, unlike plain C{Signal}, C{CleanSignal} allows to weakly reference itself.
     """
 
     __slots__ = (as_string.__parent, '__weakref__')

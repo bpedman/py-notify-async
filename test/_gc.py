@@ -66,15 +66,30 @@ class _GCProtectorTestCase (NotifyTestCase):
         object    = WeaklyReferenceable ()
         reference = weakref.ref (object)
 
+        self.assertEqual (protector.num_active_protections, 0)
+        if isinstance (protector, RaisingGCProtector):
+            self.assertEqual (protector.get_num_object_protections (object), 0)
+            self.assertEqual (protector.num_protected_objects, 0)
+
         self.assertNotEqual (reference (), None)
 
         protector.protect (object)
+
+        self.assertEqual (protector.num_active_protections, 1)
+        if isinstance (protector, RaisingGCProtector):
+            self.assertEqual (protector.get_num_object_protections (object), 1)
+            self.assertEqual (protector.num_protected_objects, 1)
+
         del object
 
         self.collect_garbage ()
         self.assertNotEqual (reference (), None)
 
         protector.unprotect (reference ())
+
+        self.assertEqual (protector.num_active_protections, 0)
+        if isinstance (protector, RaisingGCProtector):
+            self.assertEqual (protector.num_protected_objects, 0)
 
         self.collect_garbage ()
         self.assertEqual (reference (), None)
@@ -84,8 +99,25 @@ class _GCProtectorTestCase (NotifyTestCase):
         object    = WeaklyReferenceable ()
         reference = weakref.ref (object)
 
+        self.assertEqual (protector.num_active_protections, 0)
+        if isinstance (protector, RaisingGCProtector):
+            self.assertEqual (protector.get_num_object_protections (object), 0)
+            self.assertEqual (protector.num_protected_objects, 0)
+
         protector.protect (object)
+
+        self.assertEqual (protector.num_active_protections, 1)
+        if isinstance (protector, RaisingGCProtector):
+            self.assertEqual (protector.get_num_object_protections (object), 1)
+            self.assertEqual (protector.num_protected_objects, 1)
+
         protector.protect (object)
+
+        self.assertEqual (protector.num_active_protections, 2)
+        if isinstance (protector, RaisingGCProtector):
+            self.assertEqual (protector.get_num_object_protections (object), 2)
+            self.assertEqual (protector.num_protected_objects, 1)
+
         del object
 
         self.collect_garbage ()
@@ -93,10 +125,18 @@ class _GCProtectorTestCase (NotifyTestCase):
 
         protector.unprotect (reference ())
 
+        self.assertEqual (protector.num_active_protections, 1)
+        if isinstance (protector, RaisingGCProtector):
+            self.assertEqual (protector.num_protected_objects, 1)
+
         self.collect_garbage ()
         self.assertNotEqual (reference (), None)
 
         protector.unprotect (reference ())
+
+        self.assertEqual (protector.num_active_protections, 0)
+        if isinstance (protector, RaisingGCProtector):
+            self.assertEqual (protector.num_protected_objects, 0)
 
         self.collect_garbage ()
         self.assertEqual (reference (), None)
@@ -120,6 +160,19 @@ class RaisingGCProtectorTestCase (_GCProtectorTestCase):
 
     def test_protection_2 (self):
         self._do_test_double_protection (RaisingGCProtector ())
+
+    def test_protection_3 (self):
+        protector = RaisingGCProtector ()
+        a         = 1
+        b         = 2
+
+        self.assertRaises (ValueError, lambda: protector.unprotect (a))
+
+        protector.protect (a)
+        self.assertRaises (ValueError, lambda: protector.unprotect (b))
+
+        protector.unprotect (a)
+        self.assertRaises (ValueError, lambda: protector.unprotect (a))
 
 
 
