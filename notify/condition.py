@@ -848,11 +848,10 @@ class _Binary (AbstractCondition):
         on_usage_change   = self.__on_usage_change
         self.__condition1 = weakref.ref (condition1, on_usage_change)
         self.__condition2 = weakref.ref (condition2, on_usage_change)
+        self._term_state  = condition1.get () + 2 * condition2.get ()
 
         condition1.changed.connect (self._on_term1_change)
         condition2.changed.connect (self._on_term2_change)
-
-        self._term_state = condition1.get () + 2 * condition2.get ()
 
 
     # For efficiency reasons, descendants must override fully.

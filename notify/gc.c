@@ -23,6 +23,24 @@
 #include <Python.h>
 
 
+/* See Python documentation for why it prevents rare and very obscure bug.  Need to
+ * backport for older Python versions.
+ */
+#ifndef Py_CLEAR
+#define Py_CLEAR(object)                                \
+  do                                                    \
+    {                                                   \
+      if (object)                                       \
+        {                                               \
+          PyObject *temp = (PyObject *) (object);       \
+          (object) = NULL;                              \
+          Py_DECREF (temp);                             \
+        }                                               \
+    }                                                   \
+  while (0)
+#endif
+
+
 
 /*- Type forward declarations --------------------------------------*/
 
@@ -598,7 +616,7 @@ RaisingGCProtector_init (RaisingGCProtector *self, PyObject *arguments, PyObject
                                     no_keywords))
     return -1;
 
-  Py_XDECREF (self->protected_objects_dict);
+  Py_CLEAR (self->protected_objects_dict);
   self->protected_objects_dict = PyDict_New ();
 
   if (!self->protected_objects_dict)
@@ -611,7 +629,7 @@ RaisingGCProtector_init (RaisingGCProtector *self, PyObject *arguments, PyObject
 static void
 RaisingGCProtector_dealloc (RaisingGCProtector *self)
 {
-  Py_XDECREF (self->protected_objects_dict);
+  Py_CLEAR (self->protected_objects_dict);
   self->ob_type->tp_free ((PyObject *) self);
 }
 

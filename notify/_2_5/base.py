@@ -276,15 +276,15 @@ def changes_frozen (self):
 
     # Note: keep in sync with with_changes_frozen() in `notify/base.py'.
 
-    if self._AbstractValueObject__freeze_flag is None:
-        original_value                         = self.get ()
-        self._AbstractValueObject__freeze_flag = True
+    if self._AbstractValueObject__flags >= 0:
+        original_value                    = self.get ()
+        self._AbstractValueObject__flags -= 4
 
         try:
             yield original_value
         finally:
-            self._AbstractValueObject__freeze_flag = None
-            new_value                              = self.get ()
+            self._AbstractValueObject__flags += 4
+            new_value                         = self.get ()
 
             if new_value != original_value:
                 self._value_changed (new_value)

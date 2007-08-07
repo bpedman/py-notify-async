@@ -73,7 +73,7 @@ class AbstractValueObject (object):
     _additional_description
 
     @group Internals:
-    __get_changed_signal, __to_string, __freeze_flag, __signal
+    __get_changed_signal, __to_string, __flags, __signal
 
     @sort:
     get, set, mutable, changed,
@@ -85,10 +85,19 @@ class AbstractValueObject (object):
     _additional_description
     """
 
-    __slots__ = ('__weakref__', as_string.__signal, as_string.__freeze_flag)
+    __slots__ = ('__weakref__', as_string.__signal, as_string.__flags)
 
 
-    # Implementation note: `__freeze_flag' can be None (not frozen) or True (frozen.)
+    # Implementation note: `__flags' are a sum of following values:
+    # * 0 if there is no signal, 1 if `__signal' is an `AbstractSignal' instance, 2 if it
+    #   is a reference to one;
+    # * 0 if the object is not frozen, -4 if it is.
+    #
+    # The reason for the first term is to save one (slow) isinstance() call per `changed'
+    # emission.  The second term is actually needed anyway, it is only `weird', since we
+    # need to combine with the first.
+    #
+    # We rely on Python's caching of small integers, otherwise this does waste memory.
 
 
     def __init__(self):
@@ -103,8 +112,8 @@ class AbstractValueObject (object):
         # For optimization reasons, `__signal' is created only when it is needed for the
         # first time.  This may improve memory consumption if there are many unused
         # properties.
-        self.__signal      = None
-        self.__freeze_flag = None
+        self.__signal = None
+        self.__flags  = 0
 
 
     def get (self):
@@ -163,12 +172,18 @@ class AbstractValueObject (object):
 
 
     def __get_changed_signal (self):
-        if self.__signal is not None:
-            signal = self.__signal
-            if not isinstance (signal, AbstractSignal):
-                signal = signal ()
+        flags = self.__flags
+        if flags & 3:
+            if flags & 1:
+                return self.__signal
+            else:
+                return self.__signal ()
+
+        signal, self.__signal = self._create_signal ()
+        if self.__signal is signal:
+            self.__flags += 1
         else:
-            signal, self.__signal = self._create_signal ()
+            self.__flags += 2
 
         return signal
 
@@ -230,7 +245,8 @@ class AbstractValueObject (object):
         """
 
         if self.__signal is signal:
-            self.__signal = None
+            self.__signal  = None
+            self.__flags  &= ~3
             return True
         else:
             return False
@@ -542,7 +558,7 @@ class AbstractValueObject (object):
         method I{must not} be called from outside, it is for class descendants only.
 
         To follow general contract of the class, this method must be called only when the
-        value indeed changes, i.e when C{new_value} is not equal to C{self.get()}.
+        value indeed changes, i.e. when C{new_value} is not equal to C{self.get()}.
         C{_value_changed} itself does not check it and so this check (if needed) is up to
         implementing descendant class.
 
@@ -555,13 +571,12 @@ class AbstractValueObject (object):
         @returns:         Always C{True}.
         """
 
-        if self.__freeze_flag is None:
-            signal = self.__signal
-            if signal is not None:
-                if isinstance (signal, AbstractSignal):
-                    signal.emit (new_value)
-                else:
-                    signal ().emit (new_value)
+        flags = self.__flags
+        if flags > 0:
+            if flags == 1:
+                self.__signal.emit (new_value)
+            else:
+                self.__signal ().emit (new_value)
 
         return True
 
@@ -579,7 +594,7 @@ class AbstractValueObject (object):
         @see:   C{L{changes_frozen}}
         """
 
-        return self.__freeze_flag is not None
+        return self.__flags < 0
 
 
     def with_changes_frozen (self, callback, *arguments):
@@ -620,15 +635,15 @@ class AbstractValueObject (object):
 
         # Note: keep in sync with changes_frozen() in `notify/_2_5/base.py'.
 
-        if self.__freeze_flag is None:
-            original_value     = self.get ()
-            self.__freeze_flag = True
+        if self.__flags >= 0:
+            original_value  = self.get ()
+            self.__flags   -= 4
 
             try:
                 return callback (*arguments)
             finally:
-                self.__freeze_flag = None
-                new_value          = self.get ()
+                self.__flags += 4
+                new_value     = self.get ()
 
                 if new_value != original_value:
                     self._value_changed (new_value)

@@ -59,6 +59,49 @@ class BaseConditionTestCase (NotifyTestCase):
         self.assert_(not if_else_condition.mutable)
 
 
+    # Main purpose of this is to test that different values are always coerced to
+    # True/False only state.
+    def test_set (self):
+        self.results = []
+
+        condition = Condition (False)
+        condition.changed.connect(self.simple_handler)
+
+        condition.state = True
+        self.assertEqual (condition.state,  True)
+        self.assertEqual (condition.get (), True)
+
+        condition.state = 1
+        self.assertEqual (condition.state,  True)
+        self.assertEqual (condition.get (), True)
+
+        condition.state = 0
+        self.assertEqual (condition.state,  False)
+        self.assertEqual (condition.get (), False)
+
+        condition.state = False
+        self.assertEqual (condition.state,  False)
+        self.assertEqual (condition.get (), False)
+
+        condition.set ('yes')
+        self.assertEqual (condition.state,  True)
+        self.assertEqual (condition.get (), True)
+
+        condition.set (True)
+        self.assertEqual (condition.state,  True)
+        self.assertEqual (condition.get (), True)
+
+        condition.set (False)
+        self.assertEqual (condition.state,  False)
+        self.assertEqual (condition.get (), False)
+
+        condition.set (None)
+        self.assertEqual (condition.state,  False)
+        self.assertEqual (condition.get (), False)
+
+        self.assert_results (True, False, True, False)
+
+
 
 class LogicConditionTestCase (NotifyTestCase):
 

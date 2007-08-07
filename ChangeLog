@@ -1,3 +1,23 @@
+2007-08-07  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/condition.py (_Binary.__init__): Connect to terms after
+	evaluating `_term_state', since creating bindings can, in
+	principle, invoke arbitrary code.
+
+	* notify/base.py (AbstractValueObject): Rename and change meaning
+	of `__freeze_flag' slot to `__flags'.  Adjust many methods.  Also
+	incorporate whether `__signal' is set and whether it is an
+	`AbstractSignal' or a reference to it to `__flags' (speed
+	optimization.)
+	* notify/_2_5/base.py (changes_frozen): Adjust accordingly.
+
+	* test/condition.py (BaseConditionTestCase.test_set): New test.
+
+	* notify/gc.c (Py_CLEAR): Define unless already defined (in newer
+	Python versions.)
+	(RaisingGCProtector_init): Use it.
+	(RaisingGCProtector_dealloc): Likewise.
+
 2007-08-05  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* test/_gc.py (_GCProtectorTestCase._do_test_protection): Test
