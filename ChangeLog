@@ -1,3 +1,14 @@
+2007-08-11  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* test/base.py (BaseInternalsTestCase): New test case.
+
+2007-08-10  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* docs/tutorial.txt: Miscellaneous grammar, style and content
+	fixes.
+
+	* notify/base.py (AbstractValueObject._value_changed): Simplify.
+
 2007-08-07  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/condition.py (_Binary.__init__): Connect to terms after

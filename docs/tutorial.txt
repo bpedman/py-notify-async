@@ -12,30 +12,31 @@ pattern`_.  Most important included concepts are *signals*,
 *conditions* and *variables*.
 
 At the core of the package are *signals*.  They are lists of
-callables, termed *handlers*.  Signals can be emitted in which case
+callables, termed *handlers*.  Signals can be emitted, in which case
 all connected handlers are called in turn.  The idea here is
 separation of event *notifier* and *listeners*: when you emit a
-signal, you needn’t know who listens to it, i.e. what handlers are
-connected to it.
+signal, you don’t need to know who listens to it, i.e. what handlers
+are connected to it.
 
 You may have encountered signals elsewhere, since they are quite a
 widespread construct.  Among others, there are signals in `GTK+`_ (and
 hence in PyGTK_), in Boost_, `sigc++`_ and so on.  They all have
 certain similarity and provide more or less the same functionality.
-Major distinction of Py-notify signals *are not typed*, following base
-Python design principle.  You can pass any argument to a function and
-so you can pass any arguments when emitting a signal.  However,
-function can fail with that argument, and so can signal handlers.
+The major distinction is that Py-notify signals *are not typed*,
+following base Python design principle.  You can pass any argument to
+a function and so you can pass any arguments when emitting a signal.
+However, function can fail with that argument, and so can signal
+handlers.
 
 On top of the signals two other main concepts of Py-notify are build:
 *conditions* and *variables*.
 
 Conditions are boolean values paired with one signal, which is emitted
 when condition *state* changes.  They can be mutable (settable by you)
-or not.  There is an all-purpose ``Condition`` class, instances of
-which are mutable.  But if you need special functionality, like
-retrieving state using certain function, you can easily derive a new
-condition type.
+or not, which state is computed in some way.  There is an all-purpose
+``Condition`` class, instances of which are mutable.  But if you need
+special functionality, like retrieving state using certain function,
+you can easily derive a new condition type.
 
 Conditions of any type can be combined together using logic operators.
 The result is yet again a condition, with its own ‘changed’ signal.
@@ -107,7 +108,8 @@ Since Py-notify signals are not typed, there is really not much to
 pass to constructors (except for optional *accumulator* which is
 described below.)  Next we connect our three functions as handlers to
 the signal.  Note that handlers only need to be callable, they all
-just happen to be functions in our case.
+just happen to be functions in our case.  In particular, methods can
+be used as handlers too.
 
 Final four lines are the most interesting.  The four statements are
 nothing else than *emissions* of the signal.  You can as well call
@@ -139,7 +141,7 @@ matter.
 
 There is certain notifier which provides a well-defined protocol for
 its notification—in our case, the ``Signal`` object.  There can be
-listeners for those notifications.  Notifier doesn’t even need to know
+listeners for those notifications.  Notifier doesn’t need to know
 about listeners, as well as listeners don’t need to know anything
 except the protocol.  In particular, notifier can reside in a library
 and listeners in client code.
@@ -163,7 +165,7 @@ handler again.
 Comparison of handlers done by signals is less efficient than
 comparison of identifiers.  However, it is simpler to use (no need to
 store identifier around) and is more in line with Python ideology.
-Besides, handler disconnection should be quite rare to not bother
+Besides, handler disconnection should be rare enough to not bother
 about efficiency anyway.
 
 Here is a simple example::
@@ -176,14 +178,14 @@ Here is a simple example::
     signal = Signal ()
 
     signal.connect (note)
-    signal (1)
+    signal ('foo')
 
     signal.disconnect (note)
-    signal (2)
+    signal ('bar')
 
 And the output is::
 
-    emitted with 1
+    emitted with foo
 
 Signal is emitted twice, but ``note()`` handler is only called during
 the first emission.  That is because it is disconnected right before
@@ -212,11 +214,11 @@ This simple program gives::
     5 + 10 = 15
 
 Handlers with arguments can be disconnected as well.  You just need to
-pass the same (or *equal* in Python sense) arguments to
+pass the same (more exactly *equal*, in Python sense) arguments to
 ``disconnect()`` method.  For instance, in the example above the only
-handler can be disconnected with ``disconnect (sum, 5)`` code.
+handler can be disconnected with ``disconnect (sum, 5)`` code.
 
-Also important is concept of *blocking* handlers.  Blocked handlers
+Another important concept is *blocking* handlers.  Blocked handlers
 remain in the list of connected handlers, but are skipped when
 emission happens.  Of course, to make blocking useful, handlers can be
 later unblocked.  A handler can be blocked several times, but then it
@@ -224,7 +226,7 @@ needs to be unblocked exactly the same number of times to become
 active again.
 
 Blocking is less common than connecting/disconnecting handlers, but
-can be used to e.g. prevent reentrance.  For this, the handler would
+can be used e.g. to prevent reentrance.  For this, the handler would
 just block itself, emit signal once more, and then unblock.
 
 
@@ -300,7 +302,9 @@ consider that handler set has changed.  Removing line
 Now −10 becomes fine too, since the other two handlers accept it.  As
 before, main idea of signals plays its role: emitter doesn’t need to
 know about way of handling.  Here, without changing emission part in
-any way, we have changed the result the program gives.
+any way, we have changed the result the program gives.  This is
+especially useful in case set of handlers is determined by some sort
+of input, e.g. in a GUI or from a file.
 
 Other predefined accumulators are:
 
@@ -328,7 +332,8 @@ Conditions and variables are pretty similar, so let’s have a look at
 both of them at once.  (In fact they even share a common
 ``AbstractValueObject`` base.)  Both concepts are very similar to
 specific signal instances that are emitted *only* when the associated
-boolean state (or value) changes.
+boolean state (or value) changes, though they are not signals, only
+based on them.
 
 Here is a simple example featuring variables::
 
@@ -372,12 +377,13 @@ handler.  Statement ``x.store (handler)`` is completely identical to
     x.changed.connect (handler)
 
 It is sometimes needed to call the handler with some initial state or
-value.  ``store()`` provides a standard way to call a function with
-current state/value and arange to have it called again when
-state/value changes.
+value.  ``store()`` provides a standard way to call a function or
+method with current state/value and arange to have it called again
+when state/value changes.
 
 As with normal handler connection, you can pass additional arguments
-to ``store()`` which will be forwarded to the handler.
+to ``store()`` which will be forwarded to the handler.  If you need to
+abort storing, just disconnect the handler.
 
 
 
@@ -424,10 +430,9 @@ of the box.
     have_bar.state = True
     print_states ()
 
-To make a compound conditions you should just use bit operators
-(``~``, ``&``, ``|`` and ``^``) instead of logic operators, ``not``,
-``and``, ``or`` and ``xor`` correspondingly (last is missing from
-Python.)
+To make a compound conditions, use bit operators (``~``, ``&``, ``|``
+and ``^``) instead of logic operators, ``not``, ``and``, ``or`` and
+``xor`` correspondingly (last is missing from Python.)
 
 This gives the following result::
 
@@ -443,6 +448,10 @@ twice, despite the many changes in states of its *term* conditions.
 As for any other condition (or variable), the signal is only emitted
 when the state has indeed changed, not just when it might have
 changed.
+
+Compound conditions are not mutable, i.e. you can arbitrarily set
+their state.  Instead, the state is computed from that of term
+conditions.
 
 
 
@@ -549,11 +558,9 @@ least one handler is connected (in our case it is ``print_state()``.)
 
 In general, you can be sure that conditions and variables will not be
 deleted as long as they are used in some common sense.  And they
-*will* be deleted when they become unused [#]_, so there is no memory
-leak here.
-
-.. [#] Deletion may happen in a garbage collector run, so it will not
-       necessarily happen instantly.
+*will* be deleted when they become unused, so there is no memory leak
+here.  Deletion may happen in a garbage collector run, so it will not
+necessarily be instant.
 
 
 
@@ -590,7 +597,7 @@ Here is a short demonstration::
 
     variable.with_changes_frozen (do_change)
 
-It will print only 3, because assignment of 2 gets overriden by the
+It will only print 3, because assignment of 2 gets overriden by the
 time variable is thawed.
 
 The syntax above is not very nice, but I decided that providing

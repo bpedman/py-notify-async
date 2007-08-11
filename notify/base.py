@@ -572,11 +572,10 @@ class AbstractValueObject (object):
         """
 
         flags = self.__flags
-        if flags > 0:
-            if flags == 1:
-                self.__signal.emit (new_value)
-            else:
-                self.__signal ().emit (new_value)
+        if flags == 1:
+            self.__signal.emit (new_value)
+        elif flags == 2:
+            self.__signal ().emit (new_value)
 
         return True
 

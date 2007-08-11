@@ -31,14 +31,51 @@ if __name__ == '__main__':
 
 import unittest
 
-from notify.base     import AbstractValueObject
-from notify.variable import AbstractVariable, Variable
-from test.__common   import NotifyTestCase
+from notify.base      import AbstractValueObject
+from notify.condition import Condition
+from notify.variable  import AbstractVariable, Variable
+from test.__common    import NotifyTestCase
 
 
 
-# Note: since base class (AbstractValueObject) is abstract, we actually test variables.
-# However, tested functionality comes from the base class.
+# Note: since base class (AbstractValueObject) is abstract, we actually test variables and
+# conditions.  However, tested functionality comes from the base class.
+
+class BaseInternalsTestCase (NotifyTestCase):
+
+    # A half-hearted attempt to test internal `__flags' slot of `AbstractValueObject'
+    # class.  We do several things that change it and test that `changed' signal is still
+    # emitted fine.
+    def test_internals_1 (self):
+        self.results = []
+
+        condition     = Condition (False)
+        not_condition = ~condition
+
+        self.assert_(not not_condition._has_signal ())
+
+        not_condition.changed.connect (self.simple_handler)
+        self.assert_(not_condition._has_signal ())
+
+        def set_state_true ():
+            condition.state = True
+
+        condition.with_changes_frozen (set_state_true)
+
+        condition.state = False
+
+        not_condition.changed.disconnect (self.simple_handler)
+        self.collect_garbage ()
+        self.assert_(not not_condition._has_signal ())
+
+        not_condition.changed.connect (self.simple_handler)
+        self.assert_(not_condition._has_signal ())
+
+        condition.state = True
+
+        self.assert_results (False, True, False)
+
+
 
 class BaseWithChangesFrozenTestCase (NotifyTestCase):
 
