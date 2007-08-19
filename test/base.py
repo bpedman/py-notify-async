@@ -251,6 +251,10 @@ class BaseDerivationTestCase (NotifyTestCase):
         DerivedType2 ().this_attribute_isnt_declared_but_there_is_a_dict = None
 
 
+    def test_derivation_module (self):
+        self.assertEqual (Condition.derive_type ('Test').__module__, type (self).__module__)
+
+
 
 import __future__
 

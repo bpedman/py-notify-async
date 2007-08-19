@@ -1,3 +1,13 @@
+2007-08-19  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* test/base.py (BaseDerivationTestCase.test_derivation_module):
+	New test.
+
+	* notify/base.py (AbstractValueObject.derive_type): Use metaclass
+	to create new type, do not hardcode to `type'.  Get caller's
+	module name from call stack and set `__module__' attribute on new
+	type to it, if possible.
+
 2007-08-11  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* test/base.py (BaseInternalsTestCase): New test case.

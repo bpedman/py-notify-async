@@ -32,6 +32,8 @@ __docformat__ = 'epytext en'
 __all__       = ('AbstractValueObject',)
 
 
+import sys
+
 from types           import NoneType
 
 from notify.mediator import AbstractMediator
@@ -796,10 +798,22 @@ class AbstractValueObject (object):
                 else:
                     dictionary['__slots__'] += tuple (value[1])
 
+        metaclass = dictionary.get ('__metaclass__', type (cls))
+        new_type  = metaclass (new_class_name, (cls,), dictionary)
+
         try:
-            return type (new_class_name, (cls,), dictionary)
-        finally:
-            del dictionary
+            raise Exception
+        except Exception:
+            try:
+                # We try to pretend that the new type is created by the caller module, not
+                # by `notify.base'.  That will give more helpful __repr__ result.
+                traceback           = sys.exc_info () [2]
+                new_type.__module__ = traceback.tb_frame.f_back.f_globals['__name__']
+            except RuntimeError:
+                # We can do nothing, ignore.
+                pass
+
+        return new_type
 
 
     def _generate_derived_type_dictionary (cls, options):
