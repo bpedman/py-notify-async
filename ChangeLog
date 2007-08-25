@@ -1,3 +1,9 @@
+2007-08-25  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* version: Release 0.1.12.
+
+	* NEWS: Update.
+
 2007-08-19  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* test/base.py (BaseDerivationTestCase.test_derivation_module):

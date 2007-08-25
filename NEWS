@@ -1,3 +1,12 @@
+--- New in Py-notify 0.1.12 ------------------------------------------
+
+* New method AbstractVariable.transform().
+
+* Some bugfixes and code improvements.
+
+* 8 new unit tests (155/177 in total.)
+
+
 --- New in Py-notify 0.1.11 ------------------------------------------
 
 * Major speed optimization in signal emission.  Now all benchmarks run
