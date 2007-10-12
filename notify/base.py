@@ -38,7 +38,7 @@ from types           import NoneType
 
 from notify.mediator import AbstractMediator
 from notify.signal   import AbstractSignal, Signal
-from notify.utils    import is_callable, is_valid_identifier, mangle_identifier, as_string, \
+from notify.utils    import is_callable, is_valid_identifier, mangle_identifier, \
                             raise_not_implemented_exception
  
 try:
@@ -87,7 +87,7 @@ class AbstractValueObject (object):
     _additional_description
     """
 
-    __slots__ = ('__weakref__', as_string.__signal, as_string.__flags)
+    __slots__ = ('__weakref__', '__signal', '__flags')
 
 
     # Implementation note: `__flags' are a sum of following values:

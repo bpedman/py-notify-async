@@ -56,7 +56,7 @@ __docformat__ = 'epytext en'
 __all__       = ('AbstractMediator', 'BooleanMediator', 'FunctionalMediator')
 
 
-from notify.utils import is_callable, as_string, raise_not_implemented_exception
+from notify.utils import is_callable, raise_not_implemented_exception
 
 
 
@@ -231,7 +231,7 @@ class BooleanMediator (AbstractMediator):
         ... mediator.back_value    (15)       == 'apple'
     """
 
-    __slots__ = (as_string.__true_value, as_string.__false_value, as_string.__fallback)
+    __slots__ = ('__true_value', '__false_value', '__fallback')
 
 
     def __init__(self, true_value = True, false_value = False, fallback = None):
@@ -284,7 +284,7 @@ class FunctionalMediator (AbstractMediator):
     (actually, anything callable.)
     """
 
-    __slots__ = (as_string.__forward_function, as_string.__back_function, as_string.__arguments)
+    __slots__ = ('__forward_function', '__back_function', '__arguments')
 
 
     def __init__(self, forward_function = None, back_function = None, *arguments):
@@ -338,7 +338,7 @@ def _identity (value, *ignored_arguments):
 
 class _ReverseMediator (AbstractMediator):
 
-    __slots__ = (as_string.__wrapped_mediator)
+    __slots__ = ('__wrapped_mediator')
 
 
     def __init__(self, wrapped_mediator):

@@ -1,3 +1,14 @@
+2007-10-12  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/base.py:
+	* notify/bind.py:
+	* notify/condition.py:
+	* notify/mediator.py:
+	* notify/signal.py:
+	* notify/utils.py:
+	* notify/variable.py: Don't use `as_string'.  Apparently it is
+	almost never needed, doh X-(
+
 2007-08-25  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* version: Release 0.1.12.

@@ -39,7 +39,7 @@ import weakref
 from notify.base   import AbstractValueObject
 from notify.gc     import AbstractGCProtector
 from notify.signal import CleanSignal
-from notify.utils  import is_callable, as_string, raise_not_implemented_exception, DummyReference
+from notify.utils  import is_callable, raise_not_implemented_exception, DummyReference
 
 
 
@@ -271,7 +271,7 @@ class AbstractStateTrackingCondition (AbstractCondition):
     internal ones inherit C{L{AbstractCondition}} directly instead.
     """
 
-    __slots__ = (as_string.__state)
+    __slots__ = ('__state')
 
 
     def __init__(self, initial_state):
@@ -448,7 +448,7 @@ class PredicateCondition (AbstractStateTrackingCondition):
     conditions remember the way to evaluate their state.
     """
 
-    __slots__ = (as_string.__predicate)
+    __slots__ = ('__predicate')
 
 
     def __init__(self, predicate, initial_object):
@@ -525,7 +525,7 @@ class WatcherCondition (AbstractStateTrackingCondition):
     """
 
 
-    __slots__ = (as_string.__watched_condition)
+    __slots__ = ('__watched_condition')
 
 
     def __init__(self, condition_to_watch = None):
@@ -773,7 +773,7 @@ AbstractCondition.FALSE = _False ()
 class _Not (AbstractCondition):
 
     # We need to save our state, since `negated_condition' may be gc-collected.
-    __slots__ = (as_string.__state, as_string.__negated_condition)
+    __slots__ = ('__state', '__negated_condition')
 
 
     def __init__(self, negated_condition):
@@ -839,7 +839,7 @@ class _Not (AbstractCondition):
 
 class _Binary (AbstractCondition):
 
-    __slots__ = (as_string.__condition1, as_string.__condition2, '_term_state')
+    __slots__ = ('__condition1', '__condition2', '_term_state')
 
 
     def __init__(self, condition1, condition2):
@@ -983,7 +983,7 @@ class _Xor (_Binary):
 
 class _IfElse (AbstractCondition):
 
-    __slots__ = (as_string.__if, as_string.__then, as_string.__else, as_string.__term_state)
+    __slots__ = ('__if', '__then', '__else', '__term_state')
 
 
     __TERM_STATE_TO_SELF_STATE = (False, True, False, True, False, False, True, True)

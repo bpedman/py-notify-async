@@ -37,13 +37,18 @@ Convert any attribute to its name as string.  Main use of this utility object is
 perform Python ‘private’ identifier mangling.  E.g. you can write::
 
     class MyClass (object):
-        __slots__ = (as_string.__x, as_string.__y)
-        def __init__(self):
-            self.__x, self__y = 0, 0
+        __slots__ = ('__x')
+        def get_x (self):
+            if hasattr (self, as_string.__x):
+                return self.__x
 
 Advantage is that you don’t have to do mangling ‘by hands’ and hence there is less chance
 for a typing error.  Furthermore, this code does not require changes if you change
 C{MyClass} name to anything else, whereas custom mangling does.
+
+However, usefulness of ‘as_string’ is still doubtful.  When I wrote it, I didn’t know one
+could just write ``__slots__ = ('__x')``, I thought it needed to be
+``__slots__ = ('_MyClass__x')``.  Imagine...
 """
 
 __docformat__ = 'epytext en'
@@ -234,7 +239,7 @@ class DummyReference (object):
     way.
     """
 
-    __slots__ = (as_string.__object)
+    __slots__ = ('__object')
 
 
     def __init__(self, object):

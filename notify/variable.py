@@ -41,7 +41,7 @@ from notify.base      import AbstractValueObject
 from notify.condition import AbstractStateTrackingCondition
 from notify.gc        import AbstractGCProtector
 from notify.signal    import CleanSignal
-from notify.utils     import is_callable, as_string
+from notify.utils     import is_callable
 
 
 
@@ -121,7 +121,7 @@ class AbstractValueTrackingVariable (AbstractVariable):
     mutable variable implementation, see C{L{Variable}} class.
     """
 
-    __slots__ = (as_string.__value)
+    __slots__ = ('__value')
 
 
     def __init__(self, initial_value = None):
@@ -373,7 +373,7 @@ class WatcherVariable (AbstractValueTrackingVariable):
     @see:  condition.WatcherCondition
     """
 
-    __slots__ = (as_string.__watched_variable)
+    __slots__ = ('__watched_variable')
 
 
     def __init__(self, variable_to_watch = None):
@@ -507,7 +507,7 @@ class WatcherVariable (AbstractValueTrackingVariable):
 
 class _PredicateOverVariable (AbstractStateTrackingCondition):
 
-    __slots__ = (as_string.__predicate, as_string.__variable)
+    __slots__ = ('__predicate', '__variable')
 
 
     def __init__(self, predicate, variable):
@@ -553,7 +553,7 @@ class _PredicateOverVariable (AbstractStateTrackingCondition):
 
 class _VariableTransformation (AbstractValueTrackingVariable):
 
-    __slots__ = (as_string.__transformer, as_string.__variable)
+    __slots__ = ('__transformer', '__variable')
 
 
     def __init__(self, transformer, variable):
