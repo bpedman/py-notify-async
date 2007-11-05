@@ -60,6 +60,7 @@ __all__       = ('is_callable', 'is_valid_identifier', 'mangle_identifier',
 
 import re
 import sys
+from keyword import iskeyword
 
 
 
@@ -83,8 +84,9 @@ def is_valid_identifier (identifier):
     @rtype:            C{bool}
     """
 
-    return (isinstance (identifier, basestring)
-            and re.match ('^[_a-zA-Z][_a-zA-Z0-9]*$', identifier) is not None)
+    return (isinstance (identifier, StringType)
+            and re.match ('^[_a-zA-Z][_a-zA-Z0-9]*$', identifier) is not None
+            and not iskeyword (identifier))
 
 
 def mangle_identifier (class_name, identifier):
