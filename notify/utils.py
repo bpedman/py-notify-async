@@ -84,7 +84,7 @@ def is_valid_identifier (identifier):
     @rtype:            C{bool}
     """
 
-    return (isinstance (identifier, StringType)
+    return (isinstance (identifier, basestring)
             and re.match ('^[_a-zA-Z][_a-zA-Z0-9]*$', identifier) is not None
             and not iskeyword (identifier))
 
