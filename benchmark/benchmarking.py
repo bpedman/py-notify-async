@@ -33,7 +33,7 @@ from types        import ClassType, ModuleType, TypeType
 
 import notify
 
-from notify.utils import raise_not_implemented_exception
+from notify.utils import raise_not_implemented_exception, StringType
 
 
 __all__ = ('main', 'load_benchmarks', 'Benchmark', 'BenchmarkSuite', 'BenchmarkProgram')
@@ -177,7 +177,7 @@ class BenchmarkSuite (object):
 class BenchmarkProgram (object):
 
     def __init__(self, object = '__main__', default_benchmark_name = None):
-        if isinstance (object, basestring):
+        if isinstance (object, StringType):
             self.__object = __import__(object)
             for name_part in object.split ('.') [1:]:
                 self.__object = getattr (self.__object, name_part)

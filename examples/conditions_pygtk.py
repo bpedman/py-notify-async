@@ -76,7 +76,7 @@ class Entry (gtk.Entry):
     __Text = AbstractValueTrackingVariable.derive_type ('__Text', object = 'entry',
                                                         getter = gtk.Entry.get_text,
                                                         setter = gtk.Entry.set_text,
-                                                        allowed_value_types = basestring)
+                                                        allowed_value_types = StringType)
 
 
     def __init__(self):

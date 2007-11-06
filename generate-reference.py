@@ -42,14 +42,14 @@ if not os.path.isfile (os.path.join ('notify', 'all.py')):
               % (sys.argv[0], os.path.join ('notify', 'all.py')))
 
 
-print 'Building extension...'
+print ('Building extension...')
 
 # FIXME: Is that portable enough?
 if os.system ('python setup.py build_ext') != 0:
     sys.exit (1)
 
 
-print 'Invoking epydoc...'
+print ('Invoking epydoc...')
 
 
 output_directory = os.path.join ('docs', 'reference')
@@ -74,7 +74,7 @@ sys.argv.append ('notify')
 epydoc.cli.cli ()
 
 
-print 'Post-processing generated HTML files...'
+print ('Post-processing generated HTML files...')
 
 
 prompt_regex = re.compile ('<span class="(py-prompt|py-more)">([^<]*)</span>')
@@ -143,7 +143,7 @@ for root, directories, filenames in os.walk (output_directory):
             file.close ()
 
 
-print "Reference has been generated in '%s'" % output_directory
+print ("Reference has been generated in '%s'" % output_directory)
 print ("Point your browser to %s"
        % urlunsplit (('file', None,
                       os.path.join (os.path.abspath (output_directory), 'index.html'),

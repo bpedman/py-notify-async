@@ -34,6 +34,7 @@ import unittest
 
 from notify.variable import AbstractVariable, AbstractValueTrackingVariable, Variable, \
                             WatcherVariable
+from notify.utils    import StringType
 from test.__common   import NotifyTestCase
 
 
@@ -281,7 +282,7 @@ class VariableDerivationTestCase (NotifyTestCase):
 
     def test_derivation_6 (self):
         StringVariable = Variable.derive_type ('StringVariable',
-                                               allowed_value_types = basestring,
+                                               allowed_value_types = StringType,
                                                setter = lambda variable, value: None)
 
         variable = StringVariable ('')

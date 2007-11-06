@@ -55,7 +55,8 @@ __docformat__ = 'epytext en'
 __all__       = ('is_callable', 'is_valid_identifier', 'mangle_identifier',
                  'as_string',
                  'raise_not_implemented_exception',
-                 'DummyReference')
+                 'execute',
+                 'DummyReference', 'StringType')
 
 
 import re
@@ -84,7 +85,7 @@ def is_valid_identifier (identifier):
     @rtype:            C{bool}
     """
 
-    return (isinstance (identifier, basestring)
+    return (isinstance (identifier, StringType)
             and re.match ('^[_a-zA-Z][_a-zA-Z0-9]*$', identifier) is not None
             and not iskeyword (identifier))
 
@@ -229,6 +230,12 @@ def _find_declaration_classes (_class, function_name):
         return [_class]
 
 
+if sys.version_info[0] >= 3:
+    execute = eval ('exec')
+else:
+    from notify._2_x import execute
+
+
 
 class DummyReference (object):
 
@@ -270,6 +277,12 @@ class DummyReference (object):
 
     def __str__(self):
         return '<%s at 0x%x; to %s>' % (self.__class__.__name__, id (self), self.__object)
+
+
+if sys.version_info[0] >= 3:
+    StringType = str
+else:
+    StringType = basestring
 
 
 

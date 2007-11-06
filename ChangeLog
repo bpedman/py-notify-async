@@ -1,3 +1,35 @@
+2007-11-07  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* benchmark.py:
+	* benchmark/benchmarking.py:
+	* examples/conditions_pygtk.py:
+	* generate-reference.py:
+	* notify/base.py:
+	* notify/bind.py:
+	* notify/condition.py:
+	* notify/signal.py:
+	* notify/utils.py:
+	* notify/variable.py:
+	* run-tests.py:
+	* setup.py:
+	* test/variable.py: Many changes to compile and work under SVN
+	Python 3000:
+	- define `StringType' as `basestring' or `str';
+	- use print() as a function, not as an operator;
+	- don't use construct `except Type, var' removed in Py3k;
+	- define new function execute() to cope with `exec' changes;
+	- use dict.items() instead of dict.iteritems();
+	- rename __nonzero__() to __bool__() under Py3k.
+
+	* notify/_2_x.py: New module, define execute() for Python 2.x.
+
+	* notify/gc.c: Changes to compile and work under SVN Python 3000:
+	- cope with `ob_type' only present in `PyObject' structure.
+	(Compatibility_VarObject_HEAD_INIT, Compatibility_TypeType)
+	(Compatibility_Fix_TypeType, Compatibility_MODINIT_FUNC): New
+	macros.
+	(Compatibility_CLEAR): Rename from `Py_CLEAR'.x
+
 2007-11-06  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/variable.py

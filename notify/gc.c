@@ -26,18 +26,52 @@
 /* See Python documentation for why it prevents rare and very obscure bug.  Need to
  * backport for older Python versions.
  */
-#ifndef Py_CLEAR
-#define Py_CLEAR(object)                                \
-  do                                                    \
-    {                                                   \
-      if (object)                                       \
+#ifdef Py_CLEAR
+#  define Compatibility_CLEAR(object) Py_CLEAR (object)
+#else
+#  define Compatibility_CLEAR(object)                   \
+      do                                                \
         {                                               \
-          PyObject *temp = (PyObject *) (object);       \
-          (object) = NULL;                              \
-          Py_DECREF (temp);                             \
+          if (object)                                   \
+            {                                           \
+              PyObject *temp = (PyObject *) (object);   \
+              (object) = NULL;                          \
+              Py_DECREF (temp);                         \
+            }                                           \
         }                                               \
-    }                                                   \
-  while (0)
+      while (0)
+#endif
+
+
+/* Needed for Py3k, not defined earlier. */
+#ifdef PyVarObject_HEAD_INIT
+#  define Compatibility_VarObject_HEAD_INIT(type, ob_size) PyVarObject_HEAD_INIT (type, ob_size)
+#else
+#  define Compatibility_VarObject_HEAD_INIT(type, ob_size) PyObject_HEAD_INIT (type) ob_size,
+#endif
+
+
+/* Type fixup is needed for Python 2.x, but not later (and actually won't work, since
+ * structure layout changed a bit).
+ */
+#if defined (PY_MAJOR_VERSION) && PY_MAJOR_VERSION >= 3
+#  define Compatibility_TypeType           &PyType_Type
+#  define Compatibility_Fix_TypeType(type)
+#else
+#  define Compatibility_TypeType           NULL
+#  define Compatibility_Fix_TypeType(type) type.ob_type = &PyType_Type;
+#endif
+
+
+/* Again working around changes in Py3k. */
+#ifdef PyMODINIT_FUNC
+#  define Compatibility_MODINIT_FUNC PyMODINIT_FUNC
+#else
+#  ifdef DL_EXPORT
+#    define Compatibility_MODINIT_FUNC DL_EXPORT (void)
+#  else
+#    define Compatibility_MODINIT_FUNC void
+#  endif
 #endif
 
 
@@ -245,8 +279,7 @@ PyMethodDef  AbstractGCProtector_methods[]
       { NULL, NULL, 0, NULL } };
 
 PyTypeObject  AbstractGCProtector_Type
-  = { PyObject_HEAD_INIT (NULL)
-      0,                                             /* ob_size           */
+  = { Compatibility_VarObject_HEAD_INIT (Compatibility_TypeType, 0)
       "notify.gc.AbstractGCProtector",               /* tp_name           */
       sizeof (PyObject),                             /* tp_basicsize      */
       0,                                             /* tp_itemsize       */
@@ -303,8 +336,7 @@ PyGetSetDef  FastGCProtector_properties[]
       { NULL, NULL, NULL, NULL, NULL } };
 
 PyTypeObject  FastGCProtector_Type
-  = { PyObject_HEAD_INIT (NULL)
-      0,                                             /* ob_size           */
+  = { Compatibility_VarObject_HEAD_INIT (Compatibility_TypeType, 0)
       "notify.gc.FastGCProtector",                   /* tp_name           */
       sizeof (FastGCProtector),                      /* tp_basicsize      */
       0,                                             /* tp_itemsize       */
@@ -365,8 +397,7 @@ PyGetSetDef  RaisingGCProtector_properties[]
       { NULL, NULL, NULL, NULL, NULL } };
 
 PyTypeObject  RaisingGCProtector_Type
-  = { PyObject_HEAD_INIT (NULL)
-      0,                                             /* ob_size           */
+  = { Compatibility_VarObject_HEAD_INIT (Compatibility_TypeType, 0)
       "notify.gc.RaisingGCProtector",                /* tp_name           */
       sizeof (RaisingGCProtector),                   /* tp_basicsize      */
       0,                                             /* tp_itemsize       */
@@ -416,8 +447,7 @@ PyMethodDef  DebugGCProtector_methods[]
       { NULL, NULL, 0, NULL } };
 
 PyTypeObject  DebugGCProtector_Type
-  = { PyObject_HEAD_INIT (NULL)
-      0,                                             /* ob_size           */
+  = { Compatibility_VarObject_HEAD_INIT (Compatibility_TypeType, 0)
       "notify.gc.DebugGCProtector_Type",             /* tp_name           */
       sizeof (DebugGCProtector),                     /* tp_basicsize      */
       0,                                             /* tp_itemsize       */
@@ -554,7 +584,7 @@ FastGCProtector_init (FastGCProtector *self, PyObject *arguments, PyObject *keyw
 static void
 FastGCProtector_dealloc (FastGCProtector *self)
 {
-  self->ob_type->tp_free ((PyObject *) self);
+  ((PyObject *) self)->ob_type->tp_free ((PyObject *) self);
 }
 
 
@@ -616,7 +646,7 @@ RaisingGCProtector_init (RaisingGCProtector *self, PyObject *arguments, PyObject
                                     no_keywords))
     return -1;
 
-  Py_CLEAR (self->protected_objects_dict);
+  Compatibility_CLEAR (self->protected_objects_dict);
   self->protected_objects_dict = PyDict_New ();
 
   if (!self->protected_objects_dict)
@@ -629,8 +659,8 @@ RaisingGCProtector_init (RaisingGCProtector *self, PyObject *arguments, PyObject
 static void
 RaisingGCProtector_dealloc (RaisingGCProtector *self)
 {
-  Py_CLEAR (self->protected_objects_dict);
-  self->ob_type->tp_free ((PyObject *) self);
+  Compatibility_CLEAR (self->protected_objects_dict);
+  ((PyObject *) self)->ob_type->tp_free ((PyObject *) self);
 }
 
 
@@ -728,7 +758,7 @@ RaisingGCProtector_unprotect (RaisingGCProtector *self, PyObject *arguments, PyO
         }
       else
         {
-          const char *type_name = self->ob_type->tp_name;
+          const char *type_name = ((PyObject *) self)->ob_type->tp_name;
 
           if (type_name)
             {
@@ -737,7 +767,7 @@ RaisingGCProtector_unprotect (RaisingGCProtector *self, PyObject *arguments, PyO
               if (type_name)
                 type_name += 1;
               else
-                type_name = self->ob_type->tp_name;
+                type_name = ((PyObject *) self)->ob_type->tp_name;
             }
           else
             type_name = "?";
@@ -838,7 +868,7 @@ DebugGCProtector_unprotect (DebugGCProtector *self, PyObject *arguments, PyObjec
 #define REGISTER_TYPE(dictionary, type, name, error_label)              \
   do                                                                    \
     {                                                                   \
-      type.ob_type  = &PyType_Type;                                     \
+      Compatibility_Fix_TypeType (type);                                \
       type.tp_alloc = PyType_GenericAlloc;                              \
       type.tp_new   = PyType_GenericNew;                                \
       if (PyType_Ready (&type) == -1                                    \
@@ -850,7 +880,7 @@ DebugGCProtector_unprotect (DebugGCProtector *self, PyObject *arguments, PyObjec
   while (0)
 
 
-DL_EXPORT (void)
+Compatibility_MODINIT_FUNC
 initgc (void)
 {
   PyObject *module            = NULL;

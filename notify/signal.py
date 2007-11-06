@@ -356,6 +356,10 @@ class AbstractSignal (object):
 
         return self.has_handlers ()
 
+    if sys.version_info[0] >= 3:
+        __bool__ = __nonzero__
+        del __nonzero__
+
 
     def count_handlers (self):
         """

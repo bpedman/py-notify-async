@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
 #--------------------------------------------------------------------#
@@ -23,42 +22,12 @@
 #--------------------------------------------------------------------#
 
 
-import os
-import sys
-import unittest
+# TODO: Remove this file once Py-notify depends on Python 3000.
 
 
-if not os.path.isfile (os.path.join ('notify', 'all.py')):
-    sys.exit ("%s: cannot find '%s', strange..."
-              % (sys.argv[0], os.path.join ('notify', 'all.py')))
-
-
-print ('Building extension...')
-
-# FIXME: Is that portable enough?
-if os.system ('python setup.py build_ext') != 0:
-    sys.exit (1)
-
-
-
-class AllTests (object):
-
-    def __init__(self):
-        everything = unittest.TestSuite ()
-
-        for module_name in ('all', 'base', 'bind', 'condition', '_gc', 'mediator', 'signal',
-                            'utils', 'variable'):
-            module = __import__('test.%s' % module_name, globals (), locals (), ('*',))
-
-            setattr (self, module_name, module)
-            everything.addTest (unittest.defaultTestLoader.loadTestsFromModule (module))
-
-        setattr (self, 'everything', lambda: everything)
-
-
-print ('\nNote that most of the time is spent in gc.collect() calls, not in this package\n')
-
-unittest.main (AllTests (), 'everything')
+# Cannot do without a separate module, since Py3k deems this a syntax error.
+def execute (source, global_dict = None, local_dict = None):
+    exec source in global_dict, local_dict
 
 
 

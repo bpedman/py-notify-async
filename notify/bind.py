@@ -66,6 +66,7 @@ __all__       = ('Binding', 'WeakBinding', 'RaisingWeakBinding',
                  'CannotWeakReferenceError', 'GarbageCollectedError')
 
 
+import sys
 from types        import FunctionType, MethodType
 import weakref
 
@@ -325,6 +326,10 @@ class Binding (object):
         """
 
         return True
+
+    if sys.version_info[0] >= 3:
+        __bool__ = __nonzero__
+        del __nonzero__
 
 
     im_self  = property (lambda self: self._get_object (),
@@ -606,6 +611,10 @@ class WeakBinding (Binding):
         """
 
         return self._object is not None
+
+    if sys.version_info[0] >= 3:
+        __bool__ = __nonzero__
+        del __nonzero__
 
 
 _NONE_REFERENCE = DummyReference (None)

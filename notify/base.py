@@ -38,8 +38,8 @@ from types           import NoneType
 
 from notify.mediator import AbstractMediator
 from notify.signal   import AbstractSignal, Signal
-from notify.utils    import is_callable, is_valid_identifier, mangle_identifier, \
-                            raise_not_implemented_exception
+from notify.utils    import execute, is_callable, is_valid_identifier, mangle_identifier, \
+                            raise_not_implemented_exception, StringType
  
 try:
     import contextlib
@@ -793,7 +793,7 @@ class AbstractValueObject (object):
             if value[0] != '__slots__':
                 dictionary[value[0]] = value[1]
             else:
-                if isinstance (value[1], basestring):
+                if isinstance (value[1], StringType):
                     dictionary['__slots__'] += (value[1],)
                 else:
                     dictionary['__slots__'] += tuple (value[1])
@@ -887,11 +887,11 @@ class AbstractValueObject (object):
 
             yield '__slots__', mangle_identifier (options['new_class_name'], object)
 
-            exec (('def __init__(self, %s):\n'
-                   '    cls.__init__(self)\n'
-                   '    %s = %s')
-                  % (object, AbstractValueObject._get_object (options), object)) \
-                  in filtered_options, functions
+            execute (('def __init__(self, %s):\n'
+                      '    cls.__init__(self)\n'
+                      '    %s = %s')
+                     % (object, AbstractValueObject._get_object (options), object),
+                     filtered_options, functions)
 
             if 'property' in options:
                 property = options['property']
@@ -901,10 +901,10 @@ class AbstractValueObject (object):
                 if not is_valid_identifier (property):
                     raise ValueError ("'%s' is not a valid Python identifier" % property)
 
-                exec ('%s = property (lambda self: %s)'
-                      % (mangle_identifier (options['new_class_name'], property),
-                         AbstractValueObject._get_object (options))) \
-                      in functions
+                execute ('%s = property (lambda self: %s)'
+                         % (mangle_identifier (options['new_class_name'], property),
+                            AbstractValueObject._get_object (options)),
+                         functions)
 
         else:
             if 'property' in options:
@@ -919,19 +919,19 @@ class AbstractValueObject (object):
             if not is_callable (options['getter']):
                 raise TypeError ("'getter' must be a callable")
 
-            exec ('def get (self): return getter (%s)'
-                  % AbstractValueObject._get_object (options)) \
-                  in filtered_options, functions
+            execute ('def get (self): return getter (%s)'
+                     % AbstractValueObject._get_object (options),
+                     filtered_options, functions)
 
         if 'setter' in options:
             if not is_callable (options['setter']):
                 raise TypeError ("'setter' must be a callable")
 
-            exec ('def set (self, value): return setter (%s, value)'
-                  % AbstractValueObject._get_object (options)) \
-                  in filtered_options, functions
+            execute ('def set (self, value): return setter (%s, value)'
+                     % AbstractValueObject._get_object (options),
+                     filtered_options, functions)
 
-        for function in functions.iteritems ():
+        for function in functions.items ():
             yield function
 
 

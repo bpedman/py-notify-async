@@ -41,7 +41,7 @@ from notify.base      import AbstractValueObject
 from notify.condition import AbstractStateTrackingCondition
 from notify.gc        import AbstractGCProtector
 from notify.signal    import CleanSignal
-from notify.utils     import is_callable
+from notify.utils     import execute, is_callable
 
 
 
@@ -228,32 +228,35 @@ class AbstractValueTrackingVariable (AbstractVariable):
         if allowed_values is not None or allowed_value_types is not None:
             if allowed_values is not None:
                 if allowed_value_types is not None:
-                    exec ('def is_allowed_value (self, value):\n'
-                          '    return value in allowed_values\n'
-                          '           and isinstance (value, allowed_value_types)') \
-                          in filtered_options, functions
+                    execute ('def is_allowed_value (self, value):\n'
+                             '    return value in allowed_values\n'
+                             '           and isinstance (value, allowed_value_types)',
+                             filtered_options, functions)
                 else:
-                    exec ('def is_allowed_value (self, value):\n'
-                          '    return value in allowed_values\n') in filtered_options, functions
+                    execute ('def is_allowed_value (self, value):\n'
+                             '    return value in allowed_values\n',
+                             filtered_options, functions)
             else:
-                exec ('def is_allowed_value (self, value):\n'
-                      '    return isinstance (value, allowed_value_types)') \
-                      in filtered_options, functions
+                execute ('def is_allowed_value (self, value):\n'
+                         '    return isinstance (value, allowed_value_types)',
+                         filtered_options, functions)
 
         if 'getter' in options:
             if object is not None:
-                exec (('def __init__(self, %s):\n'
-                       '    cls.__init__(self, getter (%s))\n'
-                       '    %s = %s')
-                      % (object, object, AbstractValueObject._get_object (options), object)) \
-                      in filtered_options, functions
+                execute (('def __init__(self, %s):\n'
+                          '    cls.__init__(self, getter (%s))\n'
+                          '    %s = %s')
+                         % (object, object, AbstractValueObject._get_object (options), object),
+                         filtered_options, functions)
             else:
-                exec ('def __init__(self):\n'
-                      '    cls.__init__(self, getter (self))\n') in filtered_options, functions
+                execute ('def __init__(self):\n'
+                         '    cls.__init__(self, getter (self))\n',
+                         filtered_options, functions)
 
-            exec (('def resynchronize_with_backend (self):\n'
-                   '    self._set (getter (%s))')
-                  % AbstractValueObject._get_object (options)) in filtered_options, functions
+            execute (('def resynchronize_with_backend (self):\n'
+                      '    self._set (getter (%s))')
+                     % AbstractValueObject._get_object (options),
+                     filtered_options, functions)
 
         else:
             if 'default_value' in options:
@@ -279,35 +282,37 @@ class AbstractValueTrackingVariable (AbstractVariable):
                 setter_statement = ''
 
             if object is not None:
-                exec (('def __init__(self, %s, initial_value%s):\n'
-                       '    cls.__init__(self, initial_value)\n'
-                       '    %s = %s\n'
-                       '    %s\n')
-                      % (object, initial_default,
-                         AbstractValueObject._get_object (options), object, setter_statement)) \
-                      in filtered_options, functions
+                execute (('def __init__(self, %s, initial_value%s):\n'
+                          '    cls.__init__(self, initial_value)\n'
+                          '    %s = %s\n'
+                          '    %s\n')
+                         % (object, initial_default,
+                            AbstractValueObject._get_object (options), object, setter_statement),
+                         filtered_options, functions)
             else:
-                exec (('def __init__(self, initial_value%s):\n'
-                       '    cls.__init__(self, initial_value)\n'
-                       '    %s\n')
-                      % (initial_default, setter_statement)) in filtered_options, functions
+                execute (('def __init__(self, initial_value%s):\n'
+                          '    cls.__init__(self, initial_value)\n'
+                          '    %s\n')
+                         % (initial_default, setter_statement),
+                         filtered_options, functions)
 
         if 'setter' in options:
-            exec (('def _set (self, value):\n'
-                   '    if self.get () != value:\n'
-                   '        if not self.is_allowed_value (value):\n'
-                   '            raise ValueError \\\n'
-                   '                ("\'%%s\' is not allowed as value of the variable" %% value)\n'
-                   '        setter (%s, value)\n'
-                   '        self._AbstractValueTrackingVariable__value = value\n'
-                   '        return self._value_changed (value)\n'
-                   '    else:\n'
-                   '        return False')
-                  % AbstractValueObject._get_object (options)) in filtered_options, functions
+            execute (('def _set (self, value):\n'
+                      '    if self.get () != value:\n'
+                      '        if not self.is_allowed_value (value):\n'
+                      '            raise ValueError \\\n'
+                      '                ("\'%%s\' is not allowed as value of the variable" %% value)\n'
+                      '        setter (%s, value)\n'
+                      '        self._AbstractValueTrackingVariable__value = value\n'
+                      '        return self._value_changed (value)\n'
+                      '    else:\n'
+                      '        return False')
+                     % AbstractValueObject._get_object (options),
+                     filtered_options, functions)
 
-            exec 'def set (self, value): return self._set (value)' in functions
+            execute ('def set (self, value): return self._set (value)', functions)
 
-        for function in functions.iteritems ():
+        for function in functions.items ():
             yield function
 
 

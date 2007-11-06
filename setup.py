@@ -43,8 +43,8 @@ try:
     finally:
         version_file.close ()
 
-except IOError, exception:
-    sys.exit ('%s: error: %s' % (sys.argv[0], exception))
+except IOError:
+    sys.exit ('%s: error: %s' % (sys.argv[0], sys.exc_info () [1]))
 
 
 
@@ -105,8 +105,8 @@ def configure (version):
             if output_file_out is not None:
                 output_file_out.close ()
 
-    except IOError, exception:
-        sys.exit (str (exception))
+    except IOError:
+        sys.exit (str (sys.exc_info () [1]))
 
 
 
