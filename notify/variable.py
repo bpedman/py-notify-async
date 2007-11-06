@@ -284,7 +284,7 @@ class AbstractValueTrackingVariable (AbstractVariable):
                        '    %s = %s\n'
                        '    %s\n')
                       % (object, initial_default,
-                         AbstractValueObject._get_object (options), object), setter_statement) \
+                         AbstractValueObject._get_object (options), object, setter_statement)) \
                       in filtered_options, functions
             else:
                 exec (('def __init__(self, initial_value%s):\n'

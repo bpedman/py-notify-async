@@ -356,6 +356,26 @@ class VariableDerivationTestCase (NotifyTestCase):
         self.assertEqual (a.list,  ['foo'])
 
 
+    def test_derivation_11 (self):
+        # Test that derivation with keyword slot or property raises.
+        self.assertRaises (ValueError, lambda: AbstractVariable.derive_type ('DerivedVariable',
+                                                                             object = 'or'))
+        self.assertRaises (ValueError, lambda: AbstractVariable.derive_type ('DerivedVariable',
+                                                                             object   = '__class',
+                                                                             property = 'class'))
+
+
+    # Test against a real bug present up to 0.1.12.
+    def test_derivation_12 (self):
+        DerivedVariable = AbstractValueTrackingVariable.derive_type ('DerivedVariable',
+                                                                     object = '__list',
+                                                                     property = 'list')
+
+        variable = DerivedVariable ([1, 2, 3], 200)
+        self.assertEqual (variable.list,  [1, 2, 3])
+        self.assertEqual (variable.value, 200)
+
+
     def test_object_derivation_1 (self):
         class MainObject (object):
             def __init__(self, x):

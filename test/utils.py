@@ -65,6 +65,12 @@ class UtilsTestCase (unittest.TestCase):
         self.assert_(not is_valid_identifier ('-fooBar'))
         self.assert_(not is_valid_identifier ('foo_bar '))
 
+        # Keywords are not valid identifiers.
+        self.assert_(not is_valid_identifier ('class'))
+        self.assert_(not is_valid_identifier ('def'))
+        self.assert_(not is_valid_identifier ('in'))
+        self.assert_(not is_valid_identifier ('and'))
+
         self.assert_(not is_valid_identifier (None))
         self.assert_(not is_valid_identifier (1))
         self.assert_(not is_valid_identifier (()))
