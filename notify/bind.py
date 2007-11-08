@@ -594,7 +594,7 @@ class WeakBinding (Binding):
             if self:
                 self.__hash = super (WeakBinding, self).__hash__()
             else:
-                raise TypeError (("%s's object had been garbage-collected"
+                raise TypeError (("%s's object had been garbage-collected "
                                   "before first call to __hash__()")
                                  % self.__class__.__name__)
 

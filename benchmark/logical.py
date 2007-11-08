@@ -30,8 +30,15 @@ if __name__ == '__main__':
 
 
 
+import sys
+
 from benchmark        import benchmarking
 from notify.condition import Condition
+
+
+
+if sys.version_info[0] >= 3:
+    xrange = range
 
 
 

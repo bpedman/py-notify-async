@@ -28,12 +28,12 @@ import optparse
 import sys
 import time
 
-from configobj    import ConfigObj
-from types        import ClassType, ModuleType, TypeType
+from benchmark.configobj import ConfigObj
+from types               import ClassType, ModuleType, TypeType
 
 import notify
 
-from notify.utils import raise_not_implemented_exception, StringType
+from notify.utils        import raise_not_implemented_exception, StringType
 
 
 __all__ = ('main', 'load_benchmarks', 'Benchmark', 'BenchmarkSuite', 'BenchmarkProgram')

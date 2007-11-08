@@ -1,3 +1,22 @@
+2007-11-08  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/bind.py (WeakBinding.__hash__): Typo fix.
+
+	* benchmark/configobj.py: Many changes to compile and work under
+	SVN Python 3000:
+	- define `StringTypes' to just (str,) under Py3k;
+	- don't use unhashable bytes as dictionary keys;
+	- ditch compatibility with 2.2;
+	- update old-style `raise Type, message' statements;
+	- don't use construct `except Type, var' removed in Py3k.
+
+	* benchmark/benchmarking.py:
+	* benchmark/emission.py:
+	* benchmark/logical.py: Changes to compile and work under SVN
+	Python 3000:
+	- don't use relative imports;
+	- define xrange() as range() under Py3k.
+
 2007-11-07  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* benchmark.py:
@@ -28,7 +47,7 @@
 	(Compatibility_VarObject_HEAD_INIT, Compatibility_TypeType)
 	(Compatibility_Fix_TypeType, Compatibility_MODINIT_FUNC): New
 	macros.
-	(Compatibility_CLEAR): Rename from `Py_CLEAR'.x
+	(Compatibility_CLEAR): Rename from `Py_CLEAR'.
 
 2007-11-06  Paul Pogonyshev  <pogonyshev@gmx.net>
 

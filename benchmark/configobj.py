@@ -16,6 +16,9 @@
 # http://lists.sourceforge.net/lists/listinfo/configobj-develop
 # Comments, suggestions and bug reports welcome.
 
+# 2007-11-08  Paul Pogonyshev
+# Many changes to make this compile and work under Python 3000.
+
 from __future__ import generators
 
 import sys
@@ -30,7 +33,10 @@ try:
 except ImportError:
     # for IronPython
     pass
-from types import StringTypes
+try:
+    from types import StringTypes
+except ImportError:
+    StringTypes = (str,)
 from warnings import warn
 try:
     from codecs import BOM_UTF8, BOM_UTF16, BOM_UTF16_BE, BOM_UTF16_LE
@@ -52,12 +58,10 @@ except ImportError:
 # A dictionary mapping BOM to
 # the encoding to decode with, and what to set the
 # encoding attribute to.
-BOMS = {
-    BOM_UTF8: ('utf_8', None),
-    BOM_UTF16_BE: ('utf16_be', 'utf_16'),
-    BOM_UTF16_LE: ('utf16_le', 'utf_16'),
-    BOM_UTF16: ('utf_16', 'utf_16'),
-    }
+BOMS = [(BOM_UTF8, ('utf_8', None)),
+        (BOM_UTF16_BE, ('utf16_be', 'utf_16')),
+        (BOM_UTF16_LE, ('utf16_le', 'utf_16')),
+        (BOM_UTF16, ('utf_16', 'utf_16'))]
 # All legal variants of the BOM codecs.
 # TODO: the list of aliases is not meant to be exhaustive, is there a
 #   better way ?
@@ -102,11 +106,6 @@ except NameError:
         for item in obj:
             i += 1
             yield i, item
-
-try:
-    True, False
-except NameError:
-    True, False = 1, 0
 
 
 __version__ = '4.3.3-alpha4'
@@ -549,7 +548,7 @@ class Section(dict):
         creating a new sub-section.
         """
         if not isinstance(key, StringTypes):
-            raise ValueError, 'The key "%s" is not a string.' % key
+            raise ValueError('The key "%s" is not a string.' % key)
         # add the comment
         if not self.comments.has_key(key):
             self.comments[key] = []
@@ -586,10 +585,10 @@ class Section(dict):
                 elif isinstance(value, (list, tuple)):
                     for entry in value:
                         if not isinstance(entry, StringTypes):
-                            raise TypeError, (
+                            raise TypeError(
                                 'Value is not a string "%s".' % entry)
                 else:
-                    raise TypeError, 'Value is not a string "%s".' % value
+                    raise TypeError('Value is not a string "%s".' % value)
             dict.__setitem__(self, key, value)
 
     def __delitem__(self, key):
@@ -635,7 +634,7 @@ class Section(dict):
         """Pops the first (key,val)"""
         sequence = (self.scalars + self.sections)
         if not sequence:
-            raise KeyError, ": 'popitem(): dictionary is empty'"
+            raise KeyError(": 'popitem(): dictionary is empty'")
         key = sequence[0]
         val =  self[key]
         del self[key]
@@ -765,7 +764,7 @@ class Section(dict):
         elif oldkey in self.sections:
             the_list = self.sections
         else:
-            raise KeyError, 'Key "%s" not found.' % oldkey
+            raise KeyError('Key "%s" not found.' % oldkey)
         pos = the_list.index(oldkey)
         #
         val = self[oldkey]
@@ -1146,7 +1145,7 @@ class ConfigObj(Section):
         defaults = OPTION_DEFAULTS.copy()
         for entry in options.keys():
             if entry not in defaults.keys():
-                raise TypeError, 'Unrecognised option "%s".' % entry
+                raise TypeError('Unrecognised option "%s".' % entry)
         # TODO: check the values too.
         #
         # Add any explicit options to the defaults
@@ -1180,7 +1179,7 @@ class ConfigObj(Section):
                 infile = open(infile).read() or []
             elif self.file_error:
                 # raise an error if the file doesn't exist
-                raise IOError, 'Config file not found: "%s".' % self.filename
+                raise IOError('Config file not found: "%s".' % self.filename)
             else:
                 # file doesn't already exist
                 if self.create_empty:
@@ -1212,7 +1211,7 @@ class ConfigObj(Section):
             # needs splitting into lines - but needs doing *after* decoding
             # in case it's not an 8 bit encoding
         else:
-            raise TypeError, ('infile must be a filename,'
+            raise TypeError('infile must be a filename,'
                 ' file like object, or list of lines.')
         #
         if infile:
@@ -1304,7 +1303,7 @@ class ConfigObj(Section):
             enc = BOM_LIST[self.encoding.lower()]
             if enc == 'utf_16':
                 # For UTF16 we try big endian and little endian
-                for BOM, (encoding, final_encoding) in BOMS.items():
+                for BOM, (encoding, final_encoding) in BOMS:
                     if not final_encoding:
                         # skip UTF8
                         continue
@@ -1334,7 +1333,7 @@ class ConfigObj(Section):
             return self._decode(infile, self.encoding)
         #
         # No encoding specified - so we need to check for UTF8/UTF16
-        for BOM, (encoding, final_encoding) in BOMS.items():
+        for BOM, (encoding, final_encoding) in BOMS:
             if not line.startswith(BOM):
                 continue
             else:
@@ -1519,7 +1518,8 @@ class ConfigObj(Section):
                             comment = ''
                             try:
                                 value = unrepr(value)
-                            except Exception, e:
+                            except Exception:
+                                e = sys.exc_info()[1]
                                 if type(e) == UnknownType:
                                     msg = 'Unknown name or type in value at line %s.'
                                 else:
@@ -1532,7 +1532,8 @@ class ConfigObj(Section):
                         comment = ''
                         try:
                             value = unrepr(value)
-                        except Exception, e:
+                        except Exception:
+                            e = sys.exc_info()[1]
                             if isinstance(e, UnknownType):
                                 msg = 'Unknown name or type in value at line %s.'
                             else:
@@ -1653,7 +1654,7 @@ class ConfigObj(Section):
             if self.stringify:
                 value = str(value)
             else:
-                raise TypeError, 'Value "%s" is not a string.' % value
+                raise TypeError('Value "%s" is not a string.' % value)
         squot = "'%s'"
         dquot = '"%s"'
         noquot = "%s"
@@ -1670,7 +1671,7 @@ class ConfigObj(Section):
             # for normal values either single or double quotes will do
             elif '\n' in value:
                 # will only happen if multiline is off - e.g. '\n' in key
-                raise ConfigObjError, ('Value "%s" cannot be safely quoted.' %
+                raise ConfigObjError('Value "%s" cannot be safely quoted.' %
                     value)
             elif ((value[0] not in wspace_plus) and
                     (value[-1] not in wspace_plus) and
@@ -1678,7 +1679,7 @@ class ConfigObj(Section):
                 quot = noquot
             else:
                 if ("'" in value) and ('"' in value):
-                    raise ConfigObjError, (
+                    raise ConfigObjError(
                         'Value "%s" cannot be safely quoted.' % value)
                 elif '"' in value:
                     quot = squot
@@ -1687,7 +1688,7 @@ class ConfigObj(Section):
         else:
             # if value has '\n' or "'" *and* '"', it will need triple quotes
             if (value.find('"""') != -1) and (value.find("'''") != -1):
-                raise ConfigObjError, (
+                raise ConfigObjError(
                     'Value "%s" cannot be safely quoted.' % value)
             if value.find('"""') == -1:
                 quot = tdquot
@@ -1785,11 +1786,13 @@ class ConfigObj(Section):
                     raise_errors=True,
                     file_error=True,
                     list_values=False)
-            except ConfigObjError, e:
+            except ConfigObjErrore:
+                e = sys.exc_info()[1]
                 # FIXME: Should these errors have a reference
                 # to the already parsed ConfigObj ?
                 raise ConfigspecError('Parsing configspec failed: %s' % e)
-            except IOError, e:
+            except IOError:
+                e = sys.exc_info()[1]
                 raise IOError('Reading configspec failed: %s' % e)
         self._set_configspec_value(configspec, self)
 
@@ -2027,7 +2030,7 @@ class ConfigObj(Section):
         """
         if section is None:
             if self.configspec is None:
-                raise ValueError, 'No configspec supplied.'
+                raise ValueError('No configspec supplied.')
             if preserve_errors:
                 if VdtMissingValue is None:
                     raise ImportError('Missing validate module.')
@@ -2076,7 +2079,8 @@ class ConfigObj(Section):
                                         val,
                                         missing=missing
                                         )
-            except validator.baseErrorClass, e:
+            except validator.baseErrorClass:
+                e = sys.exc_info()[1]
                 if not preserve_errors or isinstance(e, VdtMissingValue):
                     out[entry] = False
                 else:
