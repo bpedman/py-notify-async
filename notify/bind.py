@@ -74,6 +74,10 @@ from notify.utils import is_callable, DummyReference
 
 
 
+_PY3K = (sys.version_info[0] >= 3)
+
+
+
 #-- Base binding class -----------------------------------------------
 
 # Note on (not) using `functools.partial' in Python 2.5 and up.  I have investigated the
@@ -126,9 +130,14 @@ class Binding (object):
         super (Binding, self).__init__()
 
         if isinstance (callable_object, BindingCompatibleTypes):
-            self._object   = callable_object.im_self
-            self._function = callable_object.im_func
-            self._class    = callable_object.im_class
+            if _PY3K:
+                self._object   = callable_object.__self__
+                self._function = callable_object.__func__
+                self._class    = type (self._object)
+            else:
+                self._object   = callable_object.im_self
+                self._function = callable_object.im_func
+                self._class    = callable_object.im_class
         else:
             self._object   = None
             self._function = callable_object
@@ -264,10 +273,15 @@ class Binding (object):
             return True
 
         if isinstance (other, BindingCompatibleTypes):
-            if (   self._get_object   () is not other.im_self
-                or self._get_function () is not other.im_func
-                or self._get_class    () is not other.im_class):
-                return False
+            if _PY3K:
+                if (self._get_object      () is not other.__self__
+                    or self._get_function () is not other.__func__):
+                    return False
+            else:
+                if (self._get_object      () is not other.im_self
+                    or self._get_function () is not other.im_func
+                    or self._get_class    () is not other.im_class):
+                    return False
 
             if isinstance (other, Binding):
                 return self._get_arguments () == other._get_arguments ()
@@ -327,7 +341,7 @@ class Binding (object):
 
         return True
 
-    if sys.version_info[0] >= 3:
+    if _PY3K:
         __bool__ = __nonzero__
         del __nonzero__
 
@@ -379,6 +393,18 @@ class Binding (object):
                                 @note: Never override this property, override
                                        C{L{_get_arguments}} method instead.
                                 """))
+
+
+    if _PY3K:
+        __self__ = im_self
+        __func__ = im_func
+        __cls__  = im_class
+        __args__ = im_args
+
+        del im_self
+        del im_func
+        del im_class
+        del im_args
 
 
     def __repr__(self):
@@ -515,13 +541,20 @@ class WeakBinding (Binding):
 
     def wrap (cls, callable_object, arguments = (), callback = None):
         # Inherit documentation somehow?
-        if (arguments
-            or (    isinstance (callable_object, BindingCompatibleTypes)
-                and not isinstance (callable_object, WeakBinding)
-                and callable_object.im_self is not None)):
+        if arguments:
             return cls (callable_object, arguments, callback)
-        else:
-            return callable_object
+
+        if (isinstance (callable_object, BindingCompatibleTypes)
+            and not isinstance (callable_object, WeakBinding)):
+
+            if _PY3K:
+                if callable_object.__self__ is not None:
+                    return cls (callable_object, arguments, callback)
+            else:
+                if callable_object.im_self is not None:
+                    return cls (callable_object, arguments, callback)
+
+        return callable_object
 
 
     wrap = classmethod (wrap)
@@ -612,7 +645,7 @@ class WeakBinding (Binding):
 
         return self._object is not None
 
-    if sys.version_info[0] >= 3:
+    if _PY3K:
         __bool__ = __nonzero__
         del __nonzero__
 

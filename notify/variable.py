@@ -41,7 +41,7 @@ from notify.base      import AbstractValueObject
 from notify.condition import AbstractStateTrackingCondition
 from notify.gc        import AbstractGCProtector
 from notify.signal    import CleanSignal
-from notify.utils     import execute, is_callable
+from notify.utils     import execute, is_callable, ClassTypes
 
 
 
@@ -208,7 +208,7 @@ class AbstractValueTrackingVariable (AbstractVariable):
                 allowed_value_types = (allowed_value_types,)
 
             for allowed_type in allowed_value_types:
-                if not isinstance (allowed_type, (type, types.ClassType)):
+                if not isinstance (allowed_type, ClassTypes):
                     raise TypeError ("'allowed_value_types' must be a tuple of types and classes")
 
         for attribute in (super (AbstractValueTrackingVariable, cls)

@@ -56,11 +56,12 @@ __all__       = ('is_callable', 'is_valid_identifier', 'mangle_identifier',
                  'as_string',
                  'raise_not_implemented_exception',
                  'execute',
-                 'DummyReference', 'StringType')
+                 'DummyReference', 'ClassTypes', 'StringType')
 
 
 import re
 import sys
+import types
 from keyword import iskeyword
 
 
@@ -280,8 +281,10 @@ class DummyReference (object):
 
 
 if sys.version_info[0] >= 3:
+    ClassTypes = (type,)
     StringType = str
 else:
+    ClassTypes = (type, types.ClassType)
     StringType = basestring
 
 

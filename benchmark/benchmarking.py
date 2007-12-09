@@ -29,11 +29,11 @@ import sys
 import time
 
 from benchmark.configobj import ConfigObj
-from types               import ClassType, ModuleType, TypeType
+from types               import ModuleType, TypeType
 
 import notify
 
-from notify.utils        import raise_not_implemented_exception, StringType
+from notify.utils        import raise_not_implemented_exception, ClassTypes, StringType
 
 
 __all__ = ('main', 'load_benchmarks', 'Benchmark', 'BenchmarkSuite', 'BenchmarkProgram')
@@ -70,7 +70,7 @@ def load_benchmarks (source, *benchmark_names):
         for name in subobjects:
             object = getattr (source, name)
 
-            if isinstance (object, (ClassType, TypeType)) and issubclass (object, Benchmark):
+            if isinstance (object, ClassTypes) and issubclass (object, Benchmark):
                 suite.append (object ())
             elif isinstance (object, BenchmarkSuite):
                 suite.append (object)

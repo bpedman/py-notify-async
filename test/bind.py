@@ -29,6 +29,7 @@ if __name__ == '__main__':
     sys.path.insert (0, os.path.join (sys.path[0], os.pardir))
 
 
+import sys
 import unittest
 
 from notify.bind   import Binding, WeakBinding, RaisingWeakBinding, \
@@ -109,17 +110,19 @@ class BindingTestCase (NotifyTestCase):
 
 
     def test_equality_2 (self):
-        def f (x):
-            pass
+        # This test won't work on Python 3000, since unbound methods are gone.
+        if sys.version_info[0] < 3:
+            def f (x):
+                pass
 
-        class A (object):
-            test = f
+            class A (object):
+                test = f
 
-        class B (object):
-            test = f
+            class B (object):
+                test = f
 
-        for binding_type in (Binding, WeakBinding, RaisingWeakBinding):
-            self.assert_not_equal_thoroughly (binding_type (A.test), binding_type (B.test))
+            for binding_type in (Binding, WeakBinding, RaisingWeakBinding):
+                self.assert_not_equal_thoroughly (binding_type (A.test), binding_type (B.test))
 
 
     def test_equality_3 (self):
@@ -249,9 +252,13 @@ class BindingWrapTestCase (NotifyTestCase):
     def test_wrap_6 (self):
         callable = DUMMY.identity_function
 
-        self.assert_(Binding.wrap (callable).im_self  is callable.im_self)
-        self.assert_(Binding.wrap (callable).im_func  is callable.im_func)
-        self.assert_(Binding.wrap (callable).im_class is callable.im_class)
+        if sys.version_info[0] >= 3:
+            self.assert_(Binding.wrap (callable).__self__ is callable.__self__)
+            self.assert_(Binding.wrap (callable).__func__ is callable.__func__)
+        else:
+            self.assert_(Binding.wrap (callable).im_self  is callable.im_self)
+            self.assert_(Binding.wrap (callable).im_func  is callable.im_func)
+            self.assert_(Binding.wrap (callable).im_class is callable.im_class)
 
 
     def test_wrap_with_arguments_1 (self):

@@ -1,3 +1,30 @@
+2007-12-09  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/bind.py (Binding.__init__, Binding.__eq__)
+	(WeakBinding.wrap): Py3k only: account for renamed `im_*'
+	properties.
+	(Binding): Py3k only: rename own `im_*' properties as done in the
+	language.
+
+	* test/bind.py (BindingTestCase.test_equality_2): Effectively
+	disable on Py3k: unbound methods are gone, so this code cannot
+	work anymore.
+	(BindingWrapTestCase.test_wrap_6): Account for renamed properties.
+
+	* notify/utils.py (DummyReference): Declare `ClassTypes' for the
+	same reason as `StringTypes'.
+	* notify/variable.py
+	(AbstractValueTrackingVariable._generate_derived_type_dictionary):
+	Use it.
+	* benchmark/benchmarking.py (load_benchmarks): Use it.
+	* test/all.py (AllTestCase.assert_is_class): Use it.
+
+	* notify/base.py (AbstractValueObject._is_mutable): Use a
+	different implementation on Py3k to workaround changes.
+	(AbstractValueObject.desynchronize)
+	(AbstractValueObject.desynchronize_fully): Don't use `NoneType'
+	removed in Py3k.
+
 2007-11-17  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* version: Release 0.1.13.

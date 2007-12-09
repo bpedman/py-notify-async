@@ -34,8 +34,6 @@ __all__       = ('AbstractValueObject',)
 
 import sys
 
-from types           import NoneType
-
 from notify.mediator import AbstractMediator
 from notify.signal   import AbstractSignal, Signal
 from notify.utils    import execute, is_callable, is_valid_identifier, mangle_identifier, \
@@ -160,6 +158,14 @@ class AbstractValueObject (object):
         """
 
         return self.set.im_func is not AbstractValueObject.set.im_func
+
+    if sys.version_info[0] >= 3:
+        def temp (self):
+            return self.set.__func__ is not AbstractValueObject.set
+
+        temp.__doc__ = _is_mutable.__doc__
+        _is_mutable  = temp
+        del temp
 
 
     mutable = property (lambda self: self._is_mutable (),
@@ -440,7 +446,7 @@ class AbstractValueObject (object):
         effect has been emulated manually.
         """
 
-        if not isinstance (mediator, (NoneType, AbstractMediator)):
+        if mediator is not None and not isinstance (mediator, AbstractMediator):
             raise TypeError ('second argument must be a mediator')
 
         if (   not isinstance (value_object, AbstractValueObject)
@@ -507,7 +513,7 @@ class AbstractValueObject (object):
         dangerous at times.
         """
 
-        if not isinstance (mediator, (NoneType, AbstractMediator)):
+        if mediator is not None and not isinstance (mediator, AbstractMediator):
             raise TypeError ('second argument must be a mediator')
 
         if (   not isinstance (value_object, AbstractValueObject)

@@ -46,7 +46,7 @@ class AllTestCase (NotifyTestCase):
 
     def assert_is_class (self, _class):
         if issubclass (_class, Exception):
-            self.assert_(isinstance (_class, (type, types.ClassType)), _class)
+            self.assert_(isinstance (_class, ClassTypes), _class)
 
         else:
             self.assert_(isinstance (_class, type), _class)
