@@ -1,3 +1,10 @@
+2007-12-21  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/gc.c (PyInt_AsLong, PyInt_FromLong): Define for Py3k
+	using their PyLong_*() analogues.
+	(AbstractGCProtector_Type): Remove explicit base, as it is
+	supplied by Python anyway and can break builds (#10560).
+
 2007-12-09  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/bind.py (Binding.__init__, Binding.__eq__)

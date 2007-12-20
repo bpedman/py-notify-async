@@ -75,6 +75,13 @@
 #endif
 
 
+/* Also compatibility, but let's avoid long name in this case. */
+#if defined (PY_MAJOR_VERSION) && PY_MAJOR_VERSION >= 3
+#  define PyInt_AsLong   PyLong_AsLong
+#  define PyInt_FromLong PyLong_FromLong
+#endif
+
+
 
 /*- Type forward declarations --------------------------------------*/
 
@@ -309,7 +316,7 @@ PyTypeObject  AbstractGCProtector_Type
       AbstractGCProtector_methods,                   /* tp_methods        */
       0,                                             /* tp_members        */
       0,                                             /* tp_getset         */
-      (PyTypeObject *) &PyBaseObject_Type,           /* tp_base           */
+      0,                                             /* tp_base           */
       (PyObject *)     0,                            /* tp_dict           */
       0,                                             /* tp_descr_get      */
       0,                                             /* tp_descr_set      */
