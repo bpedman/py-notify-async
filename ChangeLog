@@ -1,5 +1,14 @@
 2007-12-21  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	* generate-reference.py: Also exclude internal `notify._2_x'.
+
+	* notify/gc.c: Add documentation to several symbols.
+	(unprotection_error_type): Rename from
+	`unprotection_exception_type'.
+	(RaisingGCProtector_protect, RaisingGCProtector_unprotect): Change
+	types from `int' to `long int' where appropriate.
+	(initgc): Actually add UNPROTECTION_ERROR_DOC to the type.
+
 	* notify/gc.c (PyInt_AsLong, PyInt_FromLong): Define for Py3k
 	using their PyLong_*() analogues.
 	(AbstractGCProtector_Type): Remove explicit base, as it is

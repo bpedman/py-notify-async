@@ -170,14 +170,14 @@ only if you use a garbage-collection protector yourself."
 
 
 #define UNPROTECTION_ERROR_DOC "\
-Error that is raised by some L{AbstractGCProtector <garbage-collection protectors>} when you try \
-to L{AbstractGCProtector.unprotect <unprotect>} an object more times than it had been \
-L{AbstractGCProtector.protect <protected>}.  Of the standard protectors only \
+Error that is raised by some L{garbage-collection protectors <AbstractGCProtector>} when you try \
+to L{unprotect <AbstractGCProtector.unprotect>} an object more times than it had been \
+L{protected <AbstractGCProtector.protect>}.  Of the standard protectors only \
 C{L{RaisingGCProtector}} ever raises these exceptions."
 
 
-#define ABSTRACT_GC_PROTECTOR_DOC                                       \
-  NULL
+#define ABSTRACT_GC_PROTECTOR_DOC "\
+Simple protector interface with two methods for implementations to define."
 
 #define ABSTRACT_GC_PROTECTOR_PROTECT_DOC "\
 protect(self, object) \
@@ -227,8 +227,11 @@ C{L{DebugGCProtector}}."
 #define FAST_GC_PROTECTOR_UNPROTECT_DOC                                 \
   NULL
 
-#define FAST_GC_PROTECTOR_NUM_ACTIVE_PROTECTIONS_DOC                    \
-  NULL
+#define FAST_GC_PROTECTOR_NUM_ACTIVE_PROTECTIONS_DOC "\
+Number of protections currently in effect.  This number can be larger than the number of distinct \
+protected objects.  Actually, since C{FastGCProtector} doesn't track protected objects, it cannot \
+determine number of protected objects in principle.  Use C{L{RaisingGCProtector}} or a subclass \
+if you need that information."
 
 
 #define RAISING_GC_PROTECTOR_DOC "\
@@ -248,11 +251,17 @@ various protection information.\n\
 #define RAISING_GC_PROTECTOR_UNPROTECT_DOC                              \
   NULL
 
-#define RAISING_GC_PROTECTOR_GET_NUM_OBJECT_PROTECTIONS                 \
-  NULL
+#define RAISING_GC_PROTECTOR_GET_NUM_OBJECT_PROTECTIONS "\
+get_num_object_protections(self, object) \
+\n\
+Get the number of times given C{object} is protected, i.e. number of times it has to be \
+L{unprotected <unprotect>} to become a legal target for garbage collection again."
 
-#define RAISING_GC_PROTECTOR_NUM_PROTECTED_OBJECTS_DOC                  \
-  NULL
+#define RAISING_GC_PROTECTOR_NUM_PROTECTED_OBJECTS_DOC "\
+Number of distinct objects currently protected.  I.e. number of times each particular object is \
+protected is not relevant for this property.\n\
+\n\
+@see: C{L{num_active_protections}}"
 
 #define RAISING_GC_PROTECTOR_NUM_ACTIVE_PROTECTIONS_DOC                 \
   NULL
@@ -506,7 +515,7 @@ static PyObject *  raise_not_implemented_exception = NULL;
 static char *      no_keywords[]     = { NULL };
 static char *      object_keywords[] = { "object", NULL };
 
-static PyObject *  unprotection_exception_type = NULL;
+static PyObject *  unprotection_error_type = NULL;
 
 
 
@@ -685,7 +694,7 @@ RaisingGCProtector_protect (RaisingGCProtector *self, PyObject *arguments, PyObj
     {
       PyObject *id;
       PyObject *num_protections;
-      int       num_protections_new;
+      long int  num_protections_new;
 
       id = PyLong_FromVoidPtr (object);
       if (!id)
@@ -743,7 +752,7 @@ RaisingGCProtector_unprotect (RaisingGCProtector *self, PyObject *arguments, PyO
 
       if (num_protections)
         {
-          int  num_protections_new = PyInt_AsLong (num_protections) - 1;
+          long int  num_protections_new = PyInt_AsLong (num_protections) - 1;
 
           if (num_protections_new)
             {
@@ -779,7 +788,7 @@ RaisingGCProtector_unprotect (RaisingGCProtector *self, PyObject *arguments, PyO
           else
             type_name = "?";
 
-          PyErr_Format (unprotection_exception_type,
+          PyErr_Format (unprotection_error_type,
                         "object is not protected by this %s", type_name);
 
           Py_DECREF (id);
@@ -890,10 +899,11 @@ DebugGCProtector_unprotect (DebugGCProtector *self, PyObject *arguments, PyObjec
 Compatibility_MODINIT_FUNC
 initgc (void)
 {
-  PyObject *module            = NULL;
+  PyObject *module                        = NULL;
   PyObject *dictionary;
-  PyObject *utilities         = NULL;
-  PyObject *default_protector = NULL;
+  PyObject *utilities                     = NULL;
+  PyObject *unprotection_error_dictionary = NULL;
+  PyObject *default_protector             = NULL;
 
   module = Py_InitModule ("notify.gc", NULL);
   if (!module)
@@ -923,12 +933,16 @@ initgc (void)
 
   Py_DECREF (utilities);
 
-  unprotection_exception_type = PyErr_NewException ("notify.gc.UnprotectionError",
-                                                    PyExc_ValueError, NULL);
-  if (!unprotection_exception_type)
+  unprotection_error_dictionary = Py_BuildValue ("{ss}", "__doc__", UNPROTECTION_ERROR_DOC);
+  if (!unprotection_error_dictionary)
     goto error;
 
-  if (PyDict_SetItemString (dictionary, "UnprotectionError", unprotection_exception_type) == -1)
+  unprotection_error_type = PyErr_NewException ("notify.gc.UnprotectionError",
+                                                PyExc_ValueError, unprotection_error_dictionary);
+  if (!unprotection_error_type)
+    goto error;
+
+  if (PyDict_SetItemString (dictionary, "UnprotectionError", unprotection_error_type) == -1)
     goto error;
 
   REGISTER_TYPE (dictionary, AbstractGCProtector_Type, "AbstractGCProtector", error);
@@ -956,8 +970,9 @@ initgc (void)
 
   Py_XDECREF (module);
   Py_XDECREF (utilities);
+  Py_XDECREF (unprotection_error_dictionary);
   Py_XDECREF (raise_not_implemented_exception);
-  Py_XDECREF (unprotection_exception_type);
+  Py_XDECREF (unprotection_error_type);
   Py_XDECREF (default_protector);
 }
 
