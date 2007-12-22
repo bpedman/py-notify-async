@@ -1,3 +1,14 @@
+2007-12-22  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* TODO: One more item, some comments.
+
+	* benchmark/benchmarking.py: Remove never used `TypeType'.
+
+	* docs/tutorial.txt: A few grammar, style and factual fixes.
+
+	* INSTALL (System Requirements): Note about Python 3000.
+	(Installing With EasyInstall): New section.
+
 2007-12-21  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* generate-reference.py: Also exclude internal `notify._2_x'.

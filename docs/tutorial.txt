@@ -28,7 +28,7 @@ a function and so you can pass any arguments when emitting a signal.
 However, function can fail with that argument, and so can signal
 handlers.
 
-On top of the signals two other main concepts of Py-notify are build:
+On top of the signals two other main concepts of Py-notify are built:
 *conditions* and *variables*.
 
 Conditions are boolean values paired with one signal, which is emitted
@@ -449,7 +449,7 @@ As for any other condition (or variable), the signal is only emitted
 when the state has indeed changed, not just when it might have
 changed.
 
-Compound conditions are not mutable, i.e. you can arbitrarily set
+Compound conditions are not mutable, i.e. you cannot arbitrarily set
 their state.  Instead, the state is computed from that of term
 conditions.
 
@@ -508,9 +508,9 @@ later only.
 Context managers are nothing but syntactic sugar, yet they allow to
 write more concise and easily understandable code.  Basic idea is that
 once some setup code is executed, it is guaranteed that associated
-cleanup code will be too, regardless of the block exit method.  Given
-that context managers are basically pairs of setup/cleanup, Py-notify
-provides them for all complementary method pairs, like
+cleanup code will be too, regardless of the code block exit method.
+Given that context managers are basically pairs of setup/cleanup,
+Py-notify provides them for all complementary method pairs, like
 ``connect()``/``disconnect()``.
 
 Most useful of the context manager is ``blocking()``.  Here is how a

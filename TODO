@@ -1,3 +1,12 @@
+These are more like ideas than like unimplemented features.  I.e. they
+are not obviously good or have both benifits and drawbacks.
+
+
+Below items are certainly not going to be implemented in 0.2.  Maybe
+in 1.0, maybe even only after that.
+
+
+
 			    NAMED SIGNALS
 
 It would look like this: there is a single object (maybe
@@ -29,3 +38,23 @@ Optimized usage (that avoids creating proxies all the time):
 
 In both cases, `create' is a name of the signal and has absolutely no
 special meaning to `factory'.
+
+As an alternative to __getitem__(), factories may provide a custom
+__getattribute__() instead, with the same meaning.  I.e. instead of
+`factory['create']' you'd write `factory.create'.  On the upside we
+have a nicer syntax, on the downside we lose possibility to add any
+methods.
+
+
+
+			   NAMED PARAMETERS
+
+Currently, everything in Py-notify is written to use unnamed
+parameters.  One idea is to allow named once, as can be used in normal
+Python functions.  E.g.:
+
+       signal.emit (42, foo = [1, 2, 3], bar = 'meh?')
+
+Advantage is more possibilities for signal handlers.  Disadvantage is
+more complicated implementation code and likely slower and more
+memory-hungry Py-notify.

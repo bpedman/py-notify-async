@@ -1,7 +1,12 @@
 			 SYSTEM REQUIREMENTS
 
 Py-notify requires Python 2.3 or later and a C compiler supported by
-distutils (there is one module written in C for performance reasons.)
+distutils (there is one module written in C for performance reasons).
+
+Starting with 0.1.13, Py-notify should also work with SVN Python 3000.
+However, since Py3k itself is still an alpha stages, build can quickly
+become broken as Py3k changes.  There is also one non-passing test,
+but it is a problem of Python, see http://bugs.python.org/issue1393.
 
 
 
@@ -24,3 +29,20 @@ instead.
 
 In general, Py-notify installation doesn't involve anything uncommon.
 It should be just like that of any Python package that uses distutils.
+
+
+
+		     INSTALLING WITH EASYINSTALL
+
+Py-notify can be installed directly from its website if you have
+EasyInstall (a.k.a. Python egg management tool).  Just type:
+
+	easy_install py-notify
+
+(normally under super user account).
+
+Note that I don't upload eggs to PyPI page[1], as Py-notify is meant
+for developers and developers should be able to compile a simple
+package from sources anyway.
+
+	[1] http://pypi.python.org/pypi/py-notify/

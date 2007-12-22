@@ -29,7 +29,7 @@ import sys
 import time
 
 from benchmark.configobj import ConfigObj
-from types               import ModuleType, TypeType
+from types               import ModuleType
 
 import notify
 
