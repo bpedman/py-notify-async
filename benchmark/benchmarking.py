@@ -29,7 +29,7 @@ import sys
 import time
 
 from benchmark.configobj import ConfigObj
-from types               import ModuleType
+from types               import FunctionType, ModuleType
 
 import notify
 
@@ -69,6 +69,9 @@ def load_benchmarks (source, *benchmark_names):
 
         for name in subobjects:
             object = getattr (source, name)
+
+            if isinstance (object, FunctionType):
+                object = object ()
 
             if isinstance (object, ClassTypes) and issubclass (object, Benchmark):
                 suite.append (object ())

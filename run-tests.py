@@ -33,32 +33,49 @@ if not os.path.isfile (os.path.join ('notify', 'all.py')):
               % (sys.argv[0], os.path.join ('notify', 'all.py')))
 
 
-print ('Building extension...')
 
-# FIXME: Is that portable enough?
-if os.system ('python setup.py build_ext') != 0:
-    sys.exit (1)
+_TEST_MODULES = ('all', 'base', 'bind', 'condition', '_gc', 'mediator', 'signal',
+                 'utils', 'variable')
 
+def _import_module_tests (module_name):
+    module = __import__('test.%s' % module_name, globals (), locals (), ('*',))
+    return unittest.defaultTestLoader.loadTestsFromModule (module)
 
+def _create_test_module_importer (module_name):
+    return lambda: _import_module_tests (module_name)
+
+def _import_all_tests ():
+    everything = unittest.TestSuite ()
+    for module_name in _TEST_MODULES:
+        everything.addTest (_import_module_tests (module_name))
+
+    return everything
+    
 
 class AllTests (object):
 
     def __init__(self):
-        everything = unittest.TestSuite ()
-
-        for module_name in ('all', 'base', 'bind', 'condition', '_gc', 'mediator', 'signal',
-                            'utils', 'variable'):
-            module = __import__('test.%s' % module_name, globals (), locals (), ('*',))
-
-            setattr (self, module_name, module)
-            everything.addTest (unittest.defaultTestLoader.loadTestsFromModule (module))
-
-        setattr (self, 'everything', lambda: everything)
+        self.everything = _import_all_tests
+        for module_name in _TEST_MODULES:
+            setattr (self, module_name, _create_test_module_importer (module_name))
 
 
-print ('\nNote that most of the time is spent in gc.collect() calls, not in this package\n')
+class TestProgram (unittest.TestProgram):
 
-unittest.main (AllTests (), 'everything')
+    def runTests (self):
+        print ('Building extension...')
+
+        # FIXME: Is that portable enough?
+        if os.system ('python setup.py build_ext') != 0:
+            sys.exit (1)
+
+        print ('\nNote that most of the time is spent in gc.collect() calls, not in this package\n')
+
+        unittest.TestProgram.runTests (self)
+
+
+
+TestProgram (AllTests (), 'everything')
 
 
 

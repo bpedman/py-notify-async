@@ -34,31 +34,45 @@ if not os.path.isfile (os.path.join ('notify', 'all.py')):
               % (sys.argv[0], os.path.join ('notify', 'all.py')))
 
 
-print ('Building extension...')
 
-# FIXME: Is that portable enough?
-if os.system ('python setup.py build') != 0:
-    sys.exit (1)
+_BENCHMARK_MODULES = ('emission', 'logical')
 
-print
+def _import_module_benchmarks (module_name):
+    module = __import__('benchmark.%s' % module_name, globals (), locals (), ('*',))
+    return benchmarking.load_benchmarks (module)
 
+def _create_benchmark_module_importer (module_name):
+    return lambda: _import_module_benchmarks (module_name)
 
+def _import_all_benchmarks ():
+    everything = benchmarking.BenchmarkSuite ()
+    for module_name in _BENCHMARK_MODULES:
+        everything.append (_import_module_benchmarks (module_name))
+
+    return everything
+    
 
 class AllBenchmarks (object):
 
     def __init__(self):
-        everything = benchmarking.BenchmarkSuite ()
-
-        for module_name in ('emission', 'logical'):
-            module = __import__('benchmark.%s' % module_name, globals (), locals (), ('*',))
-
-            setattr (self, module_name, module)
-            everything.append (benchmarking.load_benchmarks (module))
-
-        setattr (self, 'everything', everything)
+        self.everything = _import_all_benchmarks
+        for module_name in _BENCHMARK_MODULES:
+            setattr (self, module_name, _create_benchmark_module_importer (module_name))
 
 
-benchmarking.main (AllBenchmarks (), 'everything')
+class BenchmarkProgram (benchmarking.BenchmarkProgram):
+
+    def run (self):
+        print ('Building extension...')
+
+        # FIXME: Is that portable enough?
+        if os.system ('python setup.py build_ext') != 0:
+            sys.exit (1)
+
+        benchmarking.BenchmarkProgram.run (self)
+
+
+BenchmarkProgram (AllBenchmarks (), 'everything')
 
 
 

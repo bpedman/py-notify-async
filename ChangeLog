@@ -1,3 +1,12 @@
+2007-12-26  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* run-tests.py: Rewrite to lazy-load only necessary modules and
+	build extension only if we actually get to testing anything.
+	* benchmark.py: Likewise.
+
+	* benchmark/benchmarking.py (load_benchmarks): Call any function
+	first.
+
 2007-12-22  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* TODO: One more item, some comments.
