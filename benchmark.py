@@ -35,9 +35,26 @@ if not os.path.isfile (os.path.join ('notify', 'all.py')):
 
 
 
+_extensions_built = False
+
+def _build_extensions ():
+    global _extensions_built
+
+    if not _extensions_built:
+        print ('Building extension...')
+
+        # FIXME: Is that portable enough?
+        if os.system ('python setup.py build_ext') != 0:
+            sys.exit (1)
+
+        _extensions_built = True
+
+
+
 _BENCHMARK_MODULES = ('emission', 'logical')
 
 def _import_module_benchmarks (module_name):
+    _build_extensions ()
     module = __import__('benchmark.%s' % module_name, globals (), locals (), ('*',))
     return benchmarking.load_benchmarks (module)
 
@@ -63,12 +80,7 @@ class AllBenchmarks (object):
 class BenchmarkProgram (benchmarking.BenchmarkProgram):
 
     def run (self):
-        print ('Building extension...')
-
-        # FIXME: Is that portable enough?
-        if os.system ('python setup.py build_ext') != 0:
-            sys.exit (1)
-
+        _build_extensions ()
         benchmarking.BenchmarkProgram.run (self)
 
 

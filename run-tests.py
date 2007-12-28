@@ -34,10 +34,27 @@ if not os.path.isfile (os.path.join ('notify', 'all.py')):
 
 
 
+_extensions_built = False
+
+def _build_extensions ():
+    global _extensions_built
+
+    if not _extensions_built:
+        print ('Building extension...')
+
+        # FIXME: Is that portable enough?
+        if os.system ('python setup.py build_ext') != 0:
+            sys.exit (1)
+
+        _extensions_built = True
+
+
+
 _TEST_MODULES = ('all', 'base', 'bind', 'condition', '_gc', 'mediator', 'signal',
                  'utils', 'variable')
 
 def _import_module_tests (module_name):
+    _build_extensions ()
     module = __import__('test.%s' % module_name, globals (), locals (), ('*',))
     return unittest.defaultTestLoader.loadTestsFromModule (module)
 
@@ -63,14 +80,9 @@ class AllTests (object):
 class TestProgram (unittest.TestProgram):
 
     def runTests (self):
-        print ('Building extension...')
-
-        # FIXME: Is that portable enough?
-        if os.system ('python setup.py build_ext') != 0:
-            sys.exit (1)
+        _build_extensions ()
 
         print ('\nNote that most of the time is spent in gc.collect() calls, not in this package\n')
-
         unittest.TestProgram.runTests (self)
 
 

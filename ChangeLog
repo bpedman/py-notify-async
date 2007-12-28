@@ -1,3 +1,10 @@
+2007-12-28  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* run-tests.py (_build_extensions): New function, break out of
+	TestProgram.runTests().
+	(_import_module_tests): Call it from here too.
+	* benchmark.py: Similar changes.
+
 2007-12-26  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* run-tests.py: Rewrite to lazy-load only necessary modules and
