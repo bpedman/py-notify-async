@@ -1,5 +1,9 @@
 2007-12-28  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	* version: Release 0.1.14.
+
+	* NEWS: Update.
+
 	* run-tests.py (_build_extensions): New function, break out of
 	TestProgram.runTests().
 	(_import_module_tests): Call it from here too.

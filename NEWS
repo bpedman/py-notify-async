@@ -1,3 +1,12 @@
+--- New in Py-notify 0.1.14 ------------------------------------------
+
+* Update to work with SVN Py3k again.
+
+* Fix build on MinGW at least in some cases (#10560).
+
+* A few documentation and infrastructure fixes and changes.
+
+
 --- New in Py-notify 0.1.13 ------------------------------------------
 
 * Changed to work under SVN builds of Python 3000 too.  It still
