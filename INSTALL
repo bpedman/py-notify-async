@@ -5,8 +5,7 @@ distutils (there is one module written in C for performance reasons).
 
 Starting with 0.1.13, Py-notify should also work with SVN Python 3000.
 However, since Py3k itself is still an alpha stages, build can quickly
-become broken as Py3k changes.  There is also one non-passing test,
-but it is a problem of Python, see http://bugs.python.org/issue1393.
+become broken as Py3k changes.
 
 
 
