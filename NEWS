@@ -11,7 +11,8 @@
 
 * Changed to work under SVN builds of Python 3000 too.  It still
   requires only 2.3 or later.  Note that one testcase fails under
-  Py3k, but that is a Py3k bug: http://bugs.python.org/issue1393
+  Py3k, but that is a Py3k bug: http://bugs.python.org/issue1393.
+  [P.S. Py3k was fixed later.]
 
 * A few minor bugfixes.
 
@@ -178,7 +179,7 @@
 
 
 
-  Copyright (C) 2007 Paul Pogonyshev.
+  Copyright (C) 2007, 2008 Paul Pogonyshev.
 
   Copying and distribution of this file, with or without modification,
   are permitted provided the copyright notice and this notice are preserved.

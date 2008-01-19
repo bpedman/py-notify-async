@@ -4,7 +4,7 @@
 #--------------------------------------------------------------------#
 # This file is part of Py-notify.                                    #
 #                                                                    #
-# Copyright (C) 2007 Paul Pogonyshev.                                #
+# Copyright (C) 2007, 2008 Paul Pogonyshev.                          #
 #                                                                    #
 # This library is free software; you can redistribute it and/or      #
 # modify it under the terms of the GNU Lesser General Public License #
