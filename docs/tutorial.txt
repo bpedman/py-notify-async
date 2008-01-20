@@ -1,6 +1,10 @@
 Py-notify Tutorial
 ==================
 
+:Author:  Paul Pogonyshev
+:Version: 0.2
+:Date:    January 2008
+
 .. contents::
 
 
@@ -8,7 +12,7 @@ Overview
 ********
 
 Py-notify is an unorthodox implementation of `Observer programming
-pattern`_.  Most important included concepts are *signals*,
+pattern`_.  Most important concepts of the library are *signals*,
 *conditions* and *variables*.
 
 At the core of the package are *signals*.  They are lists of
@@ -23,33 +27,34 @@ widespread construct.  Among others, there are signals in `GTK+`_ (and
 hence in PyGTK_), in Boost_, `sigc++`_ and so on.  They all have
 certain similarity and provide more or less the same functionality.
 The major distinction is that Py-notify signals *are not typed*,
-following base Python design principle.  You can pass any argument to
+following base Python design principle.  You can pass any arguments to
 a function and so you can pass any arguments when emitting a signal.
-However, function can fail with that argument, and so can signal
+However, function can fail with those arguments, and so can signal
 handlers.
 
 On top of the signals two other main concepts of Py-notify are built:
 *conditions* and *variables*.
 
-Conditions are boolean values paired with one signal, which is emitted
-when condition *state* changes.  They can be mutable (settable by you)
-or not, which state is computed in some way.  There is an all-purpose
-``Condition`` class, instances of which are mutable.  But if you need
-special functionality, like retrieving state using certain function,
-you can easily derive a new condition type.
+Conditions are boolean values paired with one signal (the ‘changed’
+signal), which is emitted when condition *state* changes.  Conditions
+can be mutable (settable by you) or not, which state is computed in
+some predefined way.  There is an all-purpose ``Condition`` class,
+instances of which are mutable.  But if you need special
+functionality, like retrieving state using certain function, you can
+easily derive a new type.
 
-Conditions of any type can be combined together using logic operators.
-The result is yet again a condition, with its own ‘changed’ signal.
-This way you can track states of compound logical expressions, like
-“number of frobnicators is at least 3 *and* there is a doodle.”
+Conditions of any type can be combined using logic operators.  The
+result is yet again a condition, with its own ‘changed’ signal.  This
+way you can track states of compound logical expressions, like “number
+of frobnicators is at least 3 *and* there is a doodle”.
 
 Variables are much like conditions, but can hold arbitrary *value*
 instead of a boolean *state*.  Variables cannot be combined using
 logic operations, but have a different interesting feature:
 ``predicate()`` method.  It returns a condition, which state is always
 the given predicate over variable’s value.  In other words, if
-variable’s value changes, condition state is automatically recomputed
-and might change as well.
+variable’s value changes, predicate condition state is automatically
+recomputed and might change as well.
 
 Main idea of both conditions and variables is similar to that of
 signals: separate provider of boolean state or arbitrary value from
@@ -76,7 +81,6 @@ program.
     def count_tentacles (frobnicator_type, num_tentacles):
         global total_tentacles
         total_tentacles += num_tentacles
-
         print 'Total tentacles so far: %s' % total_tentacles
 
     def run_if_scary (frobnicator_type, num_tentacles):
@@ -97,16 +101,16 @@ program.
 
 Now, that is pretty much for a first program, but let’s be bold.
 First line shows how you can avoid caring about specific modules in
-Py-notify package.  Or you can import from different modules, you
-decide.  Following are declarations of three functions.  They contain
-nothing specific to Py-notify and you can just skip over.  The only
-thing worth mentioning is the same signature.  We *expect* that those
-two arguments will be passed on each signal invocation.
+Py-notify package.  Though, of course, you can import from different
+modules as usually.  Following are declarations of three functions.
+They contain nothing specific to Py-notify and you can just skip over.
+The only thing worth mentioning is the same signature.  We *expect*
+that those two arguments will be passed on each signal invocation.
 
-Now we come to interesting part.  First comes creation of the signal.
+Now we come to interesting part.  First is the creation of the signal.
 Since Py-notify signals are not typed, there is really not much to
 pass to constructors (except for optional *accumulator* which is
-described below.)  Next we connect our three functions as handlers to
+described below).  Next we connect our three functions as handlers to
 the signal.  Note that handlers only need to be callable, they all
 just happen to be functions in our case.  In particular, methods can
 be used as handlers too.
@@ -115,8 +119,8 @@ Final four lines are the most interesting.  The four statements are
 nothing else than *emissions* of the signal.  You can as well call
 ``emit()`` method, but just calling signal is absolutely the same.
 So, it is only matter of taste which way to choose.  Note that in each
-emission we pass two arguments.  These arguments mean nothing to
-signal itself and are simply passed on to handlers.
+emission we pass two arguments.  These arguments have absolutely no
+meaning to signal itself and are simply passed on to handlers.
 
 Here is the output of the example::
 
@@ -143,8 +147,8 @@ There is certain notifier which provides a well-defined protocol for
 its notification—in our case, the ``Signal`` object.  There can be
 listeners for those notifications.  Notifier doesn’t need to know
 about listeners, as well as listeners don’t need to know anything
-except the protocol.  In particular, notifier can reside in a library
-and listeners in client code.
+about the notifier except the protocol.  In particular, notifier can
+reside in a library and listeners in client code.
 
 
 
@@ -155,12 +159,11 @@ In our first example we connected a number of handlers to a signal.
 Now let’s consider what is possible to do with handlers closer.
 
 Sometimes, you want to connect a handler only for a limited time—not
-for the whole lifetime of the signal—and disconnect it later.  Of
-course that is possible to do with Py-notify.  The natural question
-is, of course, what identifies a handler?  Most signal libraries I
-know of assign a special identifier to a connection, for performance
-reasons.  Py-notify takes a different approach here: you just pass the
-handler again.
+for the whole lifetime of the signal—and disconnect it later.  The
+natural question is, of course, what identifies a handler?  Most
+signal libraries I know of assign a special identifier to a
+connection, for performance reasons.  Py-notify takes a different
+approach here: you just pass the handler again.
 
 Comparison of handlers done by signals is less efficient than
 comparison of identifiers.  However, it is simpler to use (no need to
@@ -191,8 +194,8 @@ Signal is emitted twice, but ``note()`` handler is only called during
 the first emission.  That is because it is disconnected right before
 the second one.
 
-Handlers can also be connected with arguments.  These arguments don’t
-mean anything special to the signal itself, instead they will be
+Handlers can also be connected with arguments.  Again, these arguments
+don’t mean anything special to the signal itself, they will just be
 passed to the handler on each signal emission.  In case emission
 itself has some arguments, the two sets are combined: first are
 connection-time arguments, then emission argumens.
@@ -227,7 +230,11 @@ active again.
 
 Blocking is less common than connecting/disconnecting handlers, but
 can be used e.g. to prevent reentrance.  For this, the handler would
-just block itself, emit signal once more, and then unblock.
+just block itself, emit signal once more, and then unblock.  Blocking
+also preserves order of connected handlers.  I.e., after
+blocking/unblocking a handler you’ll get it in the same position in
+the handler list, whereas after disconnecting/reconnecting you will
+find it at the very end of the list.
 
 
 
@@ -243,11 +250,11 @@ This is most often what you need: just inform the world about
 something.  However, sometimes you need a way to get feedback.  For
 instance, you may want to ask: “is this value acceptable, eh?”
 
-This is what accumulators are for.  Accumulators are objects specified
-to signals at construction time.  They can combine, alter or discard
+This is what accumulators are for.  Accumulators are specified to
+signals at construction time.  They can combine, alter or discard
 handler return values, post-process them or even stop emission.  There
 are some predefined accumulators as members of ``AbstractSignal``
-class, but you can define your own, if needed.
+class, but you can easily define your own if needed.
 
 Let’s consider our example with the question outlined above.  We will
 consider value acceptable if *all* connected handlers like it.  If it
@@ -304,7 +311,7 @@ before, main idea of signals plays its role: emitter doesn’t need to
 know about way of handling.  Here, without changing emission part in
 any way, we have changed the result the program gives.  This is
 especially useful in case set of handlers is determined by some sort
-of input, e.g. in a GUI or from a file.
+of input, e.g. in a GUI or from a configuration file.
 
 Other predefined accumulators are:
 
@@ -350,10 +357,8 @@ Here is a simple example featuring variables::
     while True:
         sys.stdout.write ('What is your name? ')
         line = sys.stdin.readline ()
-
         if not line:
             break
-
         name.value = line.strip ()
 
 This simple program will read user names from stdin and welcome them.
@@ -432,9 +437,9 @@ of the box.
 
 To make a compound conditions, use bit operators (``~``, ``&``, ``|``
 and ``^``) instead of logic operators, ``not``, ``and``, ``or`` and
-``xor`` correspondingly (last is missing from Python.)
+``xor`` correspondingly (last is missing from Python).
 
-This gives the following result::
+The example gives the following result::
 
     have foo and not have bar: False (False and not False)
     compound condition state changed to True
@@ -468,7 +473,7 @@ The method is called ``predicate()``, as one would expect::
     from notify.all import *
 
     def print_state (is_over_5):
-        print ('have at least 5 frobnicators: %s (%d)'
+        print ('have more than 5 frobnicators: %s (%d)'
                % (is_over_5, num_frobnicators.value))
 
     num_frobnicators = Variable (0)
@@ -479,8 +484,8 @@ The method is called ``predicate()``, as one would expect::
 
 This gives the following output::
 
-    have at least 5 frobnicators: False (0)
-    have at least 5 frobnicators: True (6)
+    have more than 5 frobnicators: False (0)
+    have more than 5 frobnicators: True (6)
 
 Following the common conduct of conditions and variables, predicate
 conditions only emit their ‘changed’ signal when their state changes,
@@ -491,19 +496,20 @@ not each time state is recomputed.
 More Advanced Topics
 ********************
 
-Topics here are ‘advanced’ only in the sense they are not very basic
-and you don’t need to know them in order to use Py-notify.  Still,
-they are not really complicated and reading them can be helpful.
+Topics here are ‘advanced’ only in the sense they are not as basic as
+the topics in the previous sections and you don’t need to know them in
+order to use Py-notify.  Still, they are not really complicated and
+reading them can be helpful.
 
 
 
 Context Managers
 ~~~~~~~~~~~~~~~~
 
-Though Py-notify currently works with Python 2.3 or later, it does
-provide features only available in later versions.  Currently they are
-limited to context mangers, available if you run under Python 2.5 or
-later only.
+Though Py-notify works with Python 2.3 or later, it does provide
+features only available in later versions.  Currently, they are
+limited to context mangers, available if your program is run under
+Python 2.5 or later only.
 
 Context managers are nothing but syntactic sugar, yet they allow to
 write more concise and easily understandable code.  Basic idea is that
@@ -554,7 +560,7 @@ Yet the example works.  In fact, conditions and variables do certain
 tricks ‘behind the scenes’ to ensure they are not garbage-collected
 while they are used.  For predicate conditions this means the variable
 is alive (in our case it is referenced, therefore it is alive) and at
-least one handler is connected (in our case it is ``print_state()``.)
+least one handler is connected (in our case it is ``print_state()``).
 
 In general, you can be sure that conditions and variables will not be
 deleted as long as they are used in some common sense.  And they
@@ -597,7 +603,7 @@ Here is a short demonstration::
 
     variable.with_changes_frozen (do_change)
 
-It will only print 3, because assignment of 2 gets overriden by the
+It will only print ‘3’, because assignment of 2 gets overriden by the
 time variable is thawed.
 
 The syntax above is not very nice, but I decided that providing
@@ -671,21 +677,16 @@ code::
     from notify.all import *
 
     class BopContainer (object):
-
         __NumBops = (AbstractVariable.derive_type
                      ('__NumBops', object = 'container',
                       getter = lambda container: len (container.__bops)))
-
         def __init__(self):
             self.__bops   = ()
             self.num_bops = BopContainer.__NumBops (self)
-
         def set_bops (self, *bops):
             def do_set_bops ():
                 self.__bops = bops
-
             self.num_bops.with_changes_frozen (do_set_bops)
-
 
     def note (num_bops):
         print num_bops
@@ -707,6 +708,32 @@ more readable fashion::
     def set_bops (self, *bops):
         with self.num_bops.changes_frozen ():
             self.__bops = bops
+
+
+
+Tutorial Copyright and Permissions Notice
+*****************************************
+
+Copyright © 2007, 2008 Paul Pogonyshev.
+
+Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+Permission is granted to copy and distribute modified versions of this
+document under the conditions for verbatim copying, provided that this
+copyright notice is included exactly as in the original, and that the
+entire resulting derived work is distributed under the terms of a
+permission notice identical to this one.
+
+Permission is granted to copy and distribute translations of this
+document into another language, under the above conditions for
+modified versions.
+
+There is no guarantee that this document lives up to its intended
+purpose.  This is simply provided as a free resource.  As such, the
+authors and maintainers of the information provided within can not
+make any guarantee that the information is even accurate.
 
 
 

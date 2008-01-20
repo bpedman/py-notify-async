@@ -1,3 +1,13 @@
+2008-01-20  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* docs/tutorial.txt: Add document information.  Add copyright
+	notice and a simple license taken from
+	http://pygtk.org/pygtk2tutorial/ch-Copyright.html.  Make all
+	examples directly copyable to Python interpreter.  Some stylistic
+	changes and a few little expansions.
+
+	* docs/reST.css: Add custom rules for `docinfo' class.
+
 2008-01-19  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* (Globally): Update copyright notices.
