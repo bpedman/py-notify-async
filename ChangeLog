@@ -1,3 +1,13 @@
+2008-03-01  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/gc.c: Many changes because of
+	http://bugs.python.org/issue1878.  In short, introduce a meta-type
+	for GC protectors that handles `default' property of
+	types (i.e. not of objects).
+
+	* run-tests.py: Tweak so that it is possible to do sth. like
+	`./run-tests.py condition.LogicConditionTestCase'.
+
 2008-01-20  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* docs/tutorial.txt: Add document information.  Add copyright

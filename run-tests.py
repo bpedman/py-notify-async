@@ -53,13 +53,12 @@ def _build_extensions ():
 _TEST_MODULES = ('all', 'base', 'bind', 'condition', '_gc', 'mediator', 'signal',
                  'utils', 'variable')
 
-def _import_module_tests (module_name):
+def _import_module (module_name):
     _build_extensions ()
-    module = __import__('test.%s' % module_name, globals (), locals (), ('*',))
-    return unittest.defaultTestLoader.loadTestsFromModule (module)
+    return __import__('test.%s' % module_name, globals (), locals (), ('*',))
 
-def _create_test_module_importer (module_name):
-    return lambda: _import_module_tests (module_name)
+def _import_module_tests (module_name):
+    return unittest.defaultTestLoader.loadTestsFromModule (_import_module (module_name))
 
 def _import_all_tests ():
     everything = unittest.TestSuite ()
@@ -67,14 +66,26 @@ def _import_all_tests ():
         everything.addTest (_import_module_tests (module_name))
 
     return everything
-    
+
+
+class _TestModuleImporter (object):
+
+    def __init__(self, module_name):
+        self._module_name = module_name
+
+    def __call__(self):
+        return _import_module_tests (object.__getattribute__(self, '_module_name'))
+
+    def __getattribute__(self, name):
+        return getattr (_import_module (object.__getattribute__(self, '_module_name')), name)
+
 
 class AllTests (object):
 
     def __init__(self):
         self.everything = _import_all_tests
         for module_name in _TEST_MODULES:
-            setattr (self, module_name, _create_test_module_importer (module_name))
+            setattr (self, module_name, _TestModuleImporter (module_name))
 
 
 class TestProgram (unittest.TestProgram):
