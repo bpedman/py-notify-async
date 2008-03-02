@@ -36,7 +36,7 @@ import operator
 from notify.condition import AbstractCondition, AbstractStateTrackingCondition, Condition, \
                              PredicateCondition, WatcherCondition
 from notify.variable  import Variable
-from test.__common    import NotifyTestCase
+from test.__common    import NotifyTestCase, NotifyTestObject
 
 
 
@@ -62,10 +62,10 @@ class BaseConditionTestCase (NotifyTestCase):
     # Main purpose of this is to test that different values are always coerced to
     # True/False only state.
     def test_set (self):
-        self.results = []
+        test = NotifyTestObject ()
 
         condition = Condition (False)
-        condition.changed.connect(self.simple_handler)
+        condition.changed.connect (test.simple_handler)
 
         condition.state = True
         self.assertEqual (condition.state,  True)
@@ -99,35 +99,35 @@ class BaseConditionTestCase (NotifyTestCase):
         self.assertEqual (condition.state,  False)
         self.assertEqual (condition.get (), False)
 
-        self.assert_results (True, False, True, False)
+        test.assert_results (True, False, True, False)
 
 
 
 class LogicConditionTestCase (NotifyTestCase):
 
     def test_not (self):
-        self.results = []
+        test = NotifyTestObject ()
 
         condition = Condition (False)
 
         not_condition = ~condition
-        not_condition.store (self.simple_handler)
+        not_condition.store (test.simple_handler)
         self.assertEqual (not_condition.state, True)
 
         condition.state = True
         self.assertEqual (not_condition.state, False)
 
-        self.assert_results (True, False)
+        test.assert_results (True, False)
 
 
     def test_and (self):
-        self.results = []
+        test = NotifyTestObject ()
 
         condition1 = Condition (False)
         condition2 = Condition (False)
 
         and_condition = condition1 & condition2
-        and_condition.store (self.simple_handler)
+        and_condition.store (test.simple_handler)
         self.assertEqual (and_condition.state, False)
 
         condition1.state = True
@@ -142,17 +142,17 @@ class LogicConditionTestCase (NotifyTestCase):
         condition2.state = True
         self.assertEqual (and_condition.state, True)
 
-        self.assert_results (False, True)
+        test.assert_results (False, True)
 
 
     def test_or (self):
-        self.results = []
+        test = NotifyTestObject ()
 
         condition1 = Condition (False)
         condition2 = Condition (False)
 
         or_condition = condition1 | condition2
-        or_condition.store (self.simple_handler)
+        or_condition.store (test.simple_handler)
         self.assertEqual (or_condition.state, False)
 
         condition1.state = True
@@ -167,17 +167,17 @@ class LogicConditionTestCase (NotifyTestCase):
         condition2.state = True
         self.assertEqual (or_condition.state, True)
 
-        self.assert_results (False, True, False, True)
+        test.assert_results (False, True, False, True)
 
 
     def test_xor (self):
-        self.results = []
+        test = NotifyTestObject ()
 
         condition1 = Condition (False)
         condition2 = Condition (False)
 
         xor_condition = condition1 ^ condition2
-        xor_condition.store (self.simple_handler)
+        xor_condition.store (test.simple_handler)
         self.assertEqual (xor_condition.state, False)
 
         condition1.state = True
@@ -192,18 +192,18 @@ class LogicConditionTestCase (NotifyTestCase):
         condition2.state = True
         self.assertEqual (xor_condition.state, False)
 
-        self.assert_results (False, True, False, True, False)
+        test.assert_results (False, True, False, True, False)
 
 
     def test_if_else_1 (self):
-        self.results = []
+        test = NotifyTestObject ()
 
         condition1 = Condition (False)
         condition2 = Condition (False)
         condition3 = Condition (False)
 
         if_else_condition = condition1.if_else (condition2, condition3)
-        if_else_condition.store (self.simple_handler)
+        if_else_condition.store (test.simple_handler)
         self.assertEqual (if_else_condition.state, False)
 
         condition1.state = False
@@ -241,61 +241,61 @@ class LogicConditionTestCase (NotifyTestCase):
         condition3.state = True
         self.assertEqual (if_else_condition.state, True)
 
-        self.assert_results (False, True, False, True, False, True)
+        test.assert_results (False, True, False, True, False, True)
 
 
     # Test for a real bug introduced when optimizing if-else condition.
     def test_if_else_2 (self):
-        self.results = []
+        test = NotifyTestObject ()
 
         condition1 = Condition (False)
         condition2 = Condition (False)
         condition3 = Condition (True)
 
         if_else_condition = condition1.if_else (condition2, condition3)
-        if_else_condition.store (self.simple_handler)
+        if_else_condition.store (test.simple_handler)
 
         condition1.state = True
 
-        self.assert_results (True, False)
+        test.assert_results (True, False)
 
 
 
 class PredicateConditionTestCase (NotifyTestCase):
 
     def test_predicate_condition_1 (self):
-        self.results = []
+        test = NotifyTestObject ()
 
         predicate = PredicateCondition (bool, None)
-        predicate.store (self.simple_handler)
+        predicate.store (test.simple_handler)
 
         predicate.update (10)
 
-        self.assert_results (False, True)
+        test.assert_results (False, True)
 
 
     def test_predicate_condition_2 (self):
-        self.results = []
+        test = NotifyTestObject ()
 
         predicate = PredicateCondition (bool, None)
-        predicate.store (self.simple_handler)
+        predicate.store (test.simple_handler)
 
         predicate.update (False)
 
-        self.assert_results (False)
+        test.assert_results (False)
 
 
     def test_predicate_condition_3 (self):
-        self.results = []
+        test = NotifyTestObject ()
 
         predicate = PredicateCondition (lambda x: x > 10, 0)
-        predicate.store (self.simple_handler)
+        predicate.store (test.simple_handler)
 
         predicate.update (10)
         predicate.update (20)
         predicate.update (-5)
 
-        self.assert_results (False, True, False)
+        test.assert_results (False, True, False)
 
 
     def test_predicate_condition_error_1 (self):
@@ -313,10 +313,10 @@ class PredicateConditionTestCase (NotifyTestCase):
 class WatcherConditionTestCase (NotifyTestCase):
 
     def test_watcher_condition_1 (self):
-        self.results = []
+        test = NotifyTestObject ()
 
         watcher = WatcherCondition ()
-        watcher.store (self.simple_handler)
+        watcher.store (test.simple_handler)
 
         condition = Condition (True)
         watcher.watch (condition)
@@ -325,18 +325,18 @@ class WatcherConditionTestCase (NotifyTestCase):
 
         condition.state = False
 
-        self.assert_results (False, True, False)
+        test.assert_results (False, True, False)
 
 
     def test_watcher_condition_2 (self):
-        self.results = []
+        test = NotifyTestObject ()
 
         condition1 = Condition (True)
         condition2 = Condition (False)
         condition3 = Condition (False)
 
         watcher = WatcherCondition (condition1)
-        watcher.store (self.simple_handler)
+        watcher.store (test.simple_handler)
 
         watcher.watch (condition2)
         watcher.watch (condition3)
@@ -345,7 +345,7 @@ class WatcherConditionTestCase (NotifyTestCase):
         self.assert_(watcher.watched_condition is None)
 
         # Last two watch() calls must not change watcher's state.
-        self.assert_results (True, False)
+        test.assert_results (True, False)
 
 
     def test_watcher_condition_error_1 (self):
@@ -369,12 +369,12 @@ class WatcherConditionTestCase (NotifyTestCase):
 class GarbageCollectionConditionTestCase (NotifyTestCase):
 
     def test_garbage_collection_1 (self):
-        self.results = []
+        test = NotifyTestObject ()
 
         variable = Variable ()
 
         condition = variable.is_true ()
-        condition.store (self.simple_handler)
+        condition.store (test.simple_handler)
         condition = weakref.ref (condition)
 
         # This must not collect the `is_true' condition, even though it is not directly
@@ -391,18 +391,18 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
         self.collect_garbage ()
 
         self.assertEqual (condition (), None)
-        self.assert_results (False, True)
+        test.assert_results (False, True)
 
 
     # Same as the previous test, but with longer condition chain.
     def test_garbage_collection_2 (self):
-        self.results = []
+        test = NotifyTestObject ()
 
         variable = Variable ()
 
         condition1 = variable.is_true ()
         condition2 = ~condition1
-        condition2.store (self.simple_handler)
+        condition2.store (test.simple_handler)
 
         condition1 = weakref.ref (condition1)
         condition2 = weakref.ref (condition2)
@@ -421,19 +421,19 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
 
         self.assertEqual (condition1 (), None)
         self.assertEqual (condition2 (), None)
-        self.assert_results (True, False)
+        test.assert_results (True, False)
 
 
     # Again same as the previous test, but this time usage chain is broken from the other
     # end.
     def test_garbage_collection_3 (self):
-        self.results = []
+        test = NotifyTestObject ()
 
         variable = Variable ()
 
         condition1 = variable.is_true ()
         condition2 = ~condition1
-        condition2.store (self.simple_handler)
+        condition2.store (test.simple_handler)
 
         condition1 = weakref.ref (condition1)
         condition2 = weakref.ref (condition2)
@@ -445,7 +445,7 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
         self.collect_garbage ()
         variable.value = 10
 
-        condition2 ().changed.disconnect (self.simple_handler)
+        condition2 ().changed.disconnect (test.simple_handler)
 
         # FIXME: Invent a way to calculate times that is not dependent on implementation
         #        details.
@@ -459,18 +459,18 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
 
         self.assertEqual (variable (), None)
 
-        self.assert_results (True, False)
+        test.assert_results (True, False)
 
 
     def test_garbage_collection_binary (self):
         for _operator in (operator.__and__, operator.__or__, operator.__xor__):
-            self.results = []
+            test = NotifyTestObject ()
 
             condition1       = Condition (True)
             condition2       = Condition (False)
             binary_condition = _operator (condition1, condition2)
 
-            binary_condition.store (self.simple_handler)
+            binary_condition.store (test.simple_handler)
             binary_condition = weakref.ref (binary_condition)
 
             del condition1
@@ -490,18 +490,18 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
                 if not expected_results or expected_results[-1] != _operator (state1, state2):
                     expected_results.append (_operator (state1, state2))
 
-            self.assert_results (*expected_results)
+            test.assert_results (*expected_results)
 
 
     def test_garbage_collection_if_else (self):
-        self.results     = []
+        test              = NotifyTestObject ()
 
         condition1        = Condition (False)
         condition2        = Condition (False)
         condition3        = Condition (True)
         if_else_condition = condition1.if_else (condition2, condition3)
 
-        if_else_condition.store (self.simple_handler)
+        if_else_condition.store (test.simple_handler)
         if_else_condition = weakref.ref (if_else_condition)
 
         del condition2
@@ -522,7 +522,7 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
         self.collect_garbage (2)
 
         self.assertEqual    (if_else_condition (), None)
-        self.assert_results (True, False, True)
+        test.assert_results (True, False, True)
 
 
     def test_garbage_collection_signal_referenced_1 (self):
@@ -543,11 +543,12 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
 
 
     def test_garbage_collection_signal_referenced_2 (self):
+        test         = NotifyTestObject ()
         condition1   = Condition (True)
         condition2   = ~condition1
         signal       = condition2.changed
 
-        signal.connect (self.simple_handler)
+        signal.connect (test.simple_handler)
 
         condition2   = weakref.ref (condition2)
 
@@ -555,7 +556,7 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
 
         self.assertNotEqual (condition2 (), None)
 
-        signal.disconnect (self.simple_handler)
+        signal.disconnect (test.simple_handler)
 
         self.collect_garbage ()
 
@@ -568,19 +569,18 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
 
 
     def test_signal_garbage_collection (self):
-        self.results = []
+        test       = NotifyTestObject ()
+        condition1 = Condition (True)
+        condition2 = ~condition1
 
-        condition1   = Condition (True)
-        condition2   = ~condition1
-
-        condition2.changed.connect (self.simple_handler)
+        condition2.changed.connect (test.simple_handler)
 
         # We also assume that `Not's condition signal can be weakly referenced, but I
         # don't see other way...
         signal = weakref.ref (condition2.changed)
 
         condition1.state = False
-        self.assert_results (True)
+        test.assert_results (True)
 
         condition1 = weakref.ref (condition1)
         condition2 = weakref.ref (condition2)
@@ -596,22 +596,22 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
 class SignalConditionTestCase (NotifyTestCase):
 
     def test_referenced_signal (self):
-        self.results = []
+        test = NotifyTestObject ()
 
         condition = Condition (False)
         signal    = (~condition).changed
-        signal.connect (self.simple_handler)
+        signal.connect (test.simple_handler)
 
         condition.state = True
 
         # This must not change anything.  But current (at the time of test addition)
         # implementation destroys the `not' condition despite the reference to its signal.
-        signal.disconnect (self.simple_handler)
-        signal.connect    (self.simple_handler)
+        signal.disconnect (test.simple_handler)
+        signal.connect    (test.simple_handler)
 
         condition.state = False
 
-        self.assert_results (False, True)
+        test.assert_results (False, True)
 
 
 
@@ -633,13 +633,13 @@ class ConditionDerivationTestCase (NotifyTestCase):
 
 
     def test_derivation_2 (self):
-        self.results = []
+        test = NotifyTestObject ()
 
         DerivedCondition = \
             AbstractStateTrackingCondition.derive_type ('DerivedCondition',
                                                         getter = lambda condition: False,
                                                         setter = (lambda condition, state:
-                                                                      self.simple_handler (state)))
+                                                                      test.simple_handler (state)))
 
         condition = DerivedCondition ()
         condition.set (True)
@@ -647,23 +647,23 @@ class ConditionDerivationTestCase (NotifyTestCase):
 
         # The default state is retrieved with the getter function, so the setter must not
         # be called during condition creation.
-        self.assert_results (True, False)
+        test.assert_results (True, False)
 
 
     def test_derivation_3 (self):
-        self.results = []
+        test = NotifyTestObject ()
 
         DerivedCondition = \
             AbstractStateTrackingCondition.derive_type ('DerivedCondition',
                                                         setter = (lambda condition, state:
-                                                                      self.simple_handler (state)))
+                                                                      test.simple_handler (state)))
 
         condition = DerivedCondition (False)
         condition.set (True)
         condition.state = False
 
         # There is no getter at all, so setter must be called during condition creation.
-        self.assert_results (False, True, False)
+        test.assert_results (False, True, False)
 
 
     def test_derivation_slots (self):

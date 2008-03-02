@@ -26,7 +26,41 @@ import gc
 import unittest
 
 
-__all__ = ('NotifyTestCase', 'ignoring_exceptions')
+__all__ = ('NotifyTestObject', 'NotifyTestCase', 'ignoring_exceptions')
+
+
+
+# Each test should create an instance of this class and connect handlers defined here.
+# The reason is that conditions, variables etc. are garbage-collected only after last
+# handler dies.  If handlers belong to an object which is in test function scope,
+# everything used by the test will be GC-collected after test finishes.  Else we can have
+# dangling conditions, which will prevent us from changing `AbstractGCProtector.default',
+# among other things.
+class NotifyTestObject (object):
+
+    def __init__(self):
+        self.results = []
+
+
+    def assert_results (self, *results):
+        valid_results = list (results)
+
+        if self.results != valid_results:
+            raise AssertionError ('results: %s; expected: %s' % (self.results, valid_results))
+
+
+    def simple_handler (self, *arguments):
+        if len (arguments) == 1:
+            arguments = arguments[0]
+
+        self.results.append (arguments)
+
+    def simple_handler_100 (self, *arguments):
+        self.simple_handler (100 + arguments[0])
+
+
+    def simple_handler_200 (self, *arguments):
+        self.simple_handler (200 + arguments[0])
 
 
 
@@ -65,27 +99,6 @@ class NotifyTestCase (unittest.TestCase):
         self.assert_(not value1 == value2)
 
         # Note: hashes are _not_ required to be different, so don't test them.
-
-
-    def assert_results (self, *results):
-        valid_results = list (results)
-
-        if self.results != valid_results:
-            raise AssertionError ('results: %s; expected: %s' % (self.results, valid_results))
-
-
-    def simple_handler (self, *arguments):
-        if len (arguments) == 1:
-            arguments = arguments[0]
-
-        self.results.append (arguments)
-
-    def simple_handler_100 (self, *arguments):
-        self.simple_handler (100 + arguments[0])
-
-
-    def simple_handler_200 (self, *arguments):
-        self.simple_handler (200 + arguments[0])
 
 
     def collect_garbage (self, times = 1):

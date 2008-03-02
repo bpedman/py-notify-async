@@ -31,7 +31,7 @@ from __future__    import with_statement
 from contextlib    import nested
 
 from notify.signal import Signal
-from test.__common import NotifyTestCase, ignoring_exceptions
+from test.__common import NotifyTestCase, NotifyTestObject, ignoring_exceptions
 
 
 __all__ = ('SignalContextManagerTestCase',)
@@ -41,99 +41,99 @@ __all__ = ('SignalContextManagerTestCase',)
 class SignalContextManagerTestCase (NotifyTestCase):
 
     def test_connecting_1 (self):
-        signal       = Signal ()
-        self.results = []
+        test   = NotifyTestObject ()
+        signal = Signal ()
 
         signal.emit (1)
 
-        with signal.connecting (self.simple_handler):
+        with signal.connecting (test.simple_handler):
             signal.emit (2)
 
         signal.emit (3)
 
-        self.assert_results (2)
+        test.assert_results (2)
 
 
     def test_connecting_2 (self):
-        signal       = Signal ()
-        self.results = []
+        test   = NotifyTestObject ()
+        signal = Signal ()
 
         signal.emit (1)
 
-        with nested (ignoring_exceptions (), signal.connecting (self.simple_handler)):
+        with nested (ignoring_exceptions (), signal.connecting (test.simple_handler)):
             signal.emit (2)
             raise Exception
 
         signal.emit (3)
 
-        self.assert_results (2)
+        test.assert_results (2)
 
 
     def test_connecting_safely_1 (self):
-        signal       = Signal ()
-        self.results = []
+        test   = NotifyTestObject ()
+        signal = Signal ()
 
         signal.emit (1)
 
-        with signal.connecting_safely (self.simple_handler):
+        with signal.connecting_safely (test.simple_handler):
             signal.emit (2)
 
-            with signal.connecting_safely (self.simple_handler):
+            with signal.connecting_safely (test.simple_handler):
                 signal.emit (3)
 
             signal.emit (4)
 
         signal.emit (5)
 
-        self.assert_results (2, 3, 4)
+        test.assert_results (2, 3, 4)
 
 
     def test_connecting_safely_2 (self):
-        signal       = Signal ()
-        self.results = []
+        test   = NotifyTestObject ()
+        signal = Signal ()
 
         signal.emit (1)
 
-        with nested (ignoring_exceptions (), signal.connecting_safely (self.simple_handler)):
+        with nested (ignoring_exceptions (), signal.connecting_safely (test.simple_handler)):
             signal.emit (2)
             raise Exception
 
         signal.emit (3)
 
-        self.assert_results (2)
+        test.assert_results (2)
 
 
     def test_blocking_1 (self):
-        signal       = Signal ()
-        self.results = []
+        test   = NotifyTestObject ()
+        signal = Signal ()
 
-        signal.connect (self.simple_handler)
+        signal.connect (test.simple_handler)
 
         signal.emit (1)
 
-        with signal.blocking (self.simple_handler):
+        with signal.blocking (test.simple_handler):
             signal.emit (2)
 
         signal.emit (3)
 
-        self.assert_results (1, 3)
+        test.assert_results (1, 3)
 
 
     def test_blocking_2 (self):
-        signal       = Signal ()
-        self.results = []
+        test   = NotifyTestObject ()
+        signal = Signal ()
 
-        signal.connect (self.simple_handler)
+        signal.connect (test.simple_handler)
 
         signal.emit (1)
 
-        with nested (ignoring_exceptions (), signal.blocking (self.simple_handler)):
+        with nested (ignoring_exceptions (), signal.blocking (test.simple_handler)):
             signal.emit (2)
             raise Exception
 
         signal.emit (3)
 
-        self.assert_results (1, 3)
+        test.assert_results (1, 3)
 
 
 

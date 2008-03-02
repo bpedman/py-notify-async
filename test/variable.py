@@ -35,7 +35,7 @@ import unittest
 from notify.variable import AbstractVariable, AbstractValueTrackingVariable, Variable, \
                             WatcherVariable
 from notify.utils    import StringType
-from test.__common   import NotifyTestCase
+from test.__common   import NotifyTestCase, NotifyTestObject
 
 
 
@@ -65,10 +65,10 @@ class BaseVariableTestCase (NotifyTestCase):
 
 
     def test_predicate_2 (self):
-        self.results = []
+        test = NotifyTestObject ()
 
         variable = Variable (0)
-        variable.predicate (lambda value: 0 <= value < 10).store (self.simple_handler)
+        variable.predicate (lambda value: 0 <= value < 10).store (test.simple_handler)
 
         variable.value = 5
         variable.value = 15
@@ -76,7 +76,7 @@ class BaseVariableTestCase (NotifyTestCase):
         variable.value = 9
         variable.value = 3
 
-        self.assert_results (True, False, True)
+        test.assert_results (True, False, True)
 
 
     def test_is_true (self):
@@ -113,10 +113,10 @@ class BaseVariableTestCase (NotifyTestCase):
 
 
     def test_transformation_2 (self):
-        self.results = []
+        test = NotifyTestObject ()
 
         variable = Variable (0)
-        variable.transform (math.floor).store (self.simple_handler)
+        variable.transform (math.floor).store (test.simple_handler)
 
         variable.value = 5
         variable.value = 5.6
@@ -125,7 +125,7 @@ class BaseVariableTestCase (NotifyTestCase):
         variable.value = 16.5
         variable.value = 16.2
 
-        self.assert_results (0, 5, 15, 16)
+        test.assert_results (0, 5, 15, 16)
 
 
     def test_is_allowed_value (self):
@@ -153,10 +153,10 @@ class BaseVariableTestCase (NotifyTestCase):
 class WatcherVariableTestCase (NotifyTestCase):
 
     def test_watcher_variable_1 (self):
-        self.results = []
+        test = NotifyTestObject ()
 
         watcher = WatcherVariable ()
-        watcher.store (self.simple_handler)
+        watcher.store (test.simple_handler)
 
         variable = Variable ('abc')
         watcher.watch (variable)
@@ -165,18 +165,18 @@ class WatcherVariableTestCase (NotifyTestCase):
 
         variable.value = 60
 
-        self.assert_results (None, 'abc', 60)
+        test.assert_results (None, 'abc', 60)
 
 
     def test_watcher_variable_2 (self):
-        self.results = []
+        test = NotifyTestObject ()
 
         variable1 = Variable ([])
         variable2 = Variable ('string')
         variable3 = Variable ('string')
 
         watcher = WatcherVariable (variable1)
-        watcher.store (self.simple_handler)
+        watcher.store (test.simple_handler)
 
         watcher.watch (variable2)
         watcher.watch (variable3)
@@ -185,7 +185,7 @@ class WatcherVariableTestCase (NotifyTestCase):
         self.assert_(watcher.watched_variable is None)
 
         # Later two watch() calls must not change watcher's value.
-        self.assert_results ([], 'string', None)
+        test.assert_results ([], 'string', None)
 
 
     def test_watcher_variable_error_1 (self):
@@ -305,13 +305,13 @@ class VariableDerivationTestCase (NotifyTestCase):
 
 
     def test_derivation_8 (self):
-        self.results = []
+        test = NotifyTestObject ()
 
         DerivedVariable = \
             AbstractValueTrackingVariable.derive_type ('DerivedVariable',
                                                        getter = lambda variable: None,
                                                        setter = (lambda variable, value:
-                                                                     self.simple_handler (value)))
+                                                                     test.simple_handler (value)))
 
         variable = DerivedVariable ()
         variable.set (100)
@@ -319,23 +319,23 @@ class VariableDerivationTestCase (NotifyTestCase):
 
         # The default value is retrieved with the getter function, so the setter must not
         # be called during variable creation.
-        self.assert_results (100, 'abc')
+        test.assert_results (100, 'abc')
 
 
     def test_derivation_9 (self):
-        self.results = []
+        test = NotifyTestObject ()
 
         DerivedVariable = \
             AbstractValueTrackingVariable.derive_type ('DerivedVariable',
                                                        setter = (lambda variable, value:
-                                                                     self.simple_handler (value)))
+                                                                     test.simple_handler (value)))
 
         variable = DerivedVariable ()
         variable.set (100)
         variable.value = 'abc'
 
         # There is no getter at all, so setter must be called during variable creation.
-        self.assert_results (None, 100, 'abc')
+        test.assert_results (None, 100, 'abc')
 
 
     def test_derivation_10 (self):

@@ -1,3 +1,22 @@
+2008-03-02  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* test/__common.py (NotifyTestObject): New class, break out of
+	`NotifyTestCase'.
+
+	* test/base.py:
+	* test/condition.py:
+	* test/signal.py:
+	* test/variable.py:
+	* test/_2_5/base.py:
+	* test/_2_5/signal.py: Update tests so they don't leak
+	signals/conditions/variables using new machinery in `__common.py'.
+
+	* notify/gc.c: Enhance documentation a bit.
+	(Compatibility_String_AsString): New macro.
+	(GCProtectorMeta_set_default): Refuse to set a different protector
+	if it is not an instance of `AbstractGCProtector', or the current
+	one has non-zero `num_active_protections' property.
+
 2008-03-01  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/gc.c: Many changes because of

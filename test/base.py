@@ -34,7 +34,7 @@ import unittest
 from notify.base      import AbstractValueObject
 from notify.condition import Condition
 from notify.variable  import AbstractVariable, Variable
-from test.__common    import NotifyTestCase
+from test.__common    import NotifyTestCase, NotifyTestObject
 
 
 
@@ -47,14 +47,14 @@ class BaseInternalsTestCase (NotifyTestCase):
     # class.  We do several things that change it and test that `changed' signal is still
     # emitted fine.
     def test_internals_1 (self):
-        self.results = []
+        test = NotifyTestObject ()
 
         condition     = Condition (False)
         not_condition = ~condition
 
         self.assert_(not not_condition._has_signal ())
 
-        not_condition.changed.connect (self.simple_handler)
+        not_condition.changed.connect (test.simple_handler)
         self.assert_(not_condition._has_signal ())
 
         def set_state_true ():
@@ -64,51 +64,51 @@ class BaseInternalsTestCase (NotifyTestCase):
 
         condition.state = False
 
-        not_condition.changed.disconnect (self.simple_handler)
+        not_condition.changed.disconnect (test.simple_handler)
         self.collect_garbage ()
         self.assert_(not not_condition._has_signal ())
 
-        not_condition.changed.connect (self.simple_handler)
+        not_condition.changed.connect (test.simple_handler)
         self.assert_(not_condition._has_signal ())
 
         condition.state = True
 
-        self.assert_results (False, True, False)
+        test.assert_results (False, True, False)
 
 
 
 class BaseWithChangesFrozenTestCase (NotifyTestCase):
 
     def test_with_changes_frozen_1 (self):
-        variable     = Variable ()
-        self.results = []
+        test     = NotifyTestObject ()
+        variable = Variable ()
 
-        variable.changed.connect (self.simple_handler)
+        variable.changed.connect (test.simple_handler)
         variable.with_changes_frozen (lambda: None)
 
         # Must not emit `changed' signal: no changes at all.
-        self.assert_results ()
+        test.assert_results ()
 
 
     def test_with_changes_frozen_2 (self):
-        variable     = Variable ()
-        self.results = []
+        test     = NotifyTestObject ()
+        variable = Variable ()
 
-        variable.changed.connect (self.simple_handler)
+        variable.changed.connect (test.simple_handler)
 
         def do_changes ():
             variable.value = 1
 
         variable.with_changes_frozen (do_changes)
 
-        self.assert_results (1)
+        test.assert_results (1)
 
 
     def test_with_changes_frozen_3 (self):
-        variable     = Variable ()
-        self.results = []
+        test     = NotifyTestObject ()
+        variable = Variable ()
 
-        variable.changed.connect (self.simple_handler)
+        variable.changed.connect (test.simple_handler)
 
         def do_changes ():
             variable.value = 1
@@ -116,14 +116,14 @@ class BaseWithChangesFrozenTestCase (NotifyTestCase):
 
         variable.with_changes_frozen (do_changes)
 
-        self.assert_results (2)
+        test.assert_results (2)
 
 
     def test_with_changes_frozen_4 (self):
-        variable     = Variable ()
-        self.results = []
+        test     = NotifyTestObject ()
+        variable = Variable ()
 
-        variable.changed.connect (self.simple_handler)
+        variable.changed.connect (test.simple_handler)
 
         def do_changes ():
             variable.value = 1
@@ -132,14 +132,14 @@ class BaseWithChangesFrozenTestCase (NotifyTestCase):
         variable.with_changes_frozen (do_changes)
 
         # Must not emit: value returned to original.
-        self.assert_results ()
+        test.assert_results ()
 
 
     def test_with_changes_frozen_5 (self):
-        variable     = Variable ()
-        self.results = []
+        test     = NotifyTestObject ()
+        variable = Variable ()
 
-        variable.changed.connect (self.simple_handler)
+        variable.changed.connect (test.simple_handler)
 
         def do_changes_1 ():
             variable.value = 1
@@ -151,14 +151,14 @@ class BaseWithChangesFrozenTestCase (NotifyTestCase):
 
         variable.with_changes_frozen (do_changes_1)
 
-        self.assert_results (2)
+        test.assert_results (2)
 
 
     def test_with_changes_frozen_6 (self):
-        variable     = Variable ()
-        self.results = []
+        test     = NotifyTestObject ()
+        variable = Variable ()
 
-        variable.changed.connect (self.simple_handler)
+        variable.changed.connect (test.simple_handler)
 
         def do_changes_1 ():
             def do_changes_2 ():
@@ -170,14 +170,14 @@ class BaseWithChangesFrozenTestCase (NotifyTestCase):
 
         variable.with_changes_frozen (do_changes_1)
 
-        self.assert_results (2)
+        test.assert_results (2)
 
 
     def test_with_changes_frozen_7 (self):
-        variable     = Variable ()
-        self.results = []
+        test     = NotifyTestObject ()
+        variable = Variable ()
 
-        variable.changed.connect (self.simple_handler)
+        variable.changed.connect (test.simple_handler)
 
         def do_changes_1 ():
             def do_changes_2 ():
@@ -190,17 +190,17 @@ class BaseWithChangesFrozenTestCase (NotifyTestCase):
         variable.with_changes_frozen (do_changes_1)
 
         # Must not emit: value returned to original.
-        self.assert_results ()
+        test.assert_results ()
 
 
     def test_with_derived_variable_changes_frozen_1 (self):
         DerivedVariable = AbstractVariable.derive_type ('DerivedVariable',
                                                         getter = lambda variable: values['x'])
-        values       = { 'x': 1 }
-        variable     = DerivedVariable ()
-        self.results = []
+        test            = NotifyTestObject ()
+        values          = { 'x': 1 }
+        variable        = DerivedVariable ()
 
-        variable.store (self.simple_handler)
+        variable.store (test.simple_handler)
 
         def do_changes (values):
             values['x'] = 2
@@ -209,7 +209,7 @@ class BaseWithChangesFrozenTestCase (NotifyTestCase):
 
         # Though we never call _value_changed(), with_changes_frozen() promises to call it
         # itself in such cases.
-        self.assert_results (1, 2)
+        test.assert_results (1, 2)
 
 
 

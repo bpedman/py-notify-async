@@ -83,8 +83,10 @@
 /* Hide difference between old strings and Unicode strings used in Py3k. */
 #if defined (PY_MAJOR_VERSION) && PY_MAJOR_VERSION >= 3
 #  define Compatibility_String_FromString PyUnicode_FromString
+#  define Compatibility_String_AsString   PyUnicode_AsString
 #else
 #  define Compatibility_String_FromString PyString_FromString
+#  define Compatibility_String_AsString   PyString_AsString
 #endif
 
 
@@ -188,7 +190,19 @@ L{protected <AbstractGCProtector.protect>}.  Of the standard protectors only \
 C{L{RaisingGCProtector}} ever raises these exceptions."
 
 
-#define GC_PROTECTOR_META_DOC NULL
+#define GC_PROTECTOR_META_DOC "\
+A meta-class for C{L{AbstractGCProtector}}.  Its only purpose is to define C{L{default}} \
+property of the class.  In principle, it can be used for your classes too, but better subclass \
+C{AbstractGCProtector} instead."
+
+#define GC_PROTECTOR_META_DEFAULT_DOC "\
+Current default GC protector.  Starts out as an instance of C{L{FastGCProtector}}, but can be \
+changed for debugging purposes.  Note that setting this class property is only possible if \
+current default protector doesn't have any active protections, i.e. if its \
+C{num_active_protections} property is zero (or has any false truth value).  This is generally \
+true only at the start of the program, so you cannot arbitrarily switch protectors.  Doing so \
+would lead to unpredictable consequences, up to crashing the interpreter, therefore the \
+restriction."
 
 
 #define ABSTRACT_GC_PROTECTOR_DOC "\
@@ -224,10 +238,7 @@ For convenience, this function always returns C{object} itself.\n\
 #define ABSTRACT_GC_PROTECTOR_SET_DEFAULT_DOC "\
 set_default(protector) \
 \n\
-Set the value of the C{L{default}} variable.  You are advised to do this only once (if at all) \
-somewhere near beginning of your program, because switching protectors being used may even \
-crash Python.  A good reason for calling C{set_default} might be a need to debug protection \
-problems, e.g. with a C{L{DebugGCProtector}}."
+This method is deprecated.  Instead, set C{AbstractGCProtector.default} directly."
 
 
 #define FAST_GC_PROTECTOR_DOC "\
@@ -300,9 +311,10 @@ various protection information.\n\
 
 /*- Types ----------------------------------------------------------*/
 
-PyGetSetDef  GCProtectorMeta_getsets[]
-  = { { "default", GCProtectorMeta_get_default, GCProtectorMeta_set_default, NULL },
-      { NULL, NULL, NULL, NULL } };
+PyGetSetDef  GCProtectorMeta_properties[]
+  = { { "default", GCProtectorMeta_get_default, GCProtectorMeta_set_default,
+        GC_PROTECTOR_META_DEFAULT_DOC, NULL },
+      { NULL, NULL, NULL, NULL, NULL } };
 
 PyTypeObject  GCProtectorMeta_Type
   = { Compatibility_VarObject_HEAD_INIT (0)
@@ -334,7 +346,7 @@ PyTypeObject  GCProtectorMeta_Type
       (iternextfunc)   0,                            /* tp_iternext       */
       0,                                             /* tp_methods        */
       0,                                             /* tp_members        */
-      GCProtectorMeta_getsets,                       /* tp_getset         */
+      GCProtectorMeta_properties,                    /* tp_getset         */
       0,                                             /* tp_base           */
       (PyObject *)     0,                            /* tp_dict           */
       0,                                             /* tp_descr_get      */
@@ -600,7 +612,6 @@ GCProtectorMeta_setattro (PyObject *type, PyObject *name, PyObject *value)
       return PyType_Type.tp_setattro (type, name, value);
 
     default:
-    case -1:
       return -1;
     }
 }
@@ -616,12 +627,71 @@ GCProtectorMeta_get_default (PyObject *type, void *context)
 static int
 GCProtectorMeta_set_default (PyObject *type, PyObject *value, void *context)
 {
-  Py_DECREF (default_protector);
+  if (value == default_protector)
+    return 0;
 
-  default_protector = value;
-  Py_INCREF (default_protector);
+  switch (PyObject_IsInstance (value, (PyObject *) &AbstractGCProtector_Type))
+    {
+    case 1:
+      {
+        PyObject *num_active_protections = PyObject_GetAttrString (default_protector,
+                                                                   "num_active_protections");
 
-  return 0;
+        if (num_active_protections)
+          {
+            switch (PyObject_IsTrue (num_active_protections))
+              {
+              case 0:
+                Py_DECREF (num_active_protections);
+                break;
+
+              case 1:
+                {
+                  PyObject *as_string = PyObject_Str (num_active_protections);
+
+                  if (as_string)
+                    {
+                      PyErr_Format (PyExc_ValueError,
+                                    ("cannot set a different GC protector: current has active "
+                                     "protections (num_active_protections = %.200s)"),
+                                    Compatibility_String_AsString (as_string));
+                    }
+                  else
+                    {
+                      PyErr_Clear ();
+                      PyErr_SetString (PyExc_ValueError, ("cannot set a different GC protector: "
+                                                          "current has active protections"));
+                    }
+                }
+
+              default:
+                Py_DECREF (num_active_protections);
+                return -1;
+              }
+          }
+        else
+          {
+            /* Assume that there is no such attribute then. */
+            PyErr_Clear ();
+          }
+
+        Py_DECREF (default_protector);
+
+        default_protector = value;
+        Py_INCREF (default_protector);
+
+        return 0;
+      }
+
+    case 0:
+      PyErr_Format (PyExc_ValueError,
+                    ("can only set AbstractGCProtector.default to an instance of "
+                     "AbstractGCProtector; got %.200s instead"),
+                    value->ob_type->tp_name);
+      break;
+    }
+
+  return -1;
 }
 
 

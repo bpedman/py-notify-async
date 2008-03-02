@@ -32,7 +32,7 @@ if __name__ == '__main__':
 import unittest
 
 from notify.signal import AbstractSignal, Signal
-from test.__common import NotifyTestCase
+from test.__common import NotifyTestCase, NotifyTestObject
 
 
 
@@ -43,136 +43,136 @@ from test.__common import NotifyTestCase
 class SimpleSignalTestCase (NotifyTestCase):
 
     def test_connect (self):
-        signal       = Signal ()
-        self.results = []
+        test   = NotifyTestObject ()
+        signal = Signal ()
 
-        signal.connect (self.simple_handler)
+        signal.connect (test.simple_handler)
         signal.emit ()
 
         self.assert_        (signal.has_handlers ())
         self.assert_        (signal)
-        self.assert_results (())
+        test.assert_results (())
 
 
     def test_connect_safe (self):
-        signal       = Signal ()
-        self.results = []
+        test   = NotifyTestObject ()
+        signal = Signal ()
 
-        signal.connect_safe (self.simple_handler)
-        signal.connect_safe (self.simple_handler)
+        signal.connect_safe (test.simple_handler)
+        signal.connect_safe (test.simple_handler)
         signal.emit ()
 
         self.assert_        (signal.has_handlers ())
         self.assert_        (signal)
-        self.assert_results (())
+        test.assert_results (())
 
 
     def test_connect_with_arguments (self):
-        signal       = Signal ()
-        self.results = []
+        test   = NotifyTestObject ()
+        signal = Signal ()
 
-        signal.connect_safe (self.simple_handler, 'one argument')
-        signal.connect_safe (self.simple_handler, 'first', 'second', 3)
+        signal.connect_safe (test.simple_handler, 'one argument')
+        signal.connect_safe (test.simple_handler, 'first', 'second', 3)
 
         signal.emit ()
         signal.emit ('a', 'b')
 
-        self.assert_results ('one argument', ('first', 'second', 3),
+        test.assert_results ('one argument', ('first', 'second', 3),
                              ('one argument', 'a', 'b'), ('first', 'second', 3, 'a', 'b'))
 
 
     def test_argument_passing (self):
-        signal       = Signal ()
-        self.results = []
+        test   = NotifyTestObject ()
+        signal = Signal ()
 
-        signal.connect (self.simple_handler)
+        signal.connect (test.simple_handler)
         signal.emit (45, 'abc')
 
-        self.assert_results ((45, 'abc'))
+        test.assert_results ((45, 'abc'))
 
 
     def test_disconnect (self):
-        signal       = Signal ()
-        self.results = []
+        test   = NotifyTestObject ()
+        signal = Signal ()
 
-        signal.connect (self.simple_handler)
+        signal.connect (test.simple_handler)
         signal.emit ()
 
-        signal.disconnect (self.simple_handler)
+        signal.disconnect (test.simple_handler)
         signal.emit ()
 
-        self.assert_results (())
+        test.assert_results (())
 
 
     def test_disconnect_all (self):
-        signal       = Signal ()
-        self.results = []
+        test   = NotifyTestObject ()
+        signal = Signal ()
 
-        signal.connect (self.simple_handler)
-        signal.connect (self.simple_handler)
-        signal.connect (self.simple_handler)
+        signal.connect (test.simple_handler)
+        signal.connect (test.simple_handler)
+        signal.connect (test.simple_handler)
         signal.emit (1)
 
-        signal.disconnect (self.simple_handler)
+        signal.disconnect (test.simple_handler)
         signal.emit (2)
 
-        signal.disconnect_all (self.simple_handler)
+        signal.disconnect_all (test.simple_handler)
         signal.emit (3)
 
-        self.assert_results (1, 1, 1, 2, 2)
+        test.assert_results (1, 1, 1, 2, 2)
 
 
     def test_connect_disconnect (self):
-        signal       = Signal ()
-        self.results = []
+        test   = NotifyTestObject ()
+        signal = Signal ()
 
-        signal.connect (self.simple_handler)
-        signal.connect (self.simple_handler_100)
+        signal.connect (test.simple_handler)
+        signal.connect (test.simple_handler_100)
 
         signal.emit (1)
 
         # This must be a no-op.
-        signal.connect    (self.simple_handler)
-        signal.disconnect (self.simple_handler)
+        signal.connect    (test.simple_handler)
+        signal.disconnect (test.simple_handler)
 
         signal.emit (2)
 
         # This must be a no-op.
-        signal.connect    (self.simple_handler_100)
-        signal.disconnect (self.simple_handler_100)
+        signal.connect    (test.simple_handler_100)
+        signal.disconnect (test.simple_handler_100)
 
         signal.emit (3)
 
-        self.assert_results (1, 101, 2, 102, 3, 103)
+        test.assert_results (1, 101, 2, 102, 3, 103)
 
 
     def test_block (self):
-        signal       = Signal ()
-        self.results = []
+        test   = NotifyTestObject ()
+        signal = Signal ()
 
-        signal.connect (self.simple_handler)
+        signal.connect (test.simple_handler)
         signal.emit (1)
 
-        signal.block (self.simple_handler)
+        signal.block (test.simple_handler)
         signal.emit (2)
 
-        self.assert_results (1)
+        test.assert_results (1)
 
 
     def test_unblock (self):
-        signal       = Signal ()
-        self.results = []
+        test   = NotifyTestObject ()
+        signal = Signal ()
 
-        signal.connect (self.simple_handler)
+        signal.connect (test.simple_handler)
         signal.emit (1)
 
-        signal.block (self.simple_handler)
+        signal.block (test.simple_handler)
         signal.emit (2)
 
-        signal.unblock (self.simple_handler)
+        signal.unblock (test.simple_handler)
         signal.emit (3)
 
-        self.assert_results (1, 3)
+        test.assert_results (1, 3)
 
 
     def test_emission_level_1 (self):
@@ -196,32 +196,32 @@ class SimpleSignalTestCase (NotifyTestCase):
 
 
     def test_emission_level_2 (self):
-        signal       = Signal ()
-        self.results = []
+        test   = NotifyTestObject ()
+        signal = Signal ()
 
         def reemit_if_shallow ():
-            self.results.append (signal.emission_level)
+            test.results.append (signal.emission_level)
             if signal.emission_level < 3:
                 signal.emit ()
 
         signal.connect (reemit_if_shallow)
         signal.emit ()
 
-        self.assert_results (1, 2, 3)
+        test.assert_results (1, 2, 3)
 
 
     def test_emission_stop_1 (self):
         def stop_emission ():
             signal.stop_emission ()
 
-        signal       = Signal ()
-        self.results = []
+        test   = NotifyTestObject ()
+        signal = Signal ()
 
         signal.connect (stop_emission)
-        signal.connect (self.simple_handler)
+        signal.connect (test.simple_handler)
         signal.emit    ()
 
-        self.assert_results ()
+        test.assert_results ()
 
 
     def test_emission_stop_2 (self):
@@ -230,18 +230,18 @@ class SimpleSignalTestCase (NotifyTestCase):
             if number < 10:
                 signal (number + 1)
 
-        signal       = Signal ()
-        self.results = []
+        test   = NotifyTestObject ()
+        signal = Signal ()
 
-        signal.connect (self.simple_handler)
+        signal.connect (test.simple_handler)
         signal.connect (reemit_signal)
 
         # This must never be called since emission is stopped by the previous handler.
-        signal.connect (self.simple_handler)
+        signal.connect (test.simple_handler)
 
         signal.emit (0)
 
-        self.assert_results (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+        test.assert_results (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 
 
     def test_emission_stop_3 (self):
@@ -260,43 +260,34 @@ class SimpleSignalTestCase (NotifyTestCase):
 class RecursiveEmissionSignalTestCase (NotifyTestCase):
 
     def test_recursive_invocation_1 (self):
-        signal       = Signal ()
-        self.signal  = signal
-        self.results = []
+        test = self._RecursiveTestObject (Signal ())
 
-        signal.connect (self.recursive_handler)
-        signal.emit (0)
+        test.signal.connect (test.recursive_handler)
+        test.signal.emit (0)
 
-        del self.signal
-        self.assert_results (0, 1, 2, 3, 4)
+        test.assert_results (0, 1, 2, 3, 4)
 
 
     def test_recursive_invocation_2 (self):
-        signal       = Signal ()
-        self.signal  = signal
-        self.results = []
+        test = self._RecursiveTestObject (Signal ())
 
-        signal.connect (self.recursive_handler)
-        signal.connect (self.simple_handler_100)
-        signal.emit (0)
+        test.signal.connect (test.recursive_handler)
+        test.signal.connect (test.simple_handler_100)
+        test.signal.emit (0)
 
-        del self.signal
-        self.assert_results (0, 1, 2, 3, 4,
+        test.assert_results (0, 1, 2, 3, 4,
                              104, 103, 102, 101, 100)
 
 
     def test_recursive_invocation_3 (self):
-        signal       = Signal ()
-        self.signal  = signal
-        self.results = []
+        test = self._RecursiveTestObject (Signal ())
 
-        signal.connect (self.simple_handler_100)
-        signal.connect (self.recursive_handler)
-        signal.connect (self.simple_handler_200)
-        signal.emit (0)
+        test.signal.connect (test.simple_handler_100)
+        test.signal.connect (test.recursive_handler)
+        test.signal.connect (test.simple_handler_200)
+        test.signal.emit (0)
 
-        del self.signal
-        self.assert_results (100, 0,
+        test.assert_results (100, 0,
                              101, 1,
                              102, 2,
                              103, 3,
@@ -305,15 +296,12 @@ class RecursiveEmissionSignalTestCase (NotifyTestCase):
 
 
     def test_connect_in_recursive_emission_1 (self):
-        signal       = Signal ()
-        self.signal  = signal
-        self.results = []
+        test = self._RecursiveTestObject (Signal ())
 
-        signal.connect (self.connecting_recursive_handler)
-        signal.emit (0)
+        test.signal.connect (test.connecting_recursive_handler)
+        test.signal.emit (0)
 
-        del self.signal
-        self.assert_results (0, 1, 2, 3, 4,
+        test.assert_results (0, 1, 2, 3, 4,
                              104, 104, 104,
                              103, 103, 103,
                              102, 102, 102,
@@ -322,55 +310,43 @@ class RecursiveEmissionSignalTestCase (NotifyTestCase):
 
 
     def test_connect_in_recursive_emission_2 (self):
-        signal       = Signal ()
-        self.signal  = signal
-        self.results = []
+        test = self._RecursiveTestObject (Signal ())
 
-        signal.connect (self.safe_connecting_recursive_handler)
-        signal.emit (0)
+        test.signal.connect (test.safe_connecting_recursive_handler)
+        test.signal.emit (0)
 
-        del self.signal
-        self.assert_results (0, 1, 2, 3, 4,
+        test.assert_results (0, 1, 2, 3, 4,
                              104, 103, 102, 101, 100)
 
 
     def test_disconnect_in_recursive_emission_1 (self):
-        signal       = Signal ()
-        self.signal  = signal
-        self.results = []
+        test = self._RecursiveTestObject (Signal ())
 
-        signal.connect (self.simple_handler_100)
-        signal.connect (self.disconnecting_recursive_handler)
-        signal.emit (0)
+        test.signal.connect (test.simple_handler_100)
+        test.signal.connect (test.disconnecting_recursive_handler)
+        test.signal.emit (0)
 
-        del self.signal
-        self.assert_results (100, 0, 101, 1, 102, 2, 3, 4)
+        test.assert_results (100, 0, 101, 1, 102, 2, 3, 4)
 
 
     def test_disconnect_in_recursive_emission_2 (self):
-        signal       = Signal ()
-        self.signal  = signal
-        self.results = []
+        test = self._RecursiveTestObject (Signal ())
 
-        signal.connect (self.self_disconnecting_recursive_handler)
-        signal.emit (0)
+        test.signal.connect (test.self_disconnecting_recursive_handler)
+        test.signal.emit (0)
 
-        del self.signal
-        self.assert_results (0, 1, 2)
+        test.assert_results (0, 1, 2)
 
 
     def test_block_in_recursive_emission_1 (self):
-        signal       = Signal ()
-        self.signal  = signal
-        self.results = []
+        test = self._RecursiveTestObject (Signal ())
 
-        signal.connect (self.simple_handler_100)
-        signal.connect (self.blocking_recursive_handler)
-        signal.connect (self.simple_handler_100)
-        signal.emit (0)
+        test.signal.connect (test.simple_handler_100)
+        test.signal.connect (test.blocking_recursive_handler)
+        test.signal.connect (test.simple_handler_100)
+        test.signal.emit (0)
 
-        del self.signal
-        self.assert_results (100, 0,
+        test.assert_results (100, 0,
                              101, 1,
                              102, 2,
                              3,
@@ -379,118 +355,119 @@ class RecursiveEmissionSignalTestCase (NotifyTestCase):
 
 
     def test_block_in_recursive_emission_2 (self):
-        signal       = Signal ()
-        self.results = []
+        test = self._RecursiveTestObject (Signal ())
 
-        signal.connect (self.simple_handler)
-        signal.connect (lambda x: signal.block (self.simple_handler))
-        signal.connect (self.simple_handler)
+        test.signal.connect (test.simple_handler)
+        test.signal.connect (lambda x: test.signal.block (test.simple_handler))
+        test.signal.connect (test.simple_handler)
 
-        signal.emit (1)
+        test.signal.emit (1)
 
-        self.assert_results (1)
+        test.assert_results (1)
 
 
     def test_unblock_in_recursive_emission_1 (self):
-        signal       = Signal ()
-        self.results = []
+        test = self._RecursiveTestObject (Signal ())
 
-        signal.connect (self.simple_handler)
-        signal.connect (lambda x: signal.unblock (self.simple_handler))
-        signal.connect (self.simple_handler)
+        test.signal.connect (test.simple_handler)
+        test.signal.connect (lambda x: test.signal.unblock (test.simple_handler))
+        test.signal.connect (test.simple_handler)
 
-        signal.block (self.simple_handler)
-        signal.emit (1)
+        test.signal.block (test.simple_handler)
+        test.signal.emit (1)
 
-        self.assert_results (1)
+        test.assert_results (1)
 
 
     def test_unblock_in_recursive_emission_2 (self):
-        signal       = Signal ()
-        self.signal  = signal
-        self.results = []
+        test = self._RecursiveTestObject (Signal ())
 
-        signal.connect (self.simple_handler_100)
-        signal.connect (self.unblocking_recursive_handler)
-        signal.connect (self.simple_handler_100)
+        test.signal.connect (test.simple_handler_100)
+        test.signal.connect (test.unblocking_recursive_handler)
+        test.signal.connect (test.simple_handler_100)
 
-        signal.block (self.simple_handler_100)
-        signal.block (self.simple_handler_100)
+        test.signal.block (test.simple_handler_100)
+        test.signal.block (test.simple_handler_100)
 
-        signal.emit (0)
+        test.signal.emit (0)
 
-        del self.signal
-        self.assert_results (0, 1, 2, 3, 104, 4, 104, 103, 102, 101, 100)
+        test.assert_results (0, 1, 2, 3, 104, 4, 104, 103, 102, 101, 100)
 
 
-    def recursive_handler (self, *arguments):
-        self.simple_handler (*arguments)
+    class _RecursiveTestObject (NotifyTestObject):
 
-        if arguments[0] < 4:
-            self.signal.emit (arguments[0] + 1)
+        def __init__(self, signal):
+            super (RecursiveEmissionSignalTestCase._RecursiveTestObject, self).__init__()
+            self.signal = signal
 
+        def recursive_handler (self, *arguments):
+            self.simple_handler (*arguments)
 
-    def connecting_recursive_handler (self, *arguments):
-        self.simple_handler (*arguments)
-
-        if arguments[0] >= 2:
-            self.signal.connect (self.simple_handler_100)
-
-        if arguments[0] < 4:
-            self.signal.emit (arguments[0] + 1)
+            if arguments[0] < 4:
+                self.signal.emit (arguments[0] + 1)
 
 
-    def safe_connecting_recursive_handler (self, *arguments):
-        self.simple_handler (*arguments)
+        def connecting_recursive_handler (self, *arguments):
+            self.simple_handler (*arguments)
 
-        if arguments[0] >= 2:
-            self.signal.connect_safe (self.simple_handler_100)
+            if arguments[0] >= 2:
+                self.signal.connect (self.simple_handler_100)
 
-        if arguments[0] < 4:
-            self.signal.emit (arguments[0] + 1)
-
-
-    def disconnecting_recursive_handler (self, *arguments):
-        self.simple_handler (*arguments)
-
-        if arguments[0] >= 2:
-            self.signal.disconnect (self.simple_handler_100)
-
-        if arguments[0] < 4:
-            self.signal.emit (arguments[0] + 1)
+            if arguments[0] < 4:
+                self.signal.emit (arguments[0] + 1)
 
 
-    def self_disconnecting_recursive_handler (self, *arguments):
-        self.simple_handler (*arguments)
+        def safe_connecting_recursive_handler (self, *arguments):
+            self.simple_handler (*arguments)
 
-        if arguments[0] >= 2:
-            self.signal.disconnect (self.self_disconnecting_recursive_handler)
+            if arguments[0] >= 2:
+                self.signal.connect_safe (self.simple_handler_100)
 
-        if arguments[0] < 4:
-            self.signal.emit (arguments[0] + 1)
-
-
-    def blocking_recursive_handler (self, *arguments):
-        self.simple_handler (*arguments)
-
-        if arguments[0] >= 2:
-            self.signal.block (self.simple_handler_100)
-
-        if arguments[0] < 4:
-            self.signal.emit (arguments[0] + 1)
-
-        if arguments[0] >= 2:
-            self.signal.unblock (self.simple_handler_100)
+            if arguments[0] < 4:
+                self.signal.emit (arguments[0] + 1)
 
 
-    def unblocking_recursive_handler (self, *arguments):
-        self.simple_handler (*arguments)
+        def disconnecting_recursive_handler (self, *arguments):
+            self.simple_handler (*arguments)
 
-        if arguments[0] >= 2:
-            self.signal.unblock (self.simple_handler_100)
+            if arguments[0] >= 2:
+                self.signal.disconnect (self.simple_handler_100)
 
-        if arguments[0] < 4:
-            self.signal.emit (arguments[0] + 1)
+            if arguments[0] < 4:
+                self.signal.emit (arguments[0] + 1)
+
+
+        def self_disconnecting_recursive_handler (self, *arguments):
+            self.simple_handler (*arguments)
+
+            if arguments[0] >= 2:
+                self.signal.disconnect (self.self_disconnecting_recursive_handler)
+
+            if arguments[0] < 4:
+                self.signal.emit (arguments[0] + 1)
+
+
+        def blocking_recursive_handler (self, *arguments):
+            self.simple_handler (*arguments)
+
+            if arguments[0] >= 2:
+                self.signal.block (self.simple_handler_100)
+
+            if arguments[0] < 4:
+                self.signal.emit (arguments[0] + 1)
+
+            if arguments[0] >= 2:
+                self.signal.unblock (self.simple_handler_100)
+
+
+        def unblocking_recursive_handler (self, *arguments):
+            self.simple_handler (*arguments)
+
+            if arguments[0] >= 2:
+                self.signal.unblock (self.simple_handler_100)
+
+            if arguments[0] < 4:
+                self.signal.emit (arguments[0] + 1)
 
 
 
@@ -597,18 +574,18 @@ class HandlerGarbageCollectionTestCase (NotifyTestCase):
 
     class HandlerObject (object):
 
-        def __init__(self, test_case):
-            self.__test_case = test_case
+        def __init__(self, test):
+            self.__test = test
 
         def simple_handler (self, *arguments):
-            self.__test_case.simple_handler (*arguments)
+            self.__test.simple_handler (*arguments)
 
 
     def test_handler_garbage_collection_1 (self):
-        signal       = Signal ()
-        self.results = []
+        test   = NotifyTestObject ()
+        signal = Signal ()
 
-        handler = HandlerGarbageCollectionTestCase.HandlerObject (self)
+        handler = HandlerGarbageCollectionTestCase.HandlerObject (test)
         signal.connect (handler.simple_handler)
 
         self.assert_(signal._handlers is not None)
@@ -623,14 +600,14 @@ class HandlerGarbageCollectionTestCase (NotifyTestCase):
         signal.emit (2)
 
         self.assert_(signal._handlers is None)
-        self.assert_results (1)
+        test.assert_results (1)
 
 
     def test_handler_garbage_collection_2 (self):
-        signal       = Signal ()
-        self.results = []
+        test   = NotifyTestObject ()
+        signal = Signal ()
 
-        handler = HandlerGarbageCollectionTestCase.HandlerObject (self)
+        handler = HandlerGarbageCollectionTestCase.HandlerObject (test)
 
         signal.connect (lambda *ignored: signal.stop_emission ())
         signal.connect (handler.simple_handler)
@@ -649,17 +626,17 @@ class HandlerGarbageCollectionTestCase (NotifyTestCase):
         # Even though emission is stopped by the first handler, signal must still notice
         # that it should remove the second one.
         self.assertEqual (len (signal._handlers), 1)
-        self.assert_results ()
+        test.assert_results ()
 
 
     def test_handler_garbage_collection_3 (self):
-        signal       = Signal (AbstractSignal.ANY_ACCEPTS)
-        self.results = []
+        test   = NotifyTestObject ()
+        signal = Signal (AbstractSignal.ANY_ACCEPTS)
 
-        handler = HandlerGarbageCollectionTestCase.HandlerObject (self)
+        handler = HandlerGarbageCollectionTestCase.HandlerObject (test)
 
         def accepting_handler (*arguments):
-            self.simple_handler_100 (*arguments)
+            test.simple_handler_100 (*arguments)
             return arguments[0]
 
         signal.connect (accepting_handler)
@@ -679,75 +656,75 @@ class HandlerGarbageCollectionTestCase (NotifyTestCase):
         # This time emission is stopped by accumulator, but still the gc-collected handler
         # must be removed.
         self.assertEqual (len (signal._handlers), 1)
-        self.assert_results (101, 102)
+        test.assert_results (101, 102)
 
 
 
 class ExoticSignalTestCase (NotifyTestCase):
 
     def test_disconnect_blocked_handler_1 (self):
-        signal       = Signal ()
-        self.results = []
+        test   = NotifyTestObject ()
+        signal = Signal ()
 
-        signal.connect (self.simple_handler)
+        signal.connect (test.simple_handler)
         signal.emit (1)
 
-        signal.block (self.simple_handler)
+        signal.block (test.simple_handler)
         signal.emit (2)
 
-        signal.disconnect (self.simple_handler)
+        signal.disconnect (test.simple_handler)
         signal.emit (3)
 
-        signal.connect (self.simple_handler)
+        signal.connect (test.simple_handler)
         signal.emit (4)
 
-        self.assert_results (1, 4)
+        test.assert_results (1, 4)
 
 
     def test_disconnect_blocked_handler_2 (self):
-        signal       = Signal ()
-        self.results = []
+        test   = NotifyTestObject ()
+        signal = Signal ()
 
-        signal.connect (self.simple_handler)
-        signal.connect (self.simple_handler)
+        signal.connect (test.simple_handler)
+        signal.connect (test.simple_handler)
         signal.emit (1)
 
-        signal.block (self.simple_handler)
+        signal.block (test.simple_handler)
         signal.emit (2)
 
-        signal.disconnect (self.simple_handler)
+        signal.disconnect (test.simple_handler)
         signal.emit (3)
 
-        signal.connect (self.simple_handler)
+        signal.connect (test.simple_handler)
         signal.emit (4)
 
-        signal.unblock (self.simple_handler)
+        signal.unblock (test.simple_handler)
         signal.emit (5)
 
-        self.assert_results (1, 1, 5, 5)
+        test.assert_results (1, 1, 5, 5)
 
 
     def test_disconnect_blocked_handler_3 (self):
-        signal       = Signal ()
-        self.results = []
+        test   = NotifyTestObject ()
+        signal = Signal ()
 
-        signal.connect (self.simple_handler)
-        signal.connect (self.simple_handler)
+        signal.connect (test.simple_handler)
+        signal.connect (test.simple_handler)
         signal.emit (1)
 
-        signal.block (self.simple_handler)
+        signal.block (test.simple_handler)
         signal.emit (2)
 
-        signal.disconnect_all (self.simple_handler)
+        signal.disconnect_all (test.simple_handler)
         signal.emit (3)
 
-        signal.connect (self.simple_handler)
+        signal.connect (test.simple_handler)
         signal.emit (4)
 
-        signal.unblock (self.simple_handler)
+        signal.unblock (test.simple_handler)
         signal.emit (5)
 
-        self.assert_results (1, 1, 4, 5)
+        test.assert_results (1, 1, 4, 5)
 
 
 
