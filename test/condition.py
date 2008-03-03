@@ -416,8 +416,7 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
 
         del variable
 
-        # Run twice so that both outstanding conditions can be collected.
-        self.collect_garbage (2)
+        self.collect_garbage ()
 
         self.assertEqual (condition1 (), None)
         self.assertEqual (condition2 (), None)
@@ -447,9 +446,7 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
 
         condition2 ().changed.disconnect (test.simple_handler)
 
-        # FIXME: Invent a way to calculate times that is not dependent on implementation
-        #        details.
-        self.collect_garbage (4)
+        self.collect_garbage ()
 
         self.assertEqual (condition1 (), None)
         self.assertEqual (condition2 (), None)
@@ -474,14 +471,14 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
             binary_condition = weakref.ref (binary_condition)
 
             del condition1
-            self.collect_garbage (2)
+            self.collect_garbage ()
 
             self.assertNotEqual (binary_condition (), None)
 
             condition2.state = True
 
             del condition2
-            self.collect_garbage (2)
+            self.collect_garbage ()
 
             self.assertEqual (binary_condition (), None)
 
@@ -505,21 +502,21 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
         if_else_condition = weakref.ref (if_else_condition)
 
         del condition2
-        self.collect_garbage (2)
+        self.collect_garbage ()
 
         self.assertNotEqual (if_else_condition (), None)
 
         condition3.state = False
 
         del condition1
-        self.collect_garbage (2)
+        self.collect_garbage ()
 
         self.assertNotEqual (if_else_condition (), None)
 
         condition3.state = True
 
         del condition3
-        self.collect_garbage (2)
+        self.collect_garbage ()
 
         self.assertEqual    (if_else_condition (), None)
         test.assert_results (True, False, True)
@@ -563,7 +560,7 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
         self.assertNotEqual (condition2 (), None)
 
         del signal
-        self.collect_garbage (2)
+        self.collect_garbage ()
 
         self.assertEqual (condition2 (), None)
 
@@ -585,7 +582,7 @@ class GarbageCollectionConditionTestCase (NotifyTestCase):
         condition1 = weakref.ref (condition1)
         condition2 = weakref.ref (condition2)
 
-        self.collect_garbage (2)
+        self.collect_garbage ()
 
         self.assertEqual (condition1 (), None)
         self.assertEqual (condition2 (), None)

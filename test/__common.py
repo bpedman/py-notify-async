@@ -25,6 +25,8 @@
 import gc
 import unittest
 
+from notify.gc import AbstractGCProtector
+
 
 __all__ = ('NotifyTestObject', 'NotifyTestCase', 'ignoring_exceptions')
 
@@ -70,8 +72,24 @@ class NotifyTestCase (unittest.TestCase):
 
 
     def setUp (self):
-        gc.set_threshold (0, 0, 0)
         super (NotifyTestCase, self).setUp ()
+
+        gc.set_threshold (0, 0, 0)
+        self.__num_active_protections = AbstractGCProtector.default.num_active_protections
+
+
+    # It is important to leave no garbage behind, since `AbstractGCProtector.default' is
+    # only assignable in 'fresh' state.
+    def tearDown (self):
+        super (NotifyTestCase, self).tearDown ()
+
+        self.collect_garbage ()
+
+        if AbstractGCProtector.default.num_active_protections != self.__num_active_protections:
+            raise ValueError (('number of active GC protections before and after the test differ: '
+                               '%d != %d')
+                              % (self.__num_active_protections,
+                                 AbstractGCProtector.default.num_active_protections))
 
 
     def non_existing_attribute_setter (self, object, name = 'this_attribute_sure_doesnt_exist'):
@@ -101,9 +119,36 @@ class NotifyTestCase (unittest.TestCase):
         # Note: hashes are _not_ required to be different, so don't test them.
 
 
-    def collect_garbage (self, times = 1):
-        for k in range (0, times):
-            gc.collect ()
+    def collect_garbage (self, times = None):
+        if times:
+            # This is the old way, not used now.  We use a slower, but more robust way of
+            # 'collect while collects' below.
+            for k in range (times):
+                gc.collect ()
+        else:
+            num_objects = self.__count_garbage_collectable_objects ()
+
+            # TODO: Account for 'statics' like notify.Condition.TRUE.  Condition below is
+            #       always false due to 'statics'.
+            if num_objects == 0:
+                return;
+
+            num_passes  = 0
+            while num_passes < 20:
+                gc.collect ()
+                num_objects_new = self.__count_garbage_collectable_objects ()
+
+                if num_objects_new < num_objects:
+                    num_objects  = num_objects_new
+                    num_passes  += 1
+                else:
+                    break
+
+    def __count_garbage_collectable_objects ():
+        return len ([object for object in gc.get_objects ()
+                     if type (object).__module__.startswith ('notify.')])
+
+    __count_garbage_collectable_objects = staticmethod (__count_garbage_collectable_objects)
 
 
     def note_skipped_tests (tests_defined = False):

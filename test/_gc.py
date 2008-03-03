@@ -51,12 +51,26 @@ class AbstractGCProtectorTestCase (NotifyTestCase):
 
         try:
             new_protector = FastGCProtector ()
-            AbstractGCProtector.set_default (new_protector)
+            AbstractGCProtector.default = new_protector
 
             self.assert_(AbstractGCProtector.default is new_protector)
 
         finally:
-            AbstractGCProtector.set_default (original_protector)
+            AbstractGCProtector.default = original_protector
+
+
+    def test_default_property_illegals (self):
+        def create_assigner (value):
+            def assigner ():
+                AbstractGCProtector.default = value
+            return assigner
+
+        self.assertRaises (ValueError, create_assigner (42))
+
+        # When current default protector is in use, it cannot be replaced.
+        AbstractGCProtector.default.protect (42)
+        self.assertRaises (ValueError, create_assigner (FastGCProtector ()))
+        AbstractGCProtector.default.unprotect (42)
 
 
 

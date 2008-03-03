@@ -1271,10 +1271,12 @@ class CleanSignal (Signal):
         """
 
         if self.__parent is not None:
+            # Note that we must clear `__parent' first, because call to unprotect() below
+            # can invoke our collect_garbage() which might then call unprotect() once more
+            # (i.e. one time too many in result).
+            self.__parent = None
             if self._handlers is not None:
                 AbstractGCProtector.default.unprotect (self)
-
-            self.__parent = None
 
     def __orphan (self, reference = None):
         self.orphan ()
@@ -1332,7 +1334,8 @@ class CleanSignal (Signal):
 
             if not self._handlers:
                 self._handlers = None
-                AbstractGCProtector.default.unprotect (self)
+                if self.__parent is not None:
+                    AbstractGCProtector.default.unprotect (self)
 
 
     def _additional_description (self, formatter):

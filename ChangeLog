@@ -1,3 +1,27 @@
+2008-03-03  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* test/_gc.py (AbstractGCProtectorTestCase.test_default_property):
+	Don't use deprecated set_default().
+	(AbstractGCProtectorTestCase.test_default_property_illegals): New
+	test.
+
+	* test/condition.py (GarbageCollectionConditionTestCase): Remove
+	explicit number of GC runs in several tests, rely on automatic
+	algorithm added in collect_garbage().
+
+	* test/__common.py (NotifyTestCase.tearDown): New method, collect
+	garbage after each test and check that number of active GC
+	protections doesn't change compared to before the test.
+	(NotifyTestCase.collect_garbage): Add a way to 'collect while
+	collects' to avoid specifying hardwired number of runs.
+	(NotifyTestCase.__count_garbage_collectable_objects): New
+	function.
+
+	* notify/signal.py (CleanSignal.orphan): Fix order of setting
+	`__parent' to None and call to unprotect().
+	(CleanSignal.collect_garbage): Fix: don't call unprotect() if we
+	are orphaned already.
+
 2008-03-02  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* test/__common.py (NotifyTestObject): New class, break out of
