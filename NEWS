@@ -1,3 +1,21 @@
+--- New in Py-notify 0.1.15 ------------------------------------------
+
+* Important bug-fix in `CleanSignal'.
+
+* `AbstractGCProtector.default' cannot be changed anymore if the
+  current default protector is used.  In practice, it can be changed
+  only on program startup.
+
+* Changed internals of `AbstractGCProtector.default' (in backward
+  compatible fashion) to avoid screwing class attribute cache in
+  upcoming Python 2.6 (see http://bugs.python.org/issue1878).
+
+* Documentation improvements.
+
+* 1 more unit test (158/180 in total).  Much improved test framework
+  catches more bugs for already written tests.
+
+
 --- New in Py-notify 0.1.14 ------------------------------------------
 
 * Update to work with SVN Py3k again.

@@ -1,5 +1,9 @@
 2008-03-03  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	* version: Release 0.1.15.
+
+	* NEWS: Update.
+
 	* test/_gc.py (AbstractGCProtectorTestCase.test_default_property):
 	Don't use deprecated set_default().
 	(AbstractGCProtectorTestCase.test_default_property_illegals): New
