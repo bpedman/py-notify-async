@@ -93,7 +93,7 @@ class TestProgram (unittest.TestProgram):
     def runTests (self):
         _build_extensions ()
 
-        print ('\nNote that most of the time is spent in gc.collect() calls, not in this package\n')
+        print ('\nNote that almost all time is spent in gc.collect() calls, not in this package\n')
         unittest.TestProgram.runTests (self)
 
 

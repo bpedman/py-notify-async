@@ -75,15 +75,23 @@ class NotifyTestCase (unittest.TestCase):
         super (NotifyTestCase, self).setUp ()
 
         gc.set_threshold (0, 0, 0)
-        self.__num_active_protections = AbstractGCProtector.default.num_active_protections
+
+        self.__num_collectable_objects = self.collect_garbage ()
+        self.__num_active_protections  = AbstractGCProtector.default.num_active_protections
 
 
     # It is important to leave no garbage behind, since `AbstractGCProtector.default' is
-    # only assignable in 'fresh' state.
+    # only assignable in 'fresh' state.  Tests also must be self-contained, therefore we
+    # check that tests don't leave new garbage-collectable objects or GC protections.
+    # Those almost certainly indicate a memory leak.
     def tearDown (self):
         super (NotifyTestCase, self).tearDown ()
 
-        self.collect_garbage ()
+        num_collectable_objects = self.collect_garbage ()
+        if num_collectable_objects != self.__num_collectable_objects:
+            raise ValueError (('number of garbage-collectable objects before and after the test '
+                               'differ: %d != %d')
+                              % (self.__num_collectable_objects, num_collectable_objects))
 
         if AbstractGCProtector.default.num_active_protections != self.__num_active_protections:
             raise ValueError (('number of active GC protections before and after the test differ: '
@@ -119,30 +127,27 @@ class NotifyTestCase (unittest.TestCase):
         # Note: hashes are _not_ required to be different, so don't test them.
 
 
-    def collect_garbage (self, times = None):
-        if times:
-            # This is the old way, not used now.  We use a slower, but more robust way of
-            # 'collect while collects' below.
-            for k in range (times):
-                gc.collect ()
-        else:
-            num_objects = self.__count_garbage_collectable_objects ()
+    def collect_garbage (self):
+        num_objects = self.__count_garbage_collectable_objects ()
 
-            # TODO: Account for 'statics' like notify.Condition.TRUE.  Condition below is
-            #       always false due to 'statics'.
-            if num_objects == 0:
-                return;
+        # TODO: Account for 'statics' like notify.Condition.TRUE.  Condition below is
+        #       always false due to these 'statics'.
+        if num_objects == 0:
+            return 0
 
-            num_passes  = 0
-            while num_passes < 20:
-                gc.collect ()
-                num_objects_new = self.__count_garbage_collectable_objects ()
+        num_passes  = 0
+        while num_passes < 20:
+            gc.collect ()
+            num_objects_new = self.__count_garbage_collectable_objects ()
 
-                if num_objects_new < num_objects:
-                    num_objects  = num_objects_new
-                    num_passes  += 1
-                else:
-                    break
+            if num_objects_new < num_objects:
+                num_objects  = num_objects_new
+                num_passes  += 1
+            else:
+                return num_objects
+
+        # If we spent a lot of passes, something is probably wrong.
+        return -1
 
     def __count_garbage_collectable_objects ():
         return len ([object for object in gc.get_objects ()

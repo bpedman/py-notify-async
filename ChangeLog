@@ -1,3 +1,14 @@
+2008-03-10  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* run-tests.py (TestProgram.runTests): Emphasize heavy
+	gc.collect() usage.
+
+	* test/__common.py (NotifyTestCase.setUp): Remember number of
+	garbage-collectable objects before test.
+	(NotifyTestCase.tearDown): Check that the number doesn't change.
+	(NotifyTestCase.collect_garbage): Remove the only
+	argument (unused).  Return number of garbage-collectable objects.
+
 2008-03-03  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* version: Release 0.1.15.
