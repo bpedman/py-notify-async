@@ -1,3 +1,9 @@
+2008-04-25  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* run-tests.py (_TestModuleImporter.__getattribute__): First try
+	if super method works (otherwise Py3k's unittest fails, it tries
+	to get `__call__' attribute).
+
 2008-03-10  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* run-tests.py (TestProgram.runTests): Emphasize heavy

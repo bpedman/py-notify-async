@@ -77,7 +77,10 @@ class _TestModuleImporter (object):
         return _import_module_tests (object.__getattribute__(self, '_module_name'))
 
     def __getattribute__(self, name):
-        return getattr (_import_module (object.__getattribute__(self, '_module_name')), name)
+        try:
+            return object.__getattribute__(self, name)
+        except AttributeError:
+            return getattr (_import_module (object.__getattribute__(self, '_module_name')), name)
 
 
 class AllTests (object):
