@@ -1,3 +1,15 @@
+### New in Py-notify 0.2.0 ###########################################
+
+* First stable version.  158/180 unit tests.  All pass with Python
+  2.3, 2.5, SVN trunk (heading to 2.6) and SVN py3k branch on Debian
+  GNU/Linux.
+
+* One more improvement in test framework.  Tiny improvement in
+  `run-tests.py' for Py3k.
+
+######################################################################
+
+
 --- New in Py-notify 0.1.15 ------------------------------------------
 
 * Important bug-fix in `CleanSignal'.

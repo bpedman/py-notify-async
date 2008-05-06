@@ -1,3 +1,9 @@
+2008-05-06  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* version: Release 0.2.0.
+
+	* NEWS: Update.
+
 2008-04-25  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* run-tests.py (_TestModuleImporter.__getattribute__): First try
