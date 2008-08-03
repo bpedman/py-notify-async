@@ -61,7 +61,7 @@
 #endif
 
 
-/* Again working around changes in Py3k. */
+/* Working around more changes in Py3k: module initialization. */
 #ifdef PyMODINIT_FUNC
 #  define Compatibility_MODINIT_FUNC PyMODINIT_FUNC
 #else
@@ -70,6 +70,45 @@
 #  else
 #    define Compatibility_MODINIT_FUNC void
 #  endif
+#endif
+
+#ifdef PyModuleDef_HEAD_INIT
+
+#  define Compatibility_ModuleDef                 PyModuleDef
+#  define Compatibility_ModuleDef_HEAD_INIT       PyModuleDef_HEAD_INIT
+#  define Compatibility_MODINIT_FUNC_NAME(module) PyInit_##module
+#  define Compatibility_ModuleCreate(definition)  PyModule_Create (definition)
+#  define Compatibility_ModulePostCreate(module, definition)                    \
+    (PyModule_AddStringConstant ((module), "__docformat__", "epytext en") == 0)
+
+#  define Compatibility_ModuleReturn(module)      return (module)
+
+#else
+
+typedef
+struct
+{
+  const int      dummy;
+  const char    *m_name;
+  const char    *m_doc;
+  int            m_size;
+  PyMethodDef   *m_methods;
+  inquiry        m_reload;
+  traverseproc   m_traverse;
+  inquiry        m_clear;
+  freefunc       m_free;
+}
+Compatibility_ModuleDef;
+
+#  define Compatibility_ModuleDef_HEAD_INIT       0
+#  define Compatibility_MODINIT_FUNC_NAME(module) init##module
+#  define Compatibility_ModuleCreate(definition)                                        \
+  Py_InitModule ((char *) (definition)->m_name, NULL)
+#  define Compatibility_ModulePostCreate(module, definition)                            \
+  (PyModule_AddStringConstant ((module), "__doc__", (char *) (definition)->m_doc) == 0  \
+     && PyModule_AddStringConstant ((module), "__docformat__", "epytext en") == 0)
+#  define Compatibility_ModuleReturn(module)      return
+
 #endif
 
 
@@ -311,12 +350,12 @@ various protection information.\n\
 
 /*- Types ----------------------------------------------------------*/
 
-PyGetSetDef  GCProtectorMeta_properties[]
+static PyGetSetDef  GCProtectorMeta_properties[]
   = { { "default", GCProtectorMeta_get_default, GCProtectorMeta_set_default,
         GC_PROTECTOR_META_DEFAULT_DOC, NULL },
       { NULL, NULL, NULL, NULL, NULL } };
 
-PyTypeObject  GCProtectorMeta_Type
+static PyTypeObject  GCProtectorMeta_Type
   = { Compatibility_VarObject_HEAD_INIT (0)
       "notify.gc.GCProtectorMeta",                   /* tp_name           */
       sizeof (PyHeapTypeObject),                     /* tp_basicsize      */
@@ -361,7 +400,7 @@ PyTypeObject  GCProtectorMeta_Type
     };
 
 
-PyMethodDef  AbstractGCProtector_methods[]
+static PyMethodDef  AbstractGCProtector_methods[]
   = { { "protect",     (PyCFunction) AbstractGCProtector_protect,
         METH_VARARGS | METH_KEYWORDS,             ABSTRACT_GC_PROTECTOR_PROTECT_DOC },
       { "unprotect",   (PyCFunction) AbstractGCProtector_unprotect,
@@ -370,7 +409,7 @@ PyMethodDef  AbstractGCProtector_methods[]
         METH_VARARGS | METH_KEYWORDS | METH_STATIC, ABSTRACT_GC_PROTECTOR_SET_DEFAULT_DOC },
       { NULL, NULL, 0, NULL } };
 
-PyTypeObject  AbstractGCProtector_Type
+static PyTypeObject  AbstractGCProtector_Type
   = { Compatibility_VarObject_HEAD_INIT (0)
       "notify.gc.AbstractGCProtector",               /* tp_name           */
       sizeof (PyObject),                             /* tp_basicsize      */
@@ -415,19 +454,19 @@ PyTypeObject  AbstractGCProtector_Type
     };
 
 
-PyMethodDef  FastGCProtector_methods[]
+static PyMethodDef  FastGCProtector_methods[]
   = { { "protect",     (PyCFunction) FastGCProtector_protect,
         METH_VARARGS | METH_KEYWORDS, FAST_GC_PROTECTOR_PROTECT_DOC },
       { "unprotect",   (PyCFunction) FastGCProtector_unprotect,
         METH_VARARGS | METH_KEYWORDS, FAST_GC_PROTECTOR_UNPROTECT_DOC },
       { NULL, NULL, 0, NULL } };
 
-PyGetSetDef  FastGCProtector_properties[]
+static PyGetSetDef  FastGCProtector_properties[]
   = { { "num_active_protections", (getter) FastGCProtector_get_num_active_protections, NULL,
         FAST_GC_PROTECTOR_NUM_ACTIVE_PROTECTIONS_DOC, NULL },
       { NULL, NULL, NULL, NULL, NULL } };
 
-PyTypeObject  FastGCProtector_Type
+static PyTypeObject  FastGCProtector_Type
   = { Compatibility_VarObject_HEAD_INIT (0)
       "notify.gc.FastGCProtector",                   /* tp_name           */
       sizeof (FastGCProtector),                      /* tp_basicsize      */
@@ -472,7 +511,7 @@ PyTypeObject  FastGCProtector_Type
     };
 
 
-PyMethodDef  RaisingGCProtector_methods[]
+static PyMethodDef  RaisingGCProtector_methods[]
   = { { "protect",     (PyCFunction) RaisingGCProtector_protect,
         METH_VARARGS | METH_KEYWORDS, RAISING_GC_PROTECTOR_PROTECT_DOC },
       { "unprotect",   (PyCFunction) RaisingGCProtector_unprotect,
@@ -481,14 +520,14 @@ PyMethodDef  RaisingGCProtector_methods[]
         METH_VARARGS | METH_KEYWORDS, RAISING_GC_PROTECTOR_GET_NUM_OBJECT_PROTECTIONS },
       { NULL, NULL, 0, NULL } };
 
-PyGetSetDef  RaisingGCProtector_properties[]
+static PyGetSetDef  RaisingGCProtector_properties[]
   = { { "num_protected_objects", (getter) RaisingGCProtector_get_num_protected_objects, NULL,
         RAISING_GC_PROTECTOR_NUM_PROTECTED_OBJECTS_DOC, NULL },
       { "num_active_protections", (getter) RaisingGCProtector_get_num_active_protections, NULL,
         RAISING_GC_PROTECTOR_NUM_ACTIVE_PROTECTIONS_DOC, NULL },
       { NULL, NULL, NULL, NULL, NULL } };
 
-PyTypeObject  RaisingGCProtector_Type
+static PyTypeObject  RaisingGCProtector_Type
   = { Compatibility_VarObject_HEAD_INIT (0)
       "notify.gc.RaisingGCProtector",                /* tp_name           */
       sizeof (RaisingGCProtector),                   /* tp_basicsize      */
@@ -533,12 +572,12 @@ PyTypeObject  RaisingGCProtector_Type
     };
 
 
-PyMethodDef  DebugGCProtector_methods[]
+static PyMethodDef  DebugGCProtector_methods[]
   = { { "unprotect",   (PyCFunction) DebugGCProtector_unprotect,
         METH_VARARGS | METH_KEYWORDS, DEBUG_GC_PROTECTOR_UNPROTECT_DOC },
       { NULL, NULL, 0, NULL } };
 
-PyTypeObject  DebugGCProtector_Type
+static PyTypeObject  DebugGCProtector_Type
   = { Compatibility_VarObject_HEAD_INIT (0)
       "notify.gc.DebugGCProtector_Type",             /* tp_name           */
       sizeof (DebugGCProtector),                     /* tp_basicsize      */
@@ -586,10 +625,22 @@ PyTypeObject  DebugGCProtector_Type
 
 /*- Static variables -----------------------------------------------*/
 
-static PyObject *  raise_not_implemented_exception = NULL;
+static Compatibility_ModuleDef  gc_module
+  = { Compatibility_ModuleDef_HEAD_INIT,
+      "notify.gc",
+      MODULE_DOC,
+      -1,
+      NULL,
+      NULL,
+      NULL,
+      NULL,
+      NULL };
+
 
 static char *      no_keywords[]           = { NULL };
 static char *      object_keywords[]       = { "object", NULL };
+
+static PyObject *  raise_not_implemented_exception = NULL;
 
 static PyObject *  unprotection_error_type = NULL;
 
@@ -1077,15 +1128,18 @@ DebugGCProtector_unprotect (DebugGCProtector *self, PyObject *arguments, PyObjec
 
 
 Compatibility_MODINIT_FUNC
-initgc (void)
+Compatibility_MODINIT_FUNC_NAME (gc) (void)
 {
   PyObject *module                        = NULL;
   PyObject *dictionary;
   PyObject *utilities                     = NULL;
   PyObject *unprotection_error_dictionary = NULL;
 
-  module = Py_InitModule ("notify.gc", NULL);
+  module = Compatibility_ModuleCreate (&gc_module);
   if (!module)
+    goto error;
+
+  if (!Compatibility_ModulePostCreate (module, &gc_module))
     goto error;
 
   dictionary = PyModule_GetDict (module);
@@ -1142,21 +1196,19 @@ initgc (void)
   if (!default_protector)
     goto error;
 
-  if (PyModule_AddStringConstant (module, "__doc__", MODULE_DOC) == -1)
-    goto error;
-  if (PyModule_AddStringConstant (module, "__docformat__", "epytext en") == -1)
-    goto error;
-
-  return;
+  goto do_return;
 
  error:
 
-  Py_XDECREF (module);
+  Compatibility_CLEAR (module);
   Py_XDECREF (utilities);
   Py_XDECREF (unprotection_error_dictionary);
   Py_XDECREF (raise_not_implemented_exception);
   Py_XDECREF (unprotection_error_type);
   Py_XDECREF (default_protector);
+
+ do_return:
+  Compatibility_ModuleReturn (module);
 }
 
 

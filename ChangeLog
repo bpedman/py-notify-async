@@ -1,3 +1,20 @@
+2008-08-03  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/gc.c (Compatibility_ModuleDef)
+	(Compatibility_ModuleDef_HEAD_INIT)
+	(Compatibility_MODINIT_FUNC_NAME, Compatibility_ModuleCreate)
+	(Compatibility_ModulePostCreate, Compatibility_ModuleReturn): New
+	macros (Compatibility_ModuleDef is a typedef for 2.x).
+	(gc_module): New constant structure.
+	(initgc): Use `Compatibility_MODINIT_FUNC_NAME' to construct name.
+	Use other new compatibility macros.
+	(GCProtectorMeta_properties, GCProtectorMeta_Type)
+	(AbstractGCProtector_methods, AbstractGCProtector_Type)
+	(FastGCProtector_methods, FastGCProtector_properties)
+	(FastGCProtector_Type, RaisingGCProtector_methods)
+	(RaisingGCProtector_properties, RaisingGCProtector_Type)
+	(DebugGCProtector_methods, DebugGCProtector_Type): Make static.
+
 2008-05-06  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* version: Release 0.2.0.
