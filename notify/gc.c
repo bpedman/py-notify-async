@@ -30,16 +30,33 @@
 #  define Compatibility_CLEAR(object) Py_CLEAR (object)
 #else
 #  define Compatibility_CLEAR(object)                   \
-      do                                                \
-        {                                               \
-          if (object)                                   \
-            {                                           \
-              PyObject *temp = (PyObject *) (object);   \
-              (object) = NULL;                          \
-              Py_DECREF (temp);                         \
-            }                                           \
-        }                                               \
-      while (0)
+     do                                                 \
+       {                                                \
+         if (object)                                    \
+           {                                            \
+             PyObject *temp = (PyObject *) (object);    \
+             (object) = NULL;                           \
+             Py_DECREF (temp);                          \
+           }                                            \
+       }                                                \
+     while (0)
+#endif
+
+/* Py_VISIT is not available in 2.3. */
+#ifdef Py_VISIT
+#  define Compatibility_VISIT(object) Py_VISIT (object)
+#else
+#  define Compatibility_VISIT(object)                           \
+     do                                                         \
+       {                                                        \
+         if (object)                                            \
+           {                                                    \
+             int result = visit ((PyObject *) (object), arg);   \
+             if (result)                                        \
+               return result;                                   \
+           }                                                    \
+       }                                                        \
+     while (0)
 #endif
 
 
@@ -72,18 +89,26 @@
 #  endif
 #endif
 
+
 #ifdef PyModuleDef_HEAD_INIT
 
 #  define Compatibility_ModuleDef                 PyModuleDef
 #  define Compatibility_ModuleDef_HEAD_INIT       PyModuleDef_HEAD_INIT
 #  define Compatibility_MODINIT_FUNC_NAME(module) PyInit_##module
+
 #  define Compatibility_ModuleCreate(definition)  PyModule_Create (definition)
-#  define Compatibility_ModulePostCreate(module, definition)                    \
-    (PyModule_AddStringConstant ((module), "__docformat__", "epytext en") == 0)
+#  define Compatibility_ModulePostCreate(module, definition)     \
+     (PyModule_AddStringConstant ((module), "__docformat__",     \
+                                  "epytext en") == 0)
 
 #  define Compatibility_ModuleReturn(module)      return (module)
 
-#else
+#  define Compatibility_ModuleState(def, module, type)           \
+     ((type *) PyModule_GetState (module))
+#  define Compatibility_ModuleStateFromDef(def, type)            \
+     ((type *) PyModule_GetState (PyState_FindModule (&def)))
+
+#else  /* !defined PyMODINIT_FUNC */
 
 typedef
 struct
@@ -102,14 +127,25 @@ Compatibility_ModuleDef;
 
 #  define Compatibility_ModuleDef_HEAD_INIT       0
 #  define Compatibility_MODINIT_FUNC_NAME(module) init##module
-#  define Compatibility_ModuleCreate(definition)                                        \
-  Py_InitModule ((char *) (definition)->m_name, NULL)
-#  define Compatibility_ModulePostCreate(module, definition)                            \
-  (PyModule_AddStringConstant ((module), "__doc__", (char *) (definition)->m_doc) == 0  \
-     && PyModule_AddStringConstant ((module), "__docformat__", "epytext en") == 0)
+
+#  define Compatibility_ModuleCreate(definition)                        \
+     Py_InitModule ((char *) (definition)->m_name, NULL)
+#  define Compatibility_ModulePostCreate(module, definition)            \
+     (PyModule_AddStringConstant ((module), "__doc__",                  \
+                                  (char *) (definition)->m_doc) == 0    \
+      && PyModule_AddStringConstant ((module), "__docformat__",         \
+                                     "epytext en") == 0)
+
 #  define Compatibility_ModuleReturn(module)      return
 
-#endif
+#  define Compatibility_ModuleState(def, module, type)                  \
+     (&__2_x_state__##def)
+#  define Compatibility_ModuleStateFromDef(def, type)                   \
+     (&__2_x_state__##def)
+#  define Compatibility_2_x_MODULE_STATE          1
+  
+
+#endif  /* !defined PyMODINIT_FUNC */
 
 
 /* Also compatibility, but let's avoid long name in this case. */
@@ -145,6 +181,7 @@ typedef
 struct
 {
   PyObject_HEAD
+  /* Note: no cyclic GC support is needed, because this dict is for internal use only. */
   PyObject *  protected_objects_dict;
   long int    num_active_protections;
 }
@@ -152,6 +189,17 @@ RaisingGCProtector;
 
 
 typedef  RaisingGCProtector  DebugGCProtector;
+
+
+typedef
+struct
+{
+  PyObject *  raise_not_implemented_exception;
+  PyObject *  unprotection_error_type;
+  PyObject *  default_protector;
+  PyObject *  default_attribute_name;
+}
+GCModuleState;
 
 
 
@@ -198,6 +246,10 @@ static PyObject *   RaisingGCProtector_get_num_active_protections
 
 static PyObject *   DebugGCProtector_unprotect      (DebugGCProtector *self,
                                                      PyObject *arguments, PyObject *keywords);
+
+static int          gc_module_initialize_state      (PyObject *self);
+static int          gc_module_traverse              (PyObject *self, visitproc visit, void *arg);
+static int          gc_module_clear                 (PyObject *self);
 
 
 
@@ -629,23 +681,24 @@ static Compatibility_ModuleDef  gc_module
   = { Compatibility_ModuleDef_HEAD_INIT,
       "notify.gc",
       MODULE_DOC,
-      -1,
+      sizeof (GCModuleState),
       NULL,
       NULL,
-      NULL,
-      NULL,
+      gc_module_traverse,
+      gc_module_clear,
       NULL };
 
+#define GC_MODULE_STATE(module)    Compatibility_ModuleState (gc_module, module, GCModuleState)
+#define GC_MODULE_STATE_FROM_DEF() Compatibility_ModuleStateFromDef (gc_module, GCModuleState)
 
-static char *      no_keywords[]           = { NULL };
-static char *      object_keywords[]       = { "object", NULL };
+#if Compatibility_2_x_MODULE_STATE
+static GCModuleState __2_x_state__gc_module
+  = { NULL, NULL, NULL, NULL };
+#endif
 
-static PyObject *  raise_not_implemented_exception = NULL;
 
-static PyObject *  unprotection_error_type = NULL;
-
-static PyObject *  default_protector       = NULL;
-static PyObject *  default_attribute_name  = NULL;
+static char *  no_keywords[]     = { NULL };
+static char *  object_keywords[] = { "object", NULL };
 
 
 
@@ -654,7 +707,9 @@ static PyObject *  default_attribute_name  = NULL;
 static int
 GCProtectorMeta_setattro (PyObject *type, PyObject *name, PyObject *value)
 {
-  switch (PyObject_RichCompareBool (name, default_attribute_name, Py_EQ))
+  GCModuleState *state = GC_MODULE_STATE_FROM_DEF ();
+
+  switch (PyObject_RichCompareBool (name, state->default_attribute_name, Py_EQ))
     {
     case 1:
       return PyObject_GenericSetAttr (type, name, value);
@@ -671,21 +726,25 @@ GCProtectorMeta_setattro (PyObject *type, PyObject *name, PyObject *value)
 static PyObject *
 GCProtectorMeta_get_default (PyObject *type, void *context)
 {
-  Py_INCREF (default_protector);
-  return default_protector;
+  GCModuleState *state = GC_MODULE_STATE_FROM_DEF ();
+
+  Py_INCREF (state->default_protector);
+  return state->default_protector;
 }
 
 static int
 GCProtectorMeta_set_default (PyObject *type, PyObject *value, void *context)
 {
-  if (value == default_protector)
+  GCModuleState *state = GC_MODULE_STATE_FROM_DEF ();
+
+  if (value == state->default_protector)
     return 0;
 
   switch (PyObject_IsInstance (value, (PyObject *) &AbstractGCProtector_Type))
     {
     case 1:
       {
-        PyObject *num_active_protections = PyObject_GetAttrString (default_protector,
+        PyObject *num_active_protections = PyObject_GetAttrString (state->default_protector,
                                                                    "num_active_protections");
 
         if (num_active_protections)
@@ -726,10 +785,10 @@ GCProtectorMeta_set_default (PyObject *type, PyObject *value, void *context)
             PyErr_Clear ();
           }
 
-        Py_DECREF (default_protector);
+        Py_DECREF (state->default_protector);
 
-        default_protector = value;
-        Py_INCREF (default_protector);
+        state->default_protector = value;
+        Py_INCREF (state->default_protector);
 
         return 0;
       }
@@ -759,28 +818,30 @@ AbstractGCProtector_dealloc (PyObject *self)
 static PyObject *
 AbstractGCProtector_protect (PyObject *self, PyObject *arguments, PyObject *keywords)
 {
-  PyObject *object;
+  GCModuleState *state = GC_MODULE_STATE_FROM_DEF ();
+  PyObject      *object;
 
   if (!PyArg_ParseTupleAndKeywords (arguments, keywords,
                                     "O:notify.gc.AbstractGCProtector.protect",
                                     object_keywords, &object))
     return NULL;
 
-  return PyObject_CallFunction (raise_not_implemented_exception, "Os", self, "protect");
+  return PyObject_CallFunction (state->raise_not_implemented_exception, "Os", self, "protect");
 }
 
 
 static PyObject *
 AbstractGCProtector_unprotect (PyObject *self, PyObject *arguments, PyObject *keywords)
 {
-  PyObject *object;
+  GCModuleState *state = GC_MODULE_STATE_FROM_DEF ();
+  PyObject      *object;
 
   if (!PyArg_ParseTupleAndKeywords (arguments, keywords,
                                     "O:notify.gc.AbstractGCProtector.unprotect",
                                     object_keywords, &object))
     return NULL;
 
-  return PyObject_CallFunction (raise_not_implemented_exception, "Os", self, "unprotect");
+  return PyObject_CallFunction (state->raise_not_implemented_exception, "Os", self, "unprotect");
 }
 
 
@@ -963,7 +1024,8 @@ RaisingGCProtector_protect (RaisingGCProtector *self, PyObject *arguments, PyObj
 static PyObject *
 RaisingGCProtector_unprotect (RaisingGCProtector *self, PyObject *arguments, PyObject *keywords)
 {
-  PyObject *object;
+  GCModuleState *state = GC_MODULE_STATE_FROM_DEF ();
+  PyObject      *object;
 
   if (!PyArg_ParseTupleAndKeywords (arguments, keywords,
                                     "O:notify.gc.RaisingGCProtector.unprotect",
@@ -1019,7 +1081,7 @@ RaisingGCProtector_unprotect (RaisingGCProtector *self, PyObject *arguments, PyO
           else
             type_name = "?";
 
-          PyErr_Format (unprotection_error_type,
+          PyErr_Format (state->unprotection_error_type,
                         "object is not protected by this %s", type_name);
 
           Py_DECREF (id);
@@ -1110,6 +1172,99 @@ DebugGCProtector_unprotect (DebugGCProtector *self, PyObject *arguments, PyObjec
 
 
 
+/*- Module functions -----------------------------------------------*/
+
+static int
+gc_module_initialize_state (PyObject *self)
+{
+  GCModuleState *state                         = GC_MODULE_STATE (self);
+  PyObject      *dictionary                    = PyModule_GetDict (self);
+  PyObject      *utilities                     = NULL;
+  PyObject      *unprotection_error_dictionary = NULL;
+
+  if (!dictionary)
+    goto error;
+
+  state->default_attribute_name = Compatibility_String_FromString ("default");
+  if (!state->default_attribute_name)
+    goto error;
+
+  utilities = PyImport_ImportModule ("notify.utils");
+  if (!utilities)
+    goto error;
+
+  state->raise_not_implemented_exception
+    = PyDict_GetItemString (PyModule_GetDict (utilities), "raise_not_implemented_exception");
+
+  Py_DECREF (utilities);
+
+  if (!state->raise_not_implemented_exception)
+    {
+      if (!PyErr_Occurred ())
+        {
+          PyErr_SetString (PyExc_ImportError,
+                           ("notify.gc: cannot import "
+                            "raise_not_implemented_exception from notify.utils"));
+        }
+
+      goto error;
+    }
+
+  unprotection_error_dictionary = Py_BuildValue ("{ss}", "__doc__", UNPROTECTION_ERROR_DOC);
+  if (!unprotection_error_dictionary)
+    goto error;
+
+  state->unprotection_error_type = PyErr_NewException ("notify.gc.UnprotectionError",
+                                                       PyExc_ValueError,
+                                                       unprotection_error_dictionary);
+  if (!state->unprotection_error_type)
+    goto error;
+
+  if (PyDict_SetItemString (dictionary, "UnprotectionError", state->unprotection_error_type) == -1)
+    goto error;
+
+  state->default_protector = FastGCProtector_new ();
+  if (!state->default_protector)
+    goto error;
+
+  return 0;
+
+ error:
+  Py_XDECREF (utilities);
+  Py_XDECREF (unprotection_error_dictionary);
+  gc_module_clear (self);
+
+  return -1;
+}
+
+static int
+gc_module_traverse (PyObject *self, visitproc visit, void *arg)
+{
+  GCModuleState *state = GC_MODULE_STATE (self);
+
+  Compatibility_VISIT (state->raise_not_implemented_exception);
+  Compatibility_VISIT (state->unprotection_error_type);
+  Compatibility_VISIT (state->default_protector);
+  Compatibility_VISIT (state->default_attribute_name);
+
+  return 0;
+}
+
+static int
+gc_module_clear (PyObject *self)
+{
+  GCModuleState *state = GC_MODULE_STATE (self);
+
+  Compatibility_CLEAR (state->raise_not_implemented_exception);
+  Compatibility_CLEAR (state->unprotection_error_type);
+  Compatibility_CLEAR (state->default_protector);
+  Compatibility_CLEAR (state->default_attribute_name);
+
+  return 0;
+}
+
+
+
 /*- Module initialization ------------------------------------------*/
 
 #define REGISTER_TYPE(dictionary, type, meta_type, name, error_label)   \
@@ -1130,10 +1285,8 @@ DebugGCProtector_unprotect (DebugGCProtector *self, PyObject *arguments, PyObjec
 Compatibility_MODINIT_FUNC
 Compatibility_MODINIT_FUNC_NAME (gc) (void)
 {
-  PyObject *module                        = NULL;
+  PyObject *module = NULL;
   PyObject *dictionary;
-  PyObject *utilities                     = NULL;
-  PyObject *unprotection_error_dictionary = NULL;
 
   module = Compatibility_ModuleCreate (&gc_module);
   if (!module)
@@ -1146,42 +1299,6 @@ Compatibility_MODINIT_FUNC_NAME (gc) (void)
   if (!dictionary)
     goto error;
 
-  default_attribute_name = Compatibility_String_FromString ("default");
-  if (!default_attribute_name)
-    goto error;
-
-  utilities = PyImport_ImportModule ("notify.utils");
-  if (!utilities)
-    goto error;
-
-  raise_not_implemented_exception = PyDict_GetItemString (PyModule_GetDict (utilities),
-                                                          "raise_not_implemented_exception");
-  if (!raise_not_implemented_exception)
-    {
-      if (!PyErr_Occurred ())
-        {
-          PyErr_SetString (PyExc_ImportError,
-                           ("notify.gc: cannot import "
-                            "raise_not_implemented_exception from notify.utils"));
-        }
-
-      goto error;
-    }
-
-  Py_DECREF (utilities);
-
-  unprotection_error_dictionary = Py_BuildValue ("{ss}", "__doc__", UNPROTECTION_ERROR_DOC);
-  if (!unprotection_error_dictionary)
-    goto error;
-
-  unprotection_error_type = PyErr_NewException ("notify.gc.UnprotectionError",
-                                                PyExc_ValueError, unprotection_error_dictionary);
-  if (!unprotection_error_type)
-    goto error;
-
-  if (PyDict_SetItemString (dictionary, "UnprotectionError", unprotection_error_type) == -1)
-    goto error;
-
   GCProtectorMeta_Type.tp_base = &PyType_Type;
 
   REGISTER_TYPE (dictionary, GCProtectorMeta_Type,     PyType_Type, "GCProtectorMeta",     error);
@@ -1192,20 +1309,13 @@ Compatibility_MODINIT_FUNC_NAME (gc) (void)
   REGISTER_TYPE (dictionary, RaisingGCProtector_Type,  PyType_Type, "RaisingGCProtector",  error);
   REGISTER_TYPE (dictionary, DebugGCProtector_Type,    PyType_Type, "DebugGCProtector",    error);
 
-  default_protector = FastGCProtector_new ();
-  if (!default_protector)
+  if (gc_module_initialize_state (module) == -1)
     goto error;
 
   goto do_return;
 
  error:
-
   Compatibility_CLEAR (module);
-  Py_XDECREF (utilities);
-  Py_XDECREF (unprotection_error_dictionary);
-  Py_XDECREF (raise_not_implemented_exception);
-  Py_XDECREF (unprotection_error_type);
-  Py_XDECREF (default_protector);
 
  do_return:
   Compatibility_ModuleReturn (module);

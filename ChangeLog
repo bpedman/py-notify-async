@@ -1,3 +1,22 @@
+2008-08-05  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/gc.c (Compatibility_VISIT, Compatibility_ModuleState)
+	(Compatibility_ModuleStateFromDef)
+	(Compatibility_2_x_MODULE_STATE): New macros.
+	(GCModuleState): New structure.
+	(GC_MODULE_STATE, GC_MODULE_STATE_FROM_DEF): New macros.
+	(raise_not_implemented_exception, unprotection_error_type)
+	(default_protector, default_attribute_name): Combine into a
+	structure; static on 2.x, dynamically bound to module object on
+	3000.
+	(GCProtectorMeta_setattro, GCProtectorMeta_get_default)
+	(GCProtectorMeta_set_default, AbstractGCProtector_protect)
+	(AbstractGCProtector_unprotect, RaisingGCProtector_unprotect): Use
+	corresponding structure fields.
+	(gc_module_initialize_state): New function, broken out of
+	`Compatibility_MODINIT_FUNC_NAME (gc)' function.
+	(gc_module_traverse, gc_module_clear): New functions.
+
 2008-08-03  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/gc.c (Compatibility_ModuleDef)
