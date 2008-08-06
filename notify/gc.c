@@ -735,16 +735,17 @@ GCProtectorMeta_get_default (PyObject *type, void *context)
 static int
 GCProtectorMeta_set_default (PyObject *type, PyObject *value, void *context)
 {
-  GCModuleState *state = GC_MODULE_STATE_FROM_DEF ();
+  GCModuleState *state             = GC_MODULE_STATE_FROM_DEF ();
+  PyObject      *current_protector = state->default_protector;
 
-  if (value == state->default_protector)
+  if (value == current_protector)
     return 0;
 
   switch (PyObject_IsInstance (value, (PyObject *) &AbstractGCProtector_Type))
     {
     case 1:
       {
-        PyObject *num_active_protections = PyObject_GetAttrString (state->default_protector,
+        PyObject *num_active_protections = PyObject_GetAttrString (current_protector,
                                                                    "num_active_protections");
 
         if (num_active_protections)
@@ -785,10 +786,10 @@ GCProtectorMeta_set_default (PyObject *type, PyObject *value, void *context)
             PyErr_Clear ();
           }
 
-        Py_DECREF (state->default_protector);
-
         state->default_protector = value;
-        Py_INCREF (state->default_protector);
+
+        Py_INCREF (value);
+        Py_DECREF (current_protector);
 
         return 0;
       }

@@ -1,3 +1,9 @@
+2008-08-06  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/gc.c (GCProtectorMeta_set_default): Don't decref
+	`default_protector' when `state' is inconsistent (similar to
+	Py_CLEAR).
+
 2008-08-05  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/gc.c (Compatibility_VISIT, Compatibility_ModuleState)
