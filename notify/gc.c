@@ -158,10 +158,8 @@ Compatibility_ModuleDef;
 /* Hide difference between old strings and Unicode strings used in Py3k. */
 #if defined (PY_MAJOR_VERSION) && PY_MAJOR_VERSION >= 3
 #  define Compatibility_String_FromString PyUnicode_FromString
-#  define Compatibility_String_AsString   PyUnicode_AsString
 #else
 #  define Compatibility_String_FromString PyString_FromString
-#  define Compatibility_String_AsString   PyString_AsString
 #endif
 
 
@@ -758,18 +756,24 @@ GCProtectorMeta_set_default (PyObject *type, PyObject *value, void *context)
 
               case 1:
                 {
-                  PyObject *as_string = PyObject_Str (num_active_protections);
+                  long  num_active_protections_long = PyLong_AsLong (num_active_protections);
 
-                  if (as_string)
+                  if (PyErr_Occurred ())
+                    {
+                      PyErr_Clear ();
+                      num_active_protections_long = 0;
+                    }
+
+                  if (num_active_protections_long
+                      && (int) num_active_protections_long == num_active_protections_long)
                     {
                       PyErr_Format (PyExc_ValueError,
                                     ("cannot set a different GC protector: current has active "
-                                     "protections (num_active_protections = %.200s)"),
-                                    Compatibility_String_AsString (as_string));
+                                     "protections (num_active_protections = %d)"),
+                                    (int) num_active_protections_long);
                     }
                   else
                     {
-                      PyErr_Clear ();
                       PyErr_SetString (PyExc_ValueError, ("cannot set a different GC protector: "
                                                           "current has active protections"));
                     }
@@ -1199,7 +1203,9 @@ gc_module_initialize_state (PyObject *self)
 
   Py_DECREF (utilities);
 
-  if (!state->raise_not_implemented_exception)
+  if (state->raise_not_implemented_exception)
+    Py_INCREF (state->raise_not_implemented_exception);
+  else
     {
       if (!PyErr_Occurred ())
         {
@@ -1292,6 +1298,11 @@ Compatibility_MODINIT_FUNC_NAME (gc) (void)
   module = Compatibility_ModuleCreate (&gc_module);
   if (!module)
     goto error;
+
+  /* PEP 3121 claims that the state will be zero-initialized, but at least currently this
+   * doesn't happen.  Maybe a bug in Py3k.
+   */
+  memset (GC_MODULE_STATE (module), 0, sizeof (GCModuleState));
 
   if (!Compatibility_ModulePostCreate (module, &gc_module))
     goto error;

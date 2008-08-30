@@ -1,3 +1,13 @@
+2008-08-30  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/gc.c (Compatibility_String_AsString): Remove macro.
+	(GCProtectorMeta_set_default): Rewrite exception message
+	formatting: strings are too difficult from C level in Py3k.
+	(gc_module_initialize_state): Add reference to
+	`raise_not_implemented_exception'.
+	(Compatibility_MODINIT_FUNC_NAME (gc)): Zero module
+	state (workaround apparent bug in Py3k).
+
 2008-08-06  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/gc.c (GCProtectorMeta_set_default): Don't decref
