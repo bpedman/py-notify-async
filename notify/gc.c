@@ -78,6 +78,13 @@
 #endif
 
 
+#ifdef Py_TPFLAGS_HAVE_VERSION_TAG
+#  define Compatibility_TPFLAGS_HAVE_VERSION_TAG Py_TPFLAGS_HAVE_VERSION_TAG
+#else
+#  define Compatibility_TPFLAGS_HAVE_VERSION_TAG 0
+#endif
+
+
 /* Working around more changes in Py3k: module initialization. */
 #ifdef PyMODINIT_FUNC
 #  define Compatibility_MODINIT_FUNC PyMODINIT_FUNC
@@ -425,7 +432,8 @@ static PyTypeObject  GCProtectorMeta_Type
       (getattrofunc)   0,                            /* tp_getattro       */
       GCProtectorMeta_setattro,                      /* tp_setattro       */
       0,                                             /* tp_as_buffer      */
-      Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,      /* tp_flags          */
+      Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Compatibility_TPFLAGS_HAVE_VERSION_TAG,
+                                                     /* tp_flags          */
       GC_PROTECTOR_META_DOC,                         /* tp_doc            */
       (traverseproc)   0,                            /* tp_traverse       */
       (inquiry)        0,                            /* tp_clear          */
@@ -479,7 +487,8 @@ static PyTypeObject  AbstractGCProtector_Type
       (getattrofunc)   0,                            /* tp_getattro       */
       (setattrofunc)   0,                            /* tp_setattro       */
       0,                                             /* tp_as_buffer      */
-      Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,      /* tp_flags          */
+      Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Compatibility_TPFLAGS_HAVE_VERSION_TAG,
+                                                     /* tp_flags          */
       ABSTRACT_GC_PROTECTOR_DOC,                     /* tp_doc            */
       (traverseproc)   0,                            /* tp_traverse       */
       (inquiry)        0,                            /* tp_clear          */
@@ -536,7 +545,8 @@ static PyTypeObject  FastGCProtector_Type
       (getattrofunc)   0,                            /* tp_getattro       */
       (setattrofunc)   0,                            /* tp_setattro       */
       0,                                             /* tp_as_buffer      */
-      Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,      /* tp_flags          */
+      Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Compatibility_TPFLAGS_HAVE_VERSION_TAG,
+                                                     /* tp_flags          */
       FAST_GC_PROTECTOR_DOC,                         /* tp_doc            */
       (traverseproc)   0,                            /* tp_traverse       */
       (inquiry)        0,                            /* tp_clear          */
@@ -597,7 +607,8 @@ static PyTypeObject  RaisingGCProtector_Type
       (getattrofunc)   0,                            /* tp_getattro       */
       (setattrofunc)   0,                            /* tp_setattro       */
       0,                                             /* tp_as_buffer      */
-      Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,      /* tp_flags          */
+      Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Compatibility_TPFLAGS_HAVE_VERSION_TAG,
+                                                     /* tp_flags          */
       RAISING_GC_PROTECTOR_DOC,                      /* tp_doc            */
       (traverseproc)   0,                            /* tp_traverse       */
       (inquiry)        0,                            /* tp_clear          */
@@ -647,7 +658,8 @@ static PyTypeObject  DebugGCProtector_Type
       (getattrofunc)   0,                            /* tp_getattro       */
       (setattrofunc)   0,                            /* tp_setattro       */
       0,                                             /* tp_as_buffer      */
-      Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,      /* tp_flags          */
+      Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Compatibility_TPFLAGS_HAVE_VERSION_TAG,
+                                                     /* tp_flags          */
       DEBUG_GC_PROTECTOR_DOC,                        /* tp_doc            */
       (traverseproc)   0,                            /* tp_traverse       */
       (inquiry)        0,                            /* tp_clear          */

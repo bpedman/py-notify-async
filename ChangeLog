@@ -1,3 +1,11 @@
+2008-09-02  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/gc.c (Compatibility_TPFLAGS_HAVE_VERSION_TAG): New macro.
+	Equal to `Py_TPFLAGS_HAVE_VERSION_TAG' if that is defined.
+	(GCProtectorMeta_Type, AbstractGCProtector_Type)
+	(FastGCProtector_Type, RaisingGCProtector_Type)
+	(DebugGCProtector_Type): Use it.
+
 2008-08-30  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/gc.c (Compatibility_String_AsString): Remove macro.
