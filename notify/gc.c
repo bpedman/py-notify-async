@@ -271,12 +271,11 @@ This module defines both a simple L{interface <AbstractGCProtector>} and several
 implementations, some, which are suitable for production use (C{L{FastGCProtector}}), \
 some for debugging purposes (C{L{RaisingGCProtector}}, C{L{DebugGCProtector}}.)\n\
 \n\
-Py-notify classes use value of the C{L{AbstractGCProtector.default}} variable as the \
-protector instance.  In case you run into a problem, \
-use C{L{AbstractGCProtector.set_default}} static method somewhere near your program beginning \
-to set it to an instance of C{DebugGCProtector} or a similar class to track the problem down. \
-However, we believe that Py-notify classes must not cause problems themselves, they may pop up \
-only if you use a garbage-collection protector yourself."
+Py-notify classes use value of the C{AbstractGCProtector.default} variable as the \
+protector instance.  In case you run into a problem, set it to an instance of \
+C{DebugGCProtector} or a similar class to track the problem down (somewhere near your \
+program beginning).  However, we believe that Py-notify classes must not cause problems \
+themselves, they may pop up only if you use a garbage-collection protector yourself."
 
 
 #define UNPROTECTION_ERROR_DOC "\

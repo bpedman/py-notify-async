@@ -27,10 +27,10 @@ Mediators can be used to transform values from one format to another and back.  
 advantage over transformation ‘by hands’ is that both ‘to’ and ‘from’ transformations are
 encapsulated in one object and are not separated from each other.
 
-If two mediators are equal and L{AbstractMediator.forward} or L{AbstractMediator.back} are
-called with equal functions on each of the two, resulting callables will be equal.  This
-may be not easy to achive with simple functions when you need transformation to depend on
-a parameter:
+If two mediators are equal and C{L{AbstractMediator.forward}} or
+C{L{AbstractMediator.back}} are called with equal functions on each of the two, resulting
+callables will be equal.  This may be not easy to achive with simple functions when you
+need transformation to depend on a parameter:
 
     >>> f1 = lambda x: x + 10
     ... f2 = lambda x: x + 10
@@ -44,8 +44,8 @@ a parameter:
     ... m1 == m2
     ... m1.forward (identity) == m2.forward (identity)
 
-This property is important when using L{Signal.disconnect <signal.Signal.disconnect>} or
-one of the functions that base on it.  Since it disconnects an I{equal} (not identical)
+This property is important when using C{L{Signal.disconnect <signal.Signal.disconnect>}}
+or one of the functions that base on it.  Since it disconnects an I{equal} (not identical)
 handler, with mediators you can avoid storing handler around: an equal one can be
 constructed when needed.  When using lambdas, you’d have to store handler.
 
@@ -66,9 +66,9 @@ class AbstractMediator (object):
 
     """
     An abstract object that can transform values between two formats (back and forth).  In
-    addition, it can create proxies for arbitrary functions with L{forward} and L{back}
-    methods.  When a proxy is called with single value, the value is transformed forth or
-    back first, and then passed to underlying function.
+    addition, it can create proxies for arbitrary functions with C{L{forward}} and
+    C{L{back}} methods.  When a proxy is called with single value, the value is
+    transformed forth or back first, and then passed to underlying function.
 
     In other words, proxies work in such a way that
         >>> mediator.forward (some_function) (value)

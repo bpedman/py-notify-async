@@ -370,7 +370,7 @@ class AbstractValueObject (object):
 
     def synchronize_safe (self, value_object, mediator = None):
         """
-        Like C{L{synchronize}} except that uses L{store_safe} instead of L{store}.  See
+        Like C{L{synchronize}} except that uses C{L{store_safe}} instead of L{store}.  See
         C{L{synchronize}} for details.
 
         @param  value_object: other value object to synchronize with.

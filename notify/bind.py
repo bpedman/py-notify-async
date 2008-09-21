@@ -48,16 +48,16 @@ object I{weakly}.  In other words, as long as there is a bound method or lambda 
 existence, object is considered referenced and won’t be garbage-collected.  This can be
 good, but not always what you want.
 
-Class L{WeakBinding} and its descendants bind object weakly.  In other words, as long as
-object is not garbage-collected, e.g. referenced from somewhere, they work just like
-normal L{Binding}.  However, they don’t create a strong reference to the object and, if it
-is destroyed, things get different: L{WeakBinding} does nothing when called, while
-L{RaisingWeakBinding} raises L{GarbageCollectedError} exception.
+Class C{L{WeakBinding}} and its descendants bind object weakly.  In other words, as long
+as object is not garbage-collected, e.g. referenced from somewhere, they work just like
+normal C{L{Binding}}.  However, they don’t create a strong reference to the object and, if
+it is destroyed, things get different: C{WeakBinding} does nothing when called, while
+C{L{RaisingWeakBinding}} raises C{L{GarbageCollectedError}} exception.
 
 Finally, it is possible to create bindings with a list of precreated arguments.  Any
-arguments passed to binding’s L{__call__ <Binding.__call__>} method will be I{appended} to
-this list and passed to wrapped callable together.  Of course, this and more is possible
-with lambdas and is not an advantage of bindings, just a feature.
+arguments passed to binding’s C{L{__call__ <Binding.__call__>}} method will be I{appended}
+to this list and passed to the wrapped callable together.  Of course, this and more is
+possible with lambdas and is not an advantage of bindings, just a feature.
 """
 
 __docformat__ = 'epytext en'
@@ -300,7 +300,7 @@ class Binding (object):
 
     def __ne__(self, other):
         """
-        Determine if C{self} is not equal to C{other}.  See L{__eq__} for details.
+        Determine if C{self} is not equal to C{other}.  See C{L{__eq__}} for details.
 
         @rtype: C{bool}
         """
@@ -571,7 +571,7 @@ class WeakBinding (Binding):
 
     def __call__(self, *arguments):
         """
-        Like L{Binding.__call__}, but account for garbage-collected objects.  If object
+        Like C{L{Binding.__call__}}, but account for garbage-collected objects.  If object
         has been garbage-collected, then do nothing and return C{None}.
 
         @param  arguments: optional call arguments.
@@ -659,7 +659,7 @@ class RaisingWeakBinding (WeakBinding):
     """
     A variation of L{weak binding <WeakBinding>} which raises C{L{GarbageCollectedError}}
     if called after its object has been garbage-collected.  There are no other difference
-    from common weak bindings.  In particular, if a binding is create without an object
+    from common weak bindings.  In particular, if a binding is created without an object
     (i.e. with C{None}) to begin with, it will never raise C{L{GarbageCollectedError}}.
     """
 
