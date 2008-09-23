@@ -1,3 +1,13 @@
+2008-09-23  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* version: Adopt new policy: bump version after release, so that
+	installing SVN development doesn't overwrite last released version
+	install.  So, bumped to 0.3.1 now.  Insert release marks into the
+	ChangeLog.
+
+	* NEWS: Merge in news about 0.2.1 from 0.2 branch.  Add release
+	dates to all news.
+
 2008-09-21  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/gc.c (MODULE_DOC): Update:
@@ -69,6 +79,8 @@
 
 2008-05-06  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	--- Released 0.2.0 ---
+
 	* version: Release 0.2.0.
 
 	* NEWS: Update.
@@ -91,6 +103,8 @@
 	argument (unused).  Return number of garbage-collectable objects.
 
 2008-03-03  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	--- Released 0.1.15 ---
 
 	* version: Release 0.1.15.
 
@@ -169,6 +183,8 @@
 
 2007-12-28  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	--- Released 0.1.14 ---
+
 	* version: Release 0.1.14.
 
 	* NEWS: Update.
@@ -242,6 +258,8 @@
 	removed in Py3k.
 
 2007-11-17  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	--- Released 0.1.13 ---
 
 	* version: Release 0.1.13.
 
@@ -325,6 +343,8 @@
 	almost never needed, doh X-(
 
 2007-08-25  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	--- Released 0.1.12 ---
 
 	* version: Release 0.1.12.
 
@@ -412,6 +432,8 @@
 	(VariableDerivationTestCase.test_derivation_10): New test.
 
 2007-07-22  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	--- Released 0.1.11 ---
 
 	* version: Release 0.1.11.
 
@@ -559,6 +581,8 @@
 
 	* setup.py: Fix reST in package long description.
 
+	--- Released 0.1.10 ---
+
 	* version: Release 0.1.10.
 
 	* NEWS: Update.
@@ -692,6 +716,8 @@
 
 2007-06-22  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	--- Released 0.1.9 ---
+
 	* version: Release 0.1.9.
 
 	* NEWS: Update.
@@ -739,6 +765,8 @@
 	* README (About Py-notify): Style and grammar fixes.
 
 2007-06-13  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	--- Released 0.1.8 ---
 
 	* version: Release 0.1.8.
 
@@ -890,6 +918,8 @@
 
 2007-04-10  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	--- Released 0.1.7 ---
+
 	* version: Release 0.1.7.
 
 	* NEWS: Update.
@@ -1021,6 +1051,8 @@
 	* docs/tutorial.txt: Add one section.
 
 2007-04-04  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	--- Released 0.1.6 ---
 
 	* version: Release 0.1.6.
 
@@ -1161,6 +1193,8 @@
 
 2007-03-03  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	--- Released 0.1.5 ---
+
 	* version: Release 0.1.5.
 
 	* NEWS: Update.
@@ -1269,6 +1303,8 @@
 
 2007-02-16  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	--- Released 0.1.4 ---
+
 	* version: Release 0.1.4.
 
 	* NEWS: Update.
@@ -1354,6 +1390,8 @@
 	* test/all.py (AllTestCase.assert_is_class): Check that classes
 	define `__slots__' variable appropriately.
 
+	--- Released 0.1.3 ---
+
 	* version: Release 0.1.3.
 
 	* NEWS: Update.
@@ -1438,6 +1476,8 @@
 
 2007-01-28  Paul Pogonyshev  <pogonyshev@gmx.net>
 
+	--- Released 0.1.2 ---
+
 	* version: Release 0.1.2.
 
 	* NEWS: Update.
@@ -1508,6 +1548,8 @@
 	files by default.
 
 2007-01-23  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	--- Released 0.1.1 ---
 
 	* version: Release 0.1.1.
 
