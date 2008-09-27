@@ -81,6 +81,24 @@ class SimpleSignalTestCase (NotifyTestCase):
                              ('one argument', 'a', 'b'), ('first', 'second', 3, 'a', 'b'))
 
 
+    def test_connect_with_keywords (self):
+        test   = NotifyTestObject ()
+        signal = Signal ()
+
+        signal.connect_safe (test.simple_keywords_handler, a = 1)
+        signal.connect_safe (test.simple_keywords_handler, a = 2, b = 3)
+
+        signal.emit ()
+        signal.emit (b = 42)
+        signal.emit ('ham')
+
+        test.assert_results ({ 'a': 1 },          { 'a': 2, 'b' : 3 },
+                             # Note that emission keyword arguments must override
+                             # connection-time keyword arguments.
+                             { 'a': 1, 'b': 42 }, { 'a': 2, 'b' : 42 },
+                             ('ham', { 'a': 1 }), ('ham', { 'a': 2, 'b' : 3 }))
+
+
     def test_argument_passing (self):
         test   = NotifyTestObject ()
         signal = Signal ()
@@ -89,6 +107,20 @@ class SimpleSignalTestCase (NotifyTestCase):
         signal.emit (45, 'abc')
 
         test.assert_results ((45, 'abc'))
+
+
+    def test_mixed_argument_passing (self):
+        test   = NotifyTestObject ()
+        signal = Signal ()
+
+        signal.connect (test.simple_keywords_handler)
+        signal.emit (ham = 'spam')
+        signal.emit (42)
+        signal.emit (1, 2, 3, foo = 'bar')
+
+        test.assert_results ({ 'ham': 'spam' },
+                             (42, { }),
+                             (1, 2, 3, { 'foo': 'bar' }))
 
 
     def test_disconnect (self):

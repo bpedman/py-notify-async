@@ -50,8 +50,15 @@ class Dummy (object):
         else:
             return arguments
 
+    def keyword_dict_function (self, **keywords):
+        return self.static_keyword_dict (**keywords)
 
-    static_identity = staticmethod (static_identity)
+    def static_keyword_dict (**keywords):
+        return keywords
+
+
+    static_identity     = staticmethod (static_identity)
+    static_keyword_dict = staticmethod (static_keyword_dict)
 
 
 
@@ -72,6 +79,12 @@ class BindingTestCase (NotifyTestCase):
         self.assertEqual (WeakBinding        (DUMMY.identity_function) (33, 'test'), (33, 'test'))
         self.assertEqual (RaisingWeakBinding (DUMMY.identity_function) (33, 'test'), (33, 'test'))
 
+    def test_invocation_keywords (self):
+        keywords = { 'a': 1, 'b': 2 }
+        self.assertEqual (Binding            (DUMMY.keyword_dict_function) (**keywords), keywords)
+        self.assertEqual (WeakBinding        (DUMMY.keyword_dict_function) (**keywords), keywords)
+        self.assertEqual (RaisingWeakBinding (DUMMY.keyword_dict_function) (**keywords), keywords)
+
 
     def test_creation_with_arguments (self):
         self.assertEqual (Binding (DUMMY.identity_function, (33,)) ('test'),
@@ -80,6 +93,15 @@ class BindingTestCase (NotifyTestCase):
                           (33, 'test'))
         self.assertEqual (RaisingWeakBinding (DUMMY.identity_function, (33,)) ('test'),
                           (33, 'test'))
+
+    def test_creation_with_keywords (self):
+        keywords = { 'a': 1, 'b': 2 }
+        self.assertEqual (Binding (DUMMY.keyword_dict_function, (), keywords) (),
+                          keywords)
+        self.assertEqual (WeakBinding (DUMMY.keyword_dict_function, (), None, keywords) (),
+                          keywords)
+        self.assertEqual (RaisingWeakBinding (DUMMY.keyword_dict_function, (), None, keywords) (),
+                          keywords)
 
 
     def test_unreferencable_object_method_failure (self):
@@ -177,6 +199,30 @@ class BindingTestCase (NotifyTestCase):
                                               binding_type (a_lambda, (0,)))
 
 
+    def test_equality_5 (self):
+        keywords1 = { 'a': 1, 'b': 2 }
+        keywords2 = { 'a': 1, 'b': 3 }
+
+        for binding_type in (Binding, WeakBinding, RaisingWeakBinding):
+            self.assert_equal_thoroughly (binding_type (DUMMY.identity_function,
+                                                        keywords = keywords1),
+                                          binding_type (DUMMY.identity_function,
+                                                        keywords = keywords1))
+            self.assert_equal_thoroughly (binding_type (DUMMY.static_identity,
+                                                        keywords = keywords1),
+                                          binding_type (DUMMY.static_identity,
+                                                        keywords = keywords1))
+
+            self.assert_not_equal_thoroughly (binding_type (DUMMY.identity_function,
+                                                            keywords = keywords1),
+                                              binding_type (DUMMY.identity_function,
+                                                            keywords = keywords2))
+            self.assert_not_equal_thoroughly (binding_type (Dummy.static_identity,
+                                                            keywords = keywords1),
+                                              binding_type (Dummy.static_identity,
+                                                            keywords = keywords2))
+
+
     def test_garbage_collection_1 (self):
         object = Dummy ()
         method = WeakBinding (object.identity_function)
@@ -267,6 +313,15 @@ class BindingWrapTestCase (NotifyTestCase):
         self.assert_(Binding           .wrap (callable, (1, 2)) is not callable)
         self.assert_(WeakBinding       .wrap (callable, (1, 2)) is not callable)
         self.assert_(RaisingWeakBinding.wrap (callable, (1, 2)) is not callable)
+
+
+    def test_wrap_with_keywords_1 (self):
+        callable = lambda **keywords: None
+        keywords = { 'a': 1, 'b': 2 }
+
+        self.assert_(Binding           .wrap (callable, keywords = keywords) is not callable)
+        self.assert_(WeakBinding       .wrap (callable, keywords = keywords) is not callable)
+        self.assert_(RaisingWeakBinding.wrap (callable, keywords = keywords) is not callable)
 
 
 

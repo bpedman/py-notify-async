@@ -56,7 +56,7 @@ __all__       = ('is_callable', 'is_valid_identifier', 'mangle_identifier',
                  'as_string',
                  'raise_not_implemented_exception',
                  'execute',
-                 'DummyReference', 'ClassTypes', 'StringType')
+                 'frozendict', 'DummyReference', 'ClassTypes', 'StringType')
 
 
 import re
@@ -235,6 +235,67 @@ if sys.version_info[0] >= 3:
     execute = eval ('exec')
 else:
     from notify._2_x import execute
+
+
+
+class frozendict (dict):
+
+    __slots__ = ('__hash')
+
+    def __init__(self, *arguments, **keywords):
+        super (frozendict, self).__init__(*arguments, **keywords)
+        self.__hash = None
+
+
+    def clear (self):
+        raise TypeError ("'%s' object doesn't support clearing" % type (self).__name__)
+
+    def pop (self, key, default = None):
+        raise TypeError ("'%s' object doesn't support popping" % type (self).__name__)
+
+    def popitem (self):
+        raise TypeError ("'%s' object doesn't support popping" % type (self).__name__)
+
+    def setdefault (self, key, default = None):
+        raise TypeError ("'%s' object doesn't support setdefault operation" % type (self).__name__)
+
+    def update (self, dict):
+        raise TypeError ("'%s' object doesn't support updating" % type (self).__name__)
+
+
+    def __setitem__(self, key, value):
+        raise TypeError ("'%s' object doesn't support item setting" % type (self).__name__)
+
+    def __delitem__(self, key):
+        raise TypeError ("'%s' object doesn't support item deletion" % type (self).__name__)
+
+
+    def __hash__(self):
+        _hash = self.__hash
+
+        if _hash is None:
+            _hash = 0x1337
+
+            if hasattr (dict, 'iteritems'):
+                for key, value in self.iteritems ():
+                    _hash ^= hash (key) ^ hash (value)
+            else:
+                for key, value in self.items ():
+                    _hash ^= hash (key) ^ hash (value)
+
+            self.__hash = _hash
+
+        return _hash
+
+
+    def __repr__(self):
+        return '%s (%s)' % (type (self).__name__, super (frozendict, self).__repr__())
+
+
+
+frozendict.EMPTY = frozendict ({ })
+# Force hash to be precomputed.
+hash (frozendict.EMPTY)
 
 
 

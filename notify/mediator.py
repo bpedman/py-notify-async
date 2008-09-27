@@ -284,10 +284,10 @@ class FunctionalMediator (AbstractMediator):
     (actually, anything callable.)
     """
 
-    __slots__ = ('__forward_function', '__back_function', '__arguments')
+    __slots__ = ('__forward_function', '__back_function', '__arguments', '__keywords')
 
 
-    def __init__(self, forward_function = None, back_function = None, *arguments):
+    def __init__(self, forward_function = None, back_function = None, *arguments, **keywords):
         if (   not (forward_function is None or is_callable (forward_function))
             or not (back_function    is None or is_callable (back_function))):
             raise TypeError ('both functions must be callable or None')
@@ -297,13 +297,14 @@ class FunctionalMediator (AbstractMediator):
         self.__forward_function = forward_function or _identity
         self.__back_function    = back_function    or _identity
         self.__arguments        = arguments
+        self.__keywords         = keywords
 
 
     def forward_value (self, value):
-        return self.__forward_function (value, *self.__arguments)
+        return self.__forward_function (value, *self.__arguments, **self.__keywords)
 
     def back_value (self, value):
-        return self.__back_function (value, *self.__arguments)
+        return self.__back_function (value, *self.__arguments, **self.__keywords)
 
 
     def reverse (self):
@@ -311,25 +312,28 @@ class FunctionalMediator (AbstractMediator):
         Return a mediator that does exactly opposite transformations.
         """
 
-        return self.__class__(self.__back_function, self.__forward_function, *self.__arguments)
+        return self.__class__(self.__back_function, self.__forward_function,
+                              *self.__arguments, **self.__keywords)
 
 
     def __eq__(self, other):
         if isinstance (other, FunctionalMediator):
-            return (    self.__forward_function == other.__forward_function
+            return (self    .__forward_function == other.__forward_function
                     and self.__back_function    == other.__back_function
-                    and self.__arguments        == other.__arguments)
+                    and self.__arguments        == other.__arguments
+                    and self.__keywords         == other.__keywords)
         else:
             return NotImplemented
 
     def __hash__(self):
-        return (  hash (self.__forward_function)
+        return (hash   (self.__forward_function)
                 ^ hash (self.__back_function)
-                ^ hash (self.__arguments))
+                ^ hash (self.__arguments)
+                ^ hash (self.__keywords))
 
 
 
-def _identity (value, *ignored_arguments):
+def _identity (value, *ignored_arguments, **ignored_keywords):
     return value
 
 

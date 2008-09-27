@@ -70,7 +70,7 @@ import sys
 from types        import FunctionType, MethodType
 import weakref
 
-from notify.utils import is_callable, DummyReference
+from notify.utils import is_callable, frozendict, DummyReference
 
 
 
@@ -97,10 +97,10 @@ class Binding (object):
     callables and with equal argument lists, will be equal.
     """
 
-    __slots__ = ('_object', '_function', '_class', '_arguments')
+    __slots__ = ('_object', '_function', '_class', '_arguments', '_keywords')
 
 
-    def __init__(self, callable_object, arguments = ()):
+    def __init__(self, callable_object, arguments = (), keywords = None):
         """
         Initialize a new binding which will call C{callable_object}, I{prepending} fixed
         C{arguments} (if any) to those specified at call time.  Here, C{callable_object}
@@ -124,8 +124,13 @@ class Binding (object):
         if not is_callable (callable_object):
             raise TypeError ("'callable_object' must be callable")
 
-        # This raises `TypeError' if `arguments' type is inappropriate.
+        # This raises `TypeError' if `arguments' or `keywords' type is inappropriate.
         arguments = tuple (arguments)
+        if keywords is None:
+            keywords = frozendict.EMPTY
+        # Note: not isinstance, subclasses might become modifiable again.
+        elif type (keywords) is not frozendict:
+            keywords = frozendict (keywords)
 
         super (Binding, self).__init__()
 
@@ -144,9 +149,10 @@ class Binding (object):
             self._class    = None
 
         self._arguments = arguments
+        self._keywords  = keywords
 
 
-    def wrap (cls, callable_object, arguments = ()):
+    def wrap (cls, callable_object, arguments = (), keywords = None):
         """
         Return a callable with semantics of the binding class this method is called for.
         I{If necessary} (e.g. if C{arguments} tuple is not empty), this method creates a
@@ -172,8 +178,8 @@ class Binding (object):
                            iterable.
         """
 
-        if arguments:
-            return cls (callable_object, arguments)
+        if arguments or keywords:
+            return cls (callable_object, arguments, keywords)
         else:
             if not is_callable (callable_object):
                 raise TypeError ("'callable_object' must be callable")
@@ -236,8 +242,11 @@ class Binding (object):
 
         return self._arguments
 
+    def _get_keywords (self):
+        return self._keywords
 
-    def __call__(self, *arguments):
+
+    def __call__(self, *arguments, **keywords):
         """
         Call the wrapped callable (e.g. method or function) and return whatever it
         returns.  If binding was constructed with L{arguments <im_args>}, they are
@@ -253,11 +262,23 @@ class Binding (object):
 
         # NOTE: If, for some reason, you change this, don't forget to adjust
         #       `WeakBinding.__call__' accordingly.
+        if keywords:
+            fixed_keywords = self._get_keywords ()
+            if fixed_keywords:
+                all_keywords = dict (fixed_keywords)
+                all_keywords.update (keywords)
+            else:
+                all_keywords = keywords
+        else:
+            all_keywords = self._get_keywords ()
+
         if self._get_class () is not None:
             return self._get_function () (self._get_object (),
-                                          *(self._get_arguments () + arguments))
+                                          *(self._get_arguments () + arguments),
+                                          **all_keywords)
         else:
-            return self._get_function () (*(self._get_arguments () + arguments))
+            return self._get_function () (*(self._get_arguments () + arguments),
+                                          **all_keywords)
 
 
     def __eq__(self, other):
@@ -284,15 +305,17 @@ class Binding (object):
                     return False
 
             if isinstance (other, Binding):
-                return self._get_arguments () == other._get_arguments ()
+                return (self    ._get_arguments () == other._get_arguments ()
+                        and self._get_keywords  () == other._get_keywords  ())
             else:
-                return not self._get_arguments ()
+                return not self._get_arguments () and not self._get_keywords ()
 
         elif isinstance (other, FunctionType):
-            return (    self._get_function () is other
+            return (self    ._get_function () is other
                     and self._get_object   () is None
                     and self._get_class    () is None
-                    and not self._get_arguments ())
+                    and not self._get_arguments ()
+                    and not self._get_keywords  ())
 
         else:
             return NotImplemented
@@ -317,6 +340,7 @@ class Binding (object):
         _class    = self._get_class     ()
         object    = self._get_object    ()
         arguments = self._get_arguments ()
+        keywords  = self._get_keywords  ()
 
         if _class is not None or object is not None:
             _hash = hash (MethodType (self._get_function (), object, _class))
@@ -324,9 +348,11 @@ class Binding (object):
             _hash = hash (self._get_function ())
 
         if arguments:
-            return _hash ^ hash (arguments)
-        else:
-            return _hash
+            _hash ^= hash (arguments)
+        if keywords:
+            _hash ^= hash (keywords)
+
+        return _hash
 
 
     def __nonzero__(self):
@@ -394,17 +420,21 @@ class Binding (object):
                                        C{L{_get_arguments}} method instead.
                                 """))
 
+    im_kwds  = property (lambda self: self._get_keywords ())
+
 
     if _PY3K:
         __self__ = im_self
         __func__ = im_func
         __cls__  = im_class
         __args__ = im_args
+        __kwds__ = im_kwds
 
         del im_self
         del im_func
         del im_class
         del im_args
+        del im_kwds
 
 
     def __repr__(self):
@@ -422,6 +452,7 @@ class Binding (object):
         _class    = self._get_class     ()
         function  = self._get_function  ()
         arguments = self._get_arguments ()
+        keywords  = self._get_keywords  ()
 
         if isinstance (function, FunctionType):
             function_description = function.__name__
@@ -444,10 +475,24 @@ class Binding (object):
             description = '%s for %s' % (description, function_description)
 
         if arguments:
-            return ('<%s (%s, ...)>'
-                    % (description, ', '.join ([formatter (argument) for argument in arguments])))
+            if keywords:
+                return ('<%s (%s, ...., **{%s, ...})>'
+                        % (description,
+                           ', '.join ([formatter (argument) for argument in arguments]),
+                           ', '.join (['%s=%s' % (formatter (key), formatter (value))
+                                       for key, value in keywords.items ()])))
+            else:
+                return ('<%s (%s, ...)>'
+                        % (description,
+                           ', '.join ([formatter (argument) for argument in arguments])))
         else:
-            return '<%s>' % description
+            if keywords:
+                return ('<%s (**{%s, ...})>'
+                        % (description,
+                           ', '.join (['%s=%s' % (formatter (key), formatter (value))
+                                       for key, value in keywords.items ()])))
+            else:
+                return '<%s>' % description
 
 
 BindingCompatibleTypes = (MethodType, Binding)
@@ -491,7 +536,7 @@ class WeakBinding (Binding):
     __slots__ = ('__callback', '__hash')
 
 
-    def __init__(self, callable_object, arguments = (), callback = None):
+    def __init__(self, callable_object, arguments = (), callback = None, keywords = None):
         """
         Initialize a new weak binding which will call C{callable_object}, I{prepending}
         fixed C{arguments} (if any) to those specified at call time.  Here,
@@ -522,7 +567,7 @@ class WeakBinding (Binding):
                                           its object is not weakly referencable.
         """
 
-        super (WeakBinding, self).__init__(callable_object, arguments)
+        super (WeakBinding, self).__init__(callable_object, arguments, keywords)
 
         if self._object is not None:
             if callback is not None and not is_callable (callback):
@@ -539,20 +584,20 @@ class WeakBinding (Binding):
         self.__hash = None
 
 
-    def wrap (cls, callable_object, arguments = (), callback = None):
+    def wrap (cls, callable_object, arguments = (), callback = None, keywords = None):
         # Inherit documentation somehow?
-        if arguments:
-            return cls (callable_object, arguments, callback)
+        if arguments or keywords:
+            return cls (callable_object, arguments, callback, keywords)
 
         if (isinstance (callable_object, BindingCompatibleTypes)
             and not isinstance (callable_object, WeakBinding)):
 
             if _PY3K:
                 if callable_object.__self__ is not None:
-                    return cls (callable_object, arguments, callback)
+                    return cls (callable_object, arguments, callback, keywords)
             else:
                 if callable_object.im_self is not None:
-                    return cls (callable_object, arguments, callback)
+                    return cls (callable_object, arguments, callback, keywords)
 
         return callable_object
 
@@ -569,7 +614,7 @@ class WeakBinding (Binding):
             return None
 
 
-    def __call__(self, *arguments):
+    def __call__(self, *arguments, **keywords):
         """
         Like C{L{Binding.__call__}}, but account for garbage-collected objects.  If object
         has been garbage-collected, then do nothing and return C{None}.
@@ -584,15 +629,9 @@ class WeakBinding (Binding):
         reference = self._object
 
         if reference is not None:
-            # NOTE: This is essentially inlined method of the superclass.  While calling
-            #       that method would be more proper, inlining it gives significant speed
-            #       improvement.  Since it makes no difference for derivatives, we
-            #       sacrifice "do what is right" principle in this case.
-
-            if self._get_class () is not None:
-                return self._get_function () (reference (), *(self._get_arguments () + arguments))
-            else:
-                return self._get_function () (*(self._get_arguments () + arguments))
+            # FIXME: Resurrect 0.2 optimization of inlining super method once that is more
+            #        stable.  It is an _important_ optimization.
+            return super (WeakBinding, self).__call__(*arguments, **keywords)
         else:
             return self._call_after_garbage_collecting ()
 

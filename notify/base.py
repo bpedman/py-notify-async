@@ -260,7 +260,7 @@ class AbstractValueObject (object):
             return False
 
 
-    def store (self, handler, *arguments):
+    def store (self, handler, *arguments, **keywords):
         """
         Make sure current value is ‘transmitted’ to C{handler} (with C{arguments}).  This
         means that the C{handler} is called once with the C{arguments} and the current
@@ -281,10 +281,10 @@ class AbstractValueObject (object):
                            C{arguments} and current object value.
         """
 
-        handler (*(arguments + (self.get (),)))
-        self.__get_changed_signal ().connect (handler, *arguments)
+        handler (*(arguments + (self.get (),)), **keywords)
+        self.__get_changed_signal ().connect (handler, *arguments, **keywords)
 
-    def store_safe (self, handler, *arguments):
+    def store_safe (self, handler, *arguments, **keywords):
         """
         Like C{L{store}}, except that if C{handler} is already connected to this object’s
         ‘changed’ signal, this method does nothing.  See C{L{Signal.connect_safe}} method
@@ -304,8 +304,8 @@ class AbstractValueObject (object):
         """
 
         if not self.__get_changed_signal ().is_connected (handler, *arguments):
-            handler (*(arguments + (self.get (),)))
-            self.__get_changed_signal ().connect (handler, *arguments)
+            handler (*(arguments + (self.get (),)), **keywords)
+            self.__get_changed_signal ().connect (handler, *arguments, **keywords)
 
             return True
 
@@ -604,7 +604,7 @@ class AbstractValueObject (object):
         return self.__flags < 0
 
 
-    def with_changes_frozen (self, callback, *arguments):
+    def with_changes_frozen (self, callback, *arguments, **keywords):
         """
         Execute C{callback} with optional C{arguments}, freezing ‘changed’ signal of this
         object.  In other words, any changes to object’s value until C{callback} returns
@@ -647,7 +647,7 @@ class AbstractValueObject (object):
             self.__flags   -= 4
 
             try:
-                return callback (*arguments)
+                return callback (*arguments, **keywords)
             finally:
                 self.__flags += 4
                 new_value     = self.get ()
@@ -655,7 +655,7 @@ class AbstractValueObject (object):
                 if new_value != original_value:
                     self._value_changed (new_value)
         else:
-            return callback (*arguments)
+            return callback (*arguments, **keywords)
 
 
     changed = property (__get_changed_signal,

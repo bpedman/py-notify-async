@@ -376,7 +376,7 @@ class AbstractSignal (object):
         raise_not_implemented_exception (self)
 
 
-    def is_connected (self, handler, *arguments):
+    def is_connected (self, handler, *arguments, **keywords):
         """
         Determine if C{handler} with C{arguments} is connected to the signal.  Note that
         this method doesn’t detect if there are several handlers equal to C{handler}
@@ -387,7 +387,7 @@ class AbstractSignal (object):
 
         raise_not_implemented_exception (self)
 
-    def is_blocked (self, handler, *arguments):
+    def is_blocked (self, handler, *arguments, **keywords):
         """
         Determine if C{handler} with C{arguments} is connected to the signal and blocked.
         Note that if there are several handlers equal to C{handler} connected, all are
@@ -399,7 +399,7 @@ class AbstractSignal (object):
         raise_not_implemented_exception (self)
 
 
-    def connect (self, handler, *arguments):
+    def connect (self, handler, *arguments, **keywords):
         """
         Connect C{handler} with C{arguments} to the signal.  This means that upon signal
         emission the handler will be called with emission arguments I{appended} to the
@@ -418,9 +418,9 @@ class AbstractSignal (object):
         C{L{do_connect}} and/or C{L{_wrap_handler}} instead.
         """
 
-        self.do_connect (self._wrap_handler (handler, *arguments))
+        self.do_connect (self._wrap_handler (handler, *arguments, **keywords))
 
-    def connect_safe (self, handler, *arguments):
+    def connect_safe (self, handler, *arguments, **keywords):
         """
         Connect C{handler} with C{arguments} to the signal unless it is connected already.
         This method either behaves identically to C{L{connect}} (if the handler is not
@@ -432,14 +432,14 @@ class AbstractSignal (object):
                   had been connected already.
         """
 
-        if not self.is_connected (handler, *arguments):
-            self.do_connect (self._wrap_handler (handler, *arguments))
+        if not self.is_connected (handler, *arguments, **keywords):
+            self.do_connect (self._wrap_handler (handler, *arguments, **keywords))
             return True
         else:
             return False
 
 
-    def _wrap_handler (self, handler, *arguments):
+    def _wrap_handler (self, handler, *arguments, **keywords):
         """
         Wrap C{handler} with C{arguments} into a single internally-used object.  It is
         legal to return C{handler} itself if C{arguments} tuple is empty and the class
@@ -454,7 +454,7 @@ class AbstractSignal (object):
         @rtype: C{object}
         """
 
-        return WeakBinding.wrap (handler, arguments)
+        return WeakBinding.wrap (handler, arguments, None, keywords)
 
 
     def do_connect (self, handler):
@@ -492,7 +492,7 @@ class AbstractSignal (object):
             return False
 
 
-    def disconnect (self, handler, *arguments):
+    def disconnect (self, handler, *arguments, **keywords):
         """
         Disconnect C{handler} with C{arguments} from the signal.  This means that upon
         signal emission the handler will not be called anymore.  Note that it is legal to
@@ -513,7 +513,7 @@ class AbstractSignal (object):
         raise_not_implemented_exception (self)
 
 
-    def disconnect_all (self, handler, *arguments):
+    def disconnect_all (self, handler, *arguments, **keywords):
         """
         Disconnect all instances of C{handler} with C{arguments} from the signal.  This
         means that upon signal emission the handler will not be called anymore.  Note that
@@ -530,8 +530,8 @@ class AbstractSignal (object):
                   connected to begin with.
         """
 
-        if self.disconnect (handler, *arguments):
-            while self.disconnect (handler, *arguments):
+        if self.disconnect (handler, *arguments, **keywords):
+            while self.disconnect (handler, *arguments, **keywords):
                 pass
 
             return True
@@ -540,7 +540,7 @@ class AbstractSignal (object):
             return False
 
 
-    def block (self, handler, *arguments):
+    def block (self, handler, *arguments, **keywords):
         """
         Block C{handler} with C{arguments} from being called during subsequent emissions.
         If C{handler} is not connected to the signal to begin with, do nothing and return
@@ -559,7 +559,7 @@ class AbstractSignal (object):
 
         raise_not_implemented_exception (self)
 
-    def unblock (self, handler, *arguments):
+    def unblock (self, handler, *arguments, **keywords):
         """
         Unblock a C{handler} with C{arguments}.  If the C{handler} is not connected or is
         not blocked, do nothing and return C{False}.  Else decrement its ‘block counter’
@@ -593,7 +593,7 @@ class AbstractSignal (object):
         del _2_5
 
 
-    def emit (self, *arguments):
+    def emit (self, *arguments, **keywords):
         """
         Invoke non-blocked handlers connected to C{self}, passing C{arguments} to them.
         Whether all handlers are called and the return value of this method are determined
@@ -611,7 +611,7 @@ class AbstractSignal (object):
 
         raise_not_implemented_exception (self)
 
-    def __call__(self, *arguments):
+    def __call__(self, *arguments, **keywords):
         """
         Same as C{L{emit}} method.
 
@@ -622,7 +622,7 @@ class AbstractSignal (object):
         @returns: Value, determined by subclass and, possibly, by its
                   L{accumulator <AbstractAccumulator>}.
         """
-        return self.emit (*arguments)
+        return self.emit (*arguments, **keywords)
 
 
     def _get_emission_level (self):
@@ -978,10 +978,10 @@ class Signal (AbstractSignal):
         return num_handlers
 
 
-    def is_connected (self, handler, *arguments):
+    def is_connected (self, handler, *arguments, **keywords):
         if self._handlers is not None and is_callable (handler):
-            if arguments:
-                handler = Binding (handler, arguments)
+            if arguments or keywords:
+                handler = Binding (handler, arguments, keywords)
 
             return handler in self._handlers
 
@@ -989,10 +989,10 @@ class Signal (AbstractSignal):
             return False
 
 
-    def is_blocked (self, handler, *arguments):
+    def is_blocked (self, handler, *arguments, **keywords):
         if self._blocked_handlers is not _EMPTY_TUPLE and is_callable (handler):
-            if arguments:
-                handler = Binding (handler, arguments)
+            if arguments or keywords:
+                handler = Binding (handler, arguments, keywords)
 
             return handler in self._blocked_handlers
 
@@ -1012,13 +1012,13 @@ class Signal (AbstractSignal):
     # disconnections made when emission is in effect.
 
 
-    def disconnect (self, handler, *arguments):
+    def disconnect (self, handler, *arguments, **keywords):
         handlers = self._handlers
         if handlers is None or not is_callable (handler):
             return False
 
-        if arguments:
-            handler = Binding (handler, arguments)
+        if arguments or keywords:
+            handler = Binding (handler, arguments, keywords)
 
         # Note: we must disconnect _last_ of equal connected handlers, in order to make
         # connect()/disconnect() a no-op.  We use a custom loop because of that (and since
@@ -1054,12 +1054,12 @@ class Signal (AbstractSignal):
 
     # Overriden for efficiency.
 
-    def disconnect_all (self, handler, *arguments):
+    def disconnect_all (self, handler, *arguments, **keywords):
         if self._handlers is None or not is_callable (handler):
             return False
 
-        if arguments:
-            handler = Binding (handler, arguments)
+        if arguments or keywords:
+            handler = Binding (handler, arguments, keywords)
 
         if self.__emission_level == 0:
             old_length     = len (self._handlers)
@@ -1090,10 +1090,10 @@ class Signal (AbstractSignal):
     # Note: we rely on the way remove() works to fulfill our blocking obligations.
 
 
-    def block (self, handler, *arguments):
+    def block (self, handler, *arguments, **keywords):
         if is_callable (handler) and self._handlers is not None:
-            if arguments:
-                handler = Binding (handler, arguments)
+            if arguments or keywords:
+                handler = Binding (handler, arguments, keywords)
 
             if handler in self._handlers:
                 if self._blocked_handlers is not _EMPTY_TUPLE:
@@ -1106,12 +1106,12 @@ class Signal (AbstractSignal):
         return False
 
 
-    def unblock (self, handler, *arguments):
+    def unblock (self, handler, *arguments, **keywords):
         if self._blocked_handlers is _EMPTY_TUPLE or not is_callable (handler):
             return False
 
-        if arguments:
-            handler = Binding (handler, arguments)
+        if arguments or keywords:
+            handler = Binding (handler, arguments, keywords)
 
         try:
             self._blocked_handlers.remove (handler)
@@ -1126,7 +1126,7 @@ class Signal (AbstractSignal):
             return False
 
 
-    def emit (self, *arguments):
+    def emit (self, *arguments, **keywords):
         # Speed optimization.
         handlers    = self._handlers
         accumulator = self.__accumulator
@@ -1167,12 +1167,12 @@ class Signal (AbstractSignal):
                     # `handler_value' first.
                     if accumulator is None:
                         try:
-                            handler (*arguments)
+                            handler (*arguments, **keywords)
                         except:
                             AbstractSignal.exception_handler (self, sys.exc_info () [1], handler)
                     else:
                         try:
-                            handler_value = handler (*arguments)
+                            handler_value = handler (*arguments, **keywords)
                         except:
                             AbstractSignal.exception_handler (self, sys.exc_info () [1], handler)
                         else:
@@ -1289,8 +1289,8 @@ class CleanSignal (Signal):
         super (CleanSignal, self).do_connect (handler)
 
 
-    def disconnect (self, handler, *arguments):
-        if super (CleanSignal, self).disconnect (handler, *arguments):
+    def disconnect (self, handler, *arguments, **keywords):
+        if super (CleanSignal, self).disconnect (handler, *arguments, **keywords):
             if (    self._get_emission_level () == 0
                 and self._handlers is None
                 and self.__parent is not None):
@@ -1301,8 +1301,8 @@ class CleanSignal (Signal):
         else:
             return False
 
-    def disconnect_all (self, handler, *arguments):
-        if super (CleanSignal, self).disconnect_all (handler, *arguments):
+    def disconnect_all (self, handler, *arguments, **keywords):
+        if super (CleanSignal, self).disconnect_all (handler, *arguments, **keywords):
             if (    self._get_emission_level () == 0
                 and self._handlers is None
                 and self.__parent is not None):
@@ -1314,8 +1314,11 @@ class CleanSignal (Signal):
             return False
 
 
-    def _wrap_handler (self, handler, *arguments):
-        return WeakBinding.wrap (handler, arguments, self.__handler_garbage_collected)
+    def _wrap_handler (self, handler, *arguments, **keywords):
+        return WeakBinding.wrap (handler,
+                                 arguments,
+                                 self.__handler_garbage_collected,
+                                 keywords)
 
     def __handler_garbage_collected (self, object):
         self.collect_garbage ()

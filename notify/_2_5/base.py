@@ -44,7 +44,7 @@ from contextlib import contextmanager
 
 
 @contextmanager
-def storing (self, handler, *arguments):
+def storing (self, handler, *arguments, **keywords):
     """
     storing(self, handler, *arguments)
 
@@ -96,16 +96,16 @@ def storing (self, handler, *arguments):
     @see:  C{L{AbstractSignal.disconnect}}
     """
 
-    self.store (handler, *arguments)
+    self.store (handler, *arguments, **keywords)
 
     try:
         yield self
     finally:
-        self.changed.disconnect (handler, *arguments)
+        self.changed.disconnect (handler, *arguments, **keywords)
 
 
 @contextmanager
-def storing_safely (self, handler, *arguments):
+def storing_safely (self, handler, *arguments, **keywords):
     """
     storing_safely(self, handler, *arguments)
 
@@ -135,11 +135,11 @@ def storing_safely (self, handler, *arguments):
     @see:  C{L{AbstractSignal.disconnect}}
     """
 
-    if self.store_safe (handler, *arguments):
+    if self.store_safe (handler, *arguments, **keywords):
         try:
             yield self
         finally:
-            self.changed.disconnect (handler, *arguments)
+            self.changed.disconnect (handler, *arguments, **keywords)
     else:
         yield self
 

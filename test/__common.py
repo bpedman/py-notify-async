@@ -65,6 +65,14 @@ class NotifyTestObject (object):
         self.simple_handler (200 + arguments[0])
 
 
+    def simple_keywords_handler (self, *arguments, **keywords):
+        if arguments:
+            arguments = arguments + (keywords,)
+            self.results.append (arguments)
+        else:
+            self.results.append (keywords)
+
+
 
 class NotifyTestCase (unittest.TestCase):
 

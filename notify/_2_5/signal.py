@@ -42,7 +42,7 @@ from contextlib import contextmanager
 
 
 @contextmanager
-def connecting (self, handler, *arguments):
+def connecting (self, handler, *arguments, **keywords):
     """
     connecting(self, handler, *arguments)
 
@@ -76,16 +76,16 @@ def connecting (self, handler, *arguments):
     @see:  C{L{disconnect}}
     """
 
-    self.connect (handler, *arguments)
+    self.connect (handler, *arguments, **keywords)
 
     try:
         yield self
     finally:
-        self.disconnect (handler, *arguments)
+        self.disconnect (handler, *arguments, **keywords)
 
 
 @contextmanager
-def connecting_safely (self, handler, *arguments):
+def connecting_safely (self, handler, *arguments, **keywords):
     """
     connecting_safely(self, handler, *arguments)
 
@@ -106,19 +106,19 @@ def connecting_safely (self, handler, *arguments):
     @see:  C{L{disconnect}}
     """
 
-    if self.connect_safe (handler, *arguments):
+    if self.connect_safe (handler, *arguments, **keywords):
         try:
             yield self
         finally:
-            self.disconnect (handler, *arguments)
+            self.disconnect (handler, *arguments, **keywords)
     else:
         yield self
 
 
 @contextmanager
-def blocking (self, handler, *arguments):
+def blocking (self, handler, *arguments, **keywords):
     """
-    blocking(self, handler, *arguments)
+    blocking(self, handler, *arguments, **keywords)
 
     Create a context manager temporarily blocking C{handler} with C{arguments}.  Upon
     exit, returned context manager unblocks the handler.
@@ -152,11 +152,11 @@ def blocking (self, handler, *arguments):
     @see:  C{L{unblock}}
     """
 
-    if self.block (handler, *arguments):
+    if self.block (handler, *arguments, **keywords):
         try:
             yield self
         finally:
-            self.unblock (handler, *arguments)
+            self.unblock (handler, *arguments, **keywords)
     else:
         yield self
 
