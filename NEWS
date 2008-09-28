@@ -1,3 +1,19 @@
+--- New in Py-notify 0.3.1  (??? 2008) ------------------------------
+
+* All methods that accepted arbitrary argument numbers now also accept
+  arbitrary keyword arguments.
+
+* Updated to compile and work with Python 3.0rc1.
+
+* A few minor fixes for potential bugs and optimizations in
+  `notify.gc' module and in documentation.
+
+* 6 more unit test (164/186 in total).
+
+
+######################################################################
+
+
 --- New in Py-notify 0.2.1  (21 September 2008) ----------------------
 
 * Updated to compile and work with Python 3.0rc1.

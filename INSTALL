@@ -3,9 +3,8 @@
 Py-notify requires Python 2.3 or later and a C compiler supported by
 distutils (there is one module written in C for performance reasons).
 
-Starting with 0.1.13, Py-notify should also work with SVN Python 3000.
-However, since Py3k itself is still an alpha stages, build can quickly
-become broken as Py3k changes.
+Py-notify should also work fine with Python 3.0.  However, as final
+Py3k hasn't been released yet, this cannot be guaranteed.
 
 
 

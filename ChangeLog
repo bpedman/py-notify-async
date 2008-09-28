@@ -1,3 +1,13 @@
+2008-09-28  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	--- Released 0.3.1 ---
+
+	* NEWS: Update.
+
+	* INSTALL: Update.
+
+	* TODO: Update.
+
 2008-09-27  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* test/bind.py (Dummy.keyword_dict_function)
