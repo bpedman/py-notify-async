@@ -1,3 +1,9 @@
+--- New in Py-notify 0.3.2  (??? -- in development) ------------------
+
+* Part of functionality of `notify.gc' module is now implemented in
+  Python, not C.
+
+
 --- New in Py-notify 0.3.1  (28 September 2008) ----------------------
 
 * All methods that accepted arbitrary argument numbers now also accept

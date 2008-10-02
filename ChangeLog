@@ -1,3 +1,39 @@
+2008-10-02  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/gc.py: New file.  Move basic functionality of `gc.c'
+	here.
+
+	* notify/_gc.c: Rename from `gc.c'.
+	(Compatibility_Fix_TypeType, Compatibility_String_FromString):
+	Remove now unneeded macros.
+	(Compatibility_Type_Type): New macro.
+	(MODULE_DOC): Move old documentation to `gc.py', replace with a
+	stub.
+	(UNPROTECTION_ERROR_DOC, GC_PROTECTOR_META_DOC)
+	(GC_PROTECTOR_META_DEFAULT_DOC, ABSTRACT_GC_PROTECTOR_DOC)
+	(ABSTRACT_GC_PROTECTOR_PROTECT_DOC)
+	(ABSTRACT_GC_PROTECTOR_UNPROTECT_DOC)
+	(ABSTRACT_GC_PROTECTOR_SET_DEFAULT_DOC): Move to `gc.py'.
+	(GCProtectorMeta_properties, GCProtectorMeta_Type)
+	(AbstractGCProtector_methods, AbstractGCProtector_Type): Remove,
+	now these types are declared in `gc.py'.
+	(GCProtectorMeta_setattro, GCProtectorMeta_get_default)
+	(GCProtectorMeta_set_default, AbstractGCProtector_dealloc)
+	(AbstractGCProtector_protect, AbstractGCProtector_unprotect)
+	(AbstractGCProtector_set_default, FastGCProtector_new): Remove
+	functions.
+	(gc_module_initialize_state): Adjust for the changes.
+	(gc_module_traverse): Adjust for changed `GCModuleState' layout
+	changes.
+	(REGISTER_TYPE): Treat `meta_type' as `PyTypeObject*', not
+	`PyTypeObject'.
+	(Compatibility_MODINIT_FUNC_NAME (_gc)): Rename for new module
+	name.  Adjust for changes.
+
+	* generate-reference.py: Don't document internal `notify._gc'.
+
+	* NEWS: Update.
+
 2008-09-28  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* version: Post-release version bump.

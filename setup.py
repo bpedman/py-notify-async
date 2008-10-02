@@ -211,8 +211,8 @@ distutils.util.byte_compile = custom_byte_compile
 
 
 
-gc_extension = Extension (name    = 'notify.gc',
-                          sources = [os.path.join ('notify', 'gc.c')])
+gc_extension = Extension (name    = 'notify._gc',
+                          sources = [os.path.join ('notify', '_gc.c')])
 
 
 
