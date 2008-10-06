@@ -68,9 +68,10 @@ class AbstractGCProtectorTestCase (NotifyTestCase):
         self.assertRaises (ValueError, create_assigner (42))
 
         # When current default protector is in use, it cannot be replaced.
-        AbstractGCProtector.default.protect (42)
+        value = 42
+        AbstractGCProtector.default.protect (value)
         self.assertRaises (ValueError, create_assigner (FastGCProtector ()))
-        AbstractGCProtector.default.unprotect (42)
+        AbstractGCProtector.default.unprotect (value)
 
 
 

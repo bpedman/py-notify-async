@@ -44,12 +44,16 @@ class AllTestCase (NotifyTestCase):
         self.assert_(isinstance (function, (types.FunctionType, types.BuiltinFunctionType)))
 
 
-    def assert_is_class (self, _class):
+    def assert_is_class (self, _class, should_have_slots = True):
         if issubclass (_class, Exception):
             self.assert_(isinstance (_class, ClassTypes), _class)
 
         else:
             self.assert_(isinstance (_class, type), _class)
+
+            # Special case.
+            if _class is type:
+                return
 
             # Also assert that classes define `__slots__' variable appropriately.  We use
             # a trick hoping that constructor of `_class' accepts a number of `None'
@@ -61,8 +65,18 @@ class AllTestCase (NotifyTestCase):
                 except:
                     continue
 
-                self.assertRaises (AttributeError, self.non_existing_attribute_setter (object))
+                if should_have_slots:
+                    self.assertRaises (AttributeError, self.non_existing_attribute_setter (object))
+                else:
+                    object.this_attribute_sure_doesnt_exist = 42
+                    self.assertEqual (object.this_attribute_sure_doesnt_exist, 42)
+
                 break
+
+    def assert_is_class_tuple (self, _tuple):
+        self.assert_(isinstance (_tuple, tuple))
+        for _class in _tuple:
+            self.assert_is_class (_class)
 
 
     def test_base (self):
@@ -70,15 +84,12 @@ class AllTestCase (NotifyTestCase):
 
 
     def test_bind (self):
-        self.assert_is_class (Binding)
-        self.assert_is_class (WeakBinding)
-        self.assert_is_class (RaisingWeakBinding)
-
-        for type in BindingCompatibleTypes:
-            self.assert_is_class (type)
-
-        self.assert_is_class (CannotWeakReferenceError)
-        self.assert_is_class (GarbageCollectedError)
+        self.assert_is_class       (Binding)
+        self.assert_is_class       (WeakBinding)
+        self.assert_is_class       (RaisingWeakBinding)
+        self.assert_is_class_tuple (BindingCompatibleTypes)
+        self.assert_is_class       (CannotWeakReferenceError)
+        self.assert_is_class       (GarbageCollectedError)
 
 
     def test_condition (self):
@@ -90,9 +101,10 @@ class AllTestCase (NotifyTestCase):
 
 
     def test_gc (self):
-        self.assert_is_class (AbstractGCProtector)
-        self.assert_is_class (FastGCProtector)
-        self.assert_is_class (DebugGCProtector)
+        self.assert_is_class (AbstractGCProtector, False)
+        self.assert_is_class (FastGCProtector,     False)
+        self.assert_is_class (RaisingGCProtector,  False)
+        self.assert_is_class (DebugGCProtector,    False)
 
 
     def test_mediator (self):
@@ -108,15 +120,19 @@ class AllTestCase (NotifyTestCase):
 
 
     def test_util (self):
-        self.assert_is_function (is_callable)
-        self.assert_is_function (is_valid_identifier)
-        self.assert_is_function (mangle_identifier)
+        self.assert_is_function    (is_callable)
+        self.assert_is_function    (is_valid_identifier)
+        self.assert_is_function    (mangle_identifier)
 
          # It is not a function, not a class...  Just test it is there.
-        self.assert_            (as_string)
+        self.assert_               (as_string)
 
-        self.assert_is_function (raise_not_implemented_exception)
-        self.assert_is_class    (DummyReference)
+        self.assert_is_function    (execute)
+        self.assert_is_function    (raise_not_implemented_exception)
+        self.assert_is_class       (frozendict)
+        self.assert_is_class       (DummyReference)
+        self.assert_is_class_tuple (ClassTypes)
+        self.assert_is_class       (StringType)
 
     def test_variable (self):
         self.assert_is_class (AbstractVariable)

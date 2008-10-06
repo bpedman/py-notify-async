@@ -143,9 +143,7 @@ def set_default (self, default):
 # This weird class creation only to workaround differences in specifying metaclass between
 # Python 2.x and 3.x.
 AbstractGCProtector = GCProtectorMeta ('AbstractGCProtector', (object,),
-                                       { # Extentions requires __slots__ to work properly.
-                                         '__slots__':   (),
-                                         'protect':     protect,
+                                       { 'protect':     protect,
                                          'unprotect':   unprotect,
                                          'set_default': set_default })
 

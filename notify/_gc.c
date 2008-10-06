@@ -167,7 +167,17 @@ typedef
 struct
 {
   PyObject_HEAD
-  long int  num_active_protections;
+  PyObject *  __dict__;
+  PyObject *  __weakref__;
+}
+AbstractGCProtector;
+
+
+typedef
+struct
+{
+  AbstractGCProtector  base;
+  long int             num_active_protections;
 }
 FastGCProtector;
 
@@ -175,10 +185,10 @@ FastGCProtector;
 typedef
 struct
 {
-  PyObject_HEAD
+  AbstractGCProtector  base;
   /* Note: no cyclic GC support is needed, because this dict is for internal use only. */
-  PyObject *  protected_objects_dict;
-  long int    num_active_protections;
+  PyObject *           protected_objects_dict;
+  long int             num_active_protections;
 }
 RaisingGCProtector;
 
@@ -189,8 +199,8 @@ typedef  RaisingGCProtector  DebugGCProtector;
 typedef
 struct
 {
-  PyObject *      unprotection_error_type;
-  PyTypeObject *  abstract_gc_protector_type;
+  PyObject *           unprotection_error_type;
+  PyTypeObject *       abstract_gc_protector_type;
 }
 GCModuleState;
 
@@ -830,12 +840,13 @@ gc_module_initialize_state (PyObject *self)
   if (!state->abstract_gc_protector_type)
     goto error;
 
-  if (state->abstract_gc_protector_type   ->tp_basicsize != sizeof (PyObject)
+  if (state->abstract_gc_protector_type   ->tp_basicsize != sizeof (AbstractGCProtector)
       || state->abstract_gc_protector_type->tp_itemsize  != 0)
     {
+      printf ("%d %d\n", state->abstract_gc_protector_type->tp_basicsize, sizeof (AbstractGCProtector));
       PyErr_SetString (PyExc_RuntimeError,
-                       "AbstractGCProtector must not have any fields (not even __dict__) "
-                       "for proper subclassing in the extension");
+                       "AbstractGCProtector must not have any slots (except for __dict__ and "
+                       "__weakref__) for proper subclassing in the extension");
       goto error;
     }
 
