@@ -25,7 +25,8 @@
 import gc
 import unittest
 
-from notify.gc import AbstractGCProtector
+from notify.gc    import AbstractGCProtector
+from notify.utils import PYTHON_IMPLEMENTATION
 
 
 __all__ = ('NotifyTestObject', 'NotifyTestCase', 'ignoring_exceptions')
@@ -79,8 +80,14 @@ class NotifyTestCase (unittest.TestCase):
     __have_skipped_tests = False
 
 
+    HAVE_CONTROLLABLE_GC = (PYTHON_IMPLEMENTATION == 'CPython')
+
+
     def setUp (self):
         super (NotifyTestCase, self).setUp ()
+
+        if not self.HAVE_CONTROLLABLE_GC:
+            return
 
         gc.set_threshold (0, 0, 0)
 
@@ -94,6 +101,9 @@ class NotifyTestCase (unittest.TestCase):
     # Those almost certainly indicate a memory leak.
     def tearDown (self):
         super (NotifyTestCase, self).tearDown ()
+
+        if not self.HAVE_CONTROLLABLE_GC:
+            return
 
         num_collectable_objects = self.collect_garbage ()
         if num_collectable_objects != self.__num_collectable_objects:
@@ -136,7 +146,17 @@ class NotifyTestCase (unittest.TestCase):
 
 
     def collect_garbage (self):
-        num_objects = self.__count_garbage_collectable_objects ()
+        if not self.HAVE_CONTROLLABLE_GC:
+            # Just try hard and hope it works.  FIXME: Inadequate.
+            for iteration in range (10):
+                gc.collect ()
+            return 0
+
+        def count_garbage_collectable_objects ():
+            return len ([object for object in gc.get_objects ()
+                         if type (object).__module__.startswith ('notify.')])
+
+        num_objects = count_garbage_collectable_objects ()
 
         # TODO: Account for 'statics' like notify.Condition.TRUE.  Condition below is
         #       always false due to these 'statics'.
@@ -146,7 +166,7 @@ class NotifyTestCase (unittest.TestCase):
         num_passes  = 0
         while num_passes < 20:
             gc.collect ()
-            num_objects_new = self.__count_garbage_collectable_objects ()
+            num_objects_new = count_garbage_collectable_objects ()
 
             if num_objects_new < num_objects:
                 num_objects  = num_objects_new
@@ -156,12 +176,6 @@ class NotifyTestCase (unittest.TestCase):
 
         # If we spent a lot of passes, something is probably wrong.
         return -1
-
-    def __count_garbage_collectable_objects ():
-        return len ([object for object in gc.get_objects ()
-                     if type (object).__module__.startswith ('notify.')])
-
-    __count_garbage_collectable_objects = staticmethod (__count_garbage_collectable_objects)
 
 
     def note_skipped_tests (tests_defined = False):

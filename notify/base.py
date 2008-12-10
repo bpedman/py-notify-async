@@ -918,7 +918,7 @@ class AbstractValueObject (object):
 
         if 'dict' in options and options['dict']:
             # Gracefully ignore if this type already has a dict.
-            if not cls.__dictoffset__:
+            if not _type_has_dictionary (cls):
                 yield '__slots__', '__dict__'
 
         if 'getter' in options:
@@ -991,6 +991,21 @@ class AbstractValueObject (object):
     _generate_derived_type_dictionary = classmethod  (_generate_derived_type_dictionary)
     _get_object                       = staticmethod (_get_object)
     _filter_options                   = staticmethod (_filter_options)
+
+
+
+# Not breaking out to `utils.py' because general case is far from being perfect.
+def _type_has_dictionary (cls):
+    if hasattr (cls, '__dictoffset__'):
+        return cls.__dictoffset__ > 0
+
+    try:
+        type (cls) ('_UNUSED_', (cls,), { '__slots__': '__dict__' })
+        return False
+    except Exception:
+        # Of course there might be other problems too, but this is the best I can come up
+        # with for now.
+        return True
 
 
 

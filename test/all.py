@@ -102,9 +102,13 @@ class AllTestCase (NotifyTestCase):
 
     def test_gc (self):
         self.assert_is_class (AbstractGCProtector, False)
-        self.assert_is_class (FastGCProtector,     False)
-        self.assert_is_class (RaisingGCProtector,  False)
-        self.assert_is_class (DebugGCProtector,    False)
+        self.assert_is_class (StandardGCProtector, False)
+        self.assert_is_class (SlowGCProtector,     False)
+
+        if HAVE_FAST_IMPLEMENTATIONS:
+            self.assert_is_class (FastGCProtector,    False)
+            self.assert_is_class (RaisingGCProtector, False)
+            self.assert_is_class (DebugGCProtector,   False)
 
 
     def test_mediator (self):

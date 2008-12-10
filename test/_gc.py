@@ -32,9 +32,12 @@ if __name__ == '__main__':
 import unittest
 import weakref
 
-from notify.gc     import AbstractGCProtector, FastGCProtector, DebugGCProtector, RaisingGCProtector
+from notify.gc     import AbstractGCProtector, StandardGCProtector, SlowGCProtector, \
+                          HAVE_FAST_IMPLEMENTATIONS
 from test.__common import NotifyTestCase
 
+if HAVE_FAST_IMPLEMENTATIONS:
+    from notify.gc import FastGCProtector, DebugGCProtector, RaisingGCProtector
 
 
 class WeaklyReferenceable (object):
@@ -50,7 +53,7 @@ class AbstractGCProtectorTestCase (NotifyTestCase):
         self.assert_(isinstance (original_protector, AbstractGCProtector))
 
         try:
-            new_protector = FastGCProtector ()
+            new_protector = StandardGCProtector ()
             AbstractGCProtector.default = new_protector
 
             self.assert_(AbstractGCProtector.default is new_protector)
@@ -70,7 +73,7 @@ class AbstractGCProtectorTestCase (NotifyTestCase):
         # When current default protector is in use, it cannot be replaced.
         value = 42
         AbstractGCProtector.default.protect (value)
-        self.assertRaises (ValueError, create_assigner (FastGCProtector ()))
+        self.assertRaises (ValueError, create_assigner (StandardGCProtector ()))
         AbstractGCProtector.default.unprotect (value)
 
 
@@ -158,46 +161,56 @@ class _GCProtectorTestCase (NotifyTestCase):
 
 
 
-class FastGCProtectorTestCase (_GCProtectorTestCase):
+class SlowGCProtectorTestCase (_GCProtectorTestCase):
 
     def test_protection_1 (self):
-        self._do_test_protection (FastGCProtector ())
+        self._do_test_protection (SlowGCProtector ())
 
     def test_protection_2 (self):
-        self._do_test_double_protection (FastGCProtector ())
+        self._do_test_double_protection (SlowGCProtector ())
 
 
 
-class RaisingGCProtectorTestCase (_GCProtectorTestCase):
+if HAVE_FAST_IMPLEMENTATIONS:
 
-    def test_protection_1 (self):
-        self._do_test_protection (RaisingGCProtector ())
+    class FastGCProtectorTestCase (_GCProtectorTestCase):
 
-    def test_protection_2 (self):
-        self._do_test_double_protection (RaisingGCProtector ())
+        def test_protection_1 (self):
+            self._do_test_protection (FastGCProtector ())
 
-    def test_protection_3 (self):
-        protector = RaisingGCProtector ()
-        a         = 1
-        b         = 2
-
-        self.assertRaises (ValueError, lambda: protector.unprotect (a))
-
-        protector.protect (a)
-        self.assertRaises (ValueError, lambda: protector.unprotect (b))
-
-        protector.unprotect (a)
-        self.assertRaises (ValueError, lambda: protector.unprotect (a))
+        def test_protection_2 (self):
+            self._do_test_double_protection (FastGCProtector ())
 
 
+    class RaisingGCProtectorTestCase (_GCProtectorTestCase):
 
-class DebugGCProtectorTestCase (_GCProtectorTestCase):
+        def test_protection_1 (self):
+            self._do_test_protection (RaisingGCProtector ())
 
-    def test_protection_1 (self):
-        self._do_test_protection (DebugGCProtector ())
+        def test_protection_2 (self):
+            self._do_test_double_protection (RaisingGCProtector ())
 
-    def test_protection_2 (self):
-        self._do_test_double_protection (DebugGCProtector ())
+        def test_protection_3 (self):
+            protector = RaisingGCProtector ()
+            a         = 1
+            b         = 2
+
+            self.assertRaises (ValueError, lambda: protector.unprotect (a))
+
+            protector.protect (a)
+            self.assertRaises (ValueError, lambda: protector.unprotect (b))
+
+            protector.unprotect (a)
+            self.assertRaises (ValueError, lambda: protector.unprotect (a))
+
+
+    class DebugGCProtectorTestCase (_GCProtectorTestCase):
+
+        def test_protection_1 (self):
+            self._do_test_protection (DebugGCProtector ())
+
+        def test_protection_2 (self):
+            self._do_test_double_protection (DebugGCProtector ())
 
 
 

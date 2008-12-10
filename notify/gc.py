@@ -41,11 +41,13 @@ themselves, they may pop up only if you use a garbage-collection protector yours
 """
 
 __docformat__ = 'epytext en'
-__all__       = ('GCProtectorMeta', 'AbstractGCProtector',
+__all__       = ('GCProtectorMeta', 'AbstractGCProtector', 'StandardGCProtector',
+                 'SlowGCProtector',
+                 'HAVE_FAST_IMPLEMENTATIONS',
                  'FastGCProtector', 'RaisingGCProtector', 'DebugGCProtector')
 
 
-from notify.utils import raise_not_implemented_exception
+from notify.utils import PYTHON_IMPLEMENTATION, raise_not_implemented_exception
 
 
 
@@ -156,6 +158,63 @@ del protect, unprotect, set_default
 
 
 
+class SlowGCProtector (AbstractGCProtector):
+
+    def __init__(self):
+        self.__protected_objects = { }
+
+
+    def protect (self, object):
+        if object is not None:
+            object_id         = id (object)
+            protected_objects = self.__protected_objects
+            protection_data   = protected_objects.get (object_id)
+
+            if protection_data is None:
+                protected_objects[object_id] = (object, 1)
+            else:
+                protected_objects[object_id] = (object, protection_data[1] + 1)
+
+        return object
+
+    def unprotect (self, object):
+        if object is not None:
+            object_id         = id (object)
+            protected_objects = self.__protected_objects
+            protection_data   = protected_objects.get (object_id)
+
+            if protection_data is not None:
+                num_object_protections = protection_data[1]
+                if num_object_protections == 1:
+                    del protected_objects[object_id]
+                else:
+                    protected_objects[object_id] = (object, num_object_protections - 1)
+            else:
+                raise UnprotectionError ('object is not protected by this %s' % type (self))
+
+        return object
+
+
+    def num_active_protections (self):
+        num_active_protections = 0
+        for object, num_object_protections in self.__protected_objects.values ():
+            num_active_protections += num_object_protections
+
+        return num_active_protections
+
+    num_active_protections = property (num_active_protections)
+
+
+    def get_num_object_protections (self, object):
+        if object is not None:
+            protection_data = self.__protected_objects.get (id (object))
+            if protection_data is not None:
+                return protection_data[1]
+
+        return 0
+
+
+
 class UnprotectionError (ValueError):
 
     """
@@ -166,11 +225,18 @@ class UnprotectionError (ValueError):
     """
 
 
+if PYTHON_IMPLEMENTATION == 'CPython':
+    from notify._gc import DebugGCProtector, FastGCProtector, RaisingGCProtector
 
-from notify._gc import DebugGCProtector, FastGCProtector, RaisingGCProtector
+    StandardGCProtector       = FastGCProtector
+    HAVE_FAST_IMPLEMENTATIONS = True
+
+else:
+    StandardGCProtector       = SlowGCProtector
+    HAVE_FAST_IMPLEMENTATIONS = False
 
 
-_default = FastGCProtector ()
+_default = StandardGCProtector ()
 
 
 

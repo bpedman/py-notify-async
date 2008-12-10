@@ -1,3 +1,41 @@
+2008-12-10  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/utils.py (PYTHON_IMPLEMENTATION): New constant, take
+	`sys.subversion[0]' (e.g. `CPython', `Jython'...) if possible,
+	else try to guess.
+
+	* notify/gc.py: Decide based on `PYTHON_IMPLEMENTATION' whether to
+	import `notify._gc' and set new `StandardGCProtector' and
+	`HAVE_FAST_IMPLEMENTATIONS' accordingly.
+	(SlowGCProtector): New class.
+	(_default): Make an instance of new `StandardGCProtector'.
+
+	* notify/base.py
+	(AbstractValueObject._generate_derived_type_dictionary): Use new
+	_type_has_dictionary().
+	(_type_has_dictionary): New function.
+
+	* test/__common.py (NotifyTestCase.HAVE_CONTROLLABLE_GC): New
+	constant, based on whether Python implementation is CPython.
+	(NotifyTestCase.setUp): Disable additional tests if
+	`HAVE_CONTROLLABLE_GC' is false.
+	(NotifyTestCase.tearDown): Likewise.
+	(NotifyTestCase.collect_garbage): A different half-hearted
+	implementation GC.
+
+	* test/all.py (AllTestCase.test_gc): Test new
+	`StandardGCProtector' and `SlowGCProtector'.  Test relevant
+	classes only if `HAVE_FAST_IMPLEMENTATIONS' is true.
+
+	* test/_gc.py (AbstractGCProtectorTestCase.test_default_property):
+	Use `StandardGCProtector' instead of `FastGCProtector'.
+	(AbstractGCProtectorTestCase.test_default_property_illegals):
+	Likewise.
+	(SlowGCProtectorTestCase): New test case.
+	(FastGCProtectorTestCase, RaisingGCProtectorTestCase)
+	(DebugGCProtectorTestCase): Only define if
+	`HAVE_FAST_IMPLEMENTATIONS' is true.
+
 2008-10-06  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/gc.py (AbstractGCProtector): Declare without `__slots__'.
