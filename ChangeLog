@@ -1,3 +1,30 @@
+2008-12-11  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* notify/gc.py (SlowGCProtector.num_protected_objects): New
+	property, as in `RaisingGCProtector'.
+
+	* notify/utils.py (_PYTHON_IMPLEMENTATION): Rename from
+	`PYTHON_IMPLEMENTATION' and don't export in `__all__'.
+
+	* test/__common.py (NotifyTestCase.ALL_OBJECTS_ARE_WEAKLY_REFERABLE):
+	New constant.
+	(NotifyTestCase.note_skipped_tests): Rewrite to allow for
+	different test skipping reasons.
+
+	* test/bind.py
+	(BindingTestCase.test_unreferable_object_method_failure): Rename
+	from `test_unreferencable_object_method_failure'.  Don't define if
+	all objects are weakly referable to begin with (e.g. on Jython).
+
+	* test/_gc.py (_GCProtectorTestCase._do_test_protection): Test
+	get_num_object_protections() and `num_protected_objects' for all
+	protectors but `FastGCProtector'.
+	(_GCProtectorTestCase._do_test_double_protection): Likewise.
+	(FastGCProtectorTestCase, RaisingGCProtectorTestCase)
+	(DebugGCProtectorTestCase): Use
+	NotifyTestCase.note_skipped_tests() to inform about test skipping,
+	don't just silently omit them for non-CPython.
+
 2008-12-10  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/utils.py (PYTHON_IMPLEMENTATION): New constant, take

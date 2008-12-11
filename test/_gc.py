@@ -85,7 +85,7 @@ class _GCProtectorTestCase (NotifyTestCase):
         reference = weakref.ref (object)
 
         self.assertEqual (protector.num_active_protections, 0)
-        if isinstance (protector, RaisingGCProtector):
+        if not (HAVE_FAST_IMPLEMENTATIONS and isinstance (protector, FastGCProtector)):
             self.assertEqual (protector.get_num_object_protections (object), 0)
             self.assertEqual (protector.num_protected_objects, 0)
 
@@ -94,7 +94,7 @@ class _GCProtectorTestCase (NotifyTestCase):
         protector.protect (object)
 
         self.assertEqual (protector.num_active_protections, 1)
-        if isinstance (protector, RaisingGCProtector):
+        if not (HAVE_FAST_IMPLEMENTATIONS and isinstance (protector, FastGCProtector)):
             self.assertEqual (protector.get_num_object_protections (object), 1)
             self.assertEqual (protector.num_protected_objects, 1)
 
@@ -106,7 +106,7 @@ class _GCProtectorTestCase (NotifyTestCase):
         protector.unprotect (reference ())
 
         self.assertEqual (protector.num_active_protections, 0)
-        if isinstance (protector, RaisingGCProtector):
+        if not (HAVE_FAST_IMPLEMENTATIONS and isinstance (protector, FastGCProtector)):
             self.assertEqual (protector.num_protected_objects, 0)
 
         self.collect_garbage ()
@@ -118,21 +118,21 @@ class _GCProtectorTestCase (NotifyTestCase):
         reference = weakref.ref (object)
 
         self.assertEqual (protector.num_active_protections, 0)
-        if isinstance (protector, RaisingGCProtector):
+        if not (HAVE_FAST_IMPLEMENTATIONS and isinstance (protector, FastGCProtector)):
             self.assertEqual (protector.get_num_object_protections (object), 0)
             self.assertEqual (protector.num_protected_objects, 0)
 
         protector.protect (object)
 
         self.assertEqual (protector.num_active_protections, 1)
-        if isinstance (protector, RaisingGCProtector):
+        if not (HAVE_FAST_IMPLEMENTATIONS and isinstance (protector, FastGCProtector)):
             self.assertEqual (protector.get_num_object_protections (object), 1)
             self.assertEqual (protector.num_protected_objects, 1)
 
         protector.protect (object)
 
         self.assertEqual (protector.num_active_protections, 2)
-        if isinstance (protector, RaisingGCProtector):
+        if not (HAVE_FAST_IMPLEMENTATIONS and isinstance (protector, FastGCProtector)):
             self.assertEqual (protector.get_num_object_protections (object), 2)
             self.assertEqual (protector.num_protected_objects, 1)
 
@@ -144,7 +144,7 @@ class _GCProtectorTestCase (NotifyTestCase):
         protector.unprotect (reference ())
 
         self.assertEqual (protector.num_active_protections, 1)
-        if isinstance (protector, RaisingGCProtector):
+        if not (HAVE_FAST_IMPLEMENTATIONS and isinstance (protector, FastGCProtector)):
             self.assertEqual (protector.num_protected_objects, 1)
 
         self.collect_garbage ()
@@ -153,7 +153,7 @@ class _GCProtectorTestCase (NotifyTestCase):
         protector.unprotect (reference ())
 
         self.assertEqual (protector.num_active_protections, 0)
-        if isinstance (protector, RaisingGCProtector):
+        if not (HAVE_FAST_IMPLEMENTATIONS and isinstance (protector, FastGCProtector)):
             self.assertEqual (protector.num_protected_objects, 0)
 
         self.collect_garbage ()
@@ -171,7 +171,8 @@ class SlowGCProtectorTestCase (_GCProtectorTestCase):
 
 
 
-if HAVE_FAST_IMPLEMENTATIONS:
+if NotifyTestCase.note_skipped_tests (HAVE_FAST_IMPLEMENTATIONS,
+                                      NotifyTestCase.REASON_INVALID_FOR_IMPLEMENTATION):
 
     class FastGCProtectorTestCase (_GCProtectorTestCase):
 

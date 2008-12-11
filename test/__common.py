@@ -24,9 +24,10 @@
 
 import gc
 import unittest
+import weakref
 
 from notify.gc    import AbstractGCProtector
-from notify.utils import PYTHON_IMPLEMENTATION
+from notify.utils import _PYTHON_IMPLEMENTATION
 
 
 __all__ = ('NotifyTestObject', 'NotifyTestCase', 'ignoring_exceptions')
@@ -77,10 +78,18 @@ class NotifyTestObject (object):
 
 class NotifyTestCase (unittest.TestCase):
 
-    __have_skipped_tests = False
+    HAVE_CONTROLLABLE_GC = (_PYTHON_IMPLEMENTATION == 'CPython')
 
+    try:
+        weakref.ref (object ())
+        ALL_OBJECTS_ARE_WEAKLY_REFERABLE = True
+    except TypeError:
+        ALL_OBJECTS_ARE_WEAKLY_REFERABLE = False
 
-    HAVE_CONTROLLABLE_GC = (PYTHON_IMPLEMENTATION == 'CPython')
+    REASON_OLD_PYTHON                 = 'because they require a later Python version to run'
+    REASON_INVALID_FOR_IMPLEMENTATION = 'because they are not valid for your Python implementation'
+
+    __test_skip_reasons = []
 
 
     def setUp (self):
@@ -178,20 +187,25 @@ class NotifyTestCase (unittest.TestCase):
         return -1
 
 
-    def note_skipped_tests (tests_defined = False):
-        if tests_defined or NotifyTestCase.__have_skipped_tests:
-            return tests_defined
+    def note_skipped_tests (tests_defined = False, reason = REASON_OLD_PYTHON):
+        if tests_defined:
+            return True
 
-        import sys
-        import atexit
+        if not NotifyTestCase.__test_skip_reasons:
+            import sys
+            import atexit
 
-        atexit.register (sys.stdout.write,
-                         ('\nSome tests were skipped because '
-                          'they require a later Python version to run\n'))
+            def announce_test_skipping ():
+                sys.stdout.write ('\n')
+                for reason in NotifyTestCase.__test_skip_reasons:
+                    sys.stdout.write ('Some tests were skipped %s\n' % reason)
 
-        NotifyTestCase.__have_skipped_tests = True
+            atexit.register (announce_test_skipping)
 
-        return tests_defined
+        if reason not in NotifyTestCase.__test_skip_reasons:
+            NotifyTestCase.__test_skip_reasons.append (reason)
+
+        return False
 
 
     note_skipped_tests = staticmethod (note_skipped_tests)

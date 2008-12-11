@@ -104,14 +104,16 @@ class BindingTestCase (NotifyTestCase):
                           keywords)
 
 
-    def test_unreferencable_object_method_failure (self):
-        class Test (object):
-            __slots__ = ()
-            def test (self):
-                pass
+    if NotifyTestCase.note_skipped_tests (not NotifyTestCase.ALL_OBJECTS_ARE_WEAKLY_REFERABLE,
+                                          NotifyTestCase.REASON_INVALID_FOR_IMPLEMENTATION):
+        def test_unreferable_object_method_failure (self):
+            class Test (object):
+                __slots__ = ()
+                def test (self):
+                    pass
 
-        self.assertRaises (CannotWeakReferenceError, lambda: WeakBinding        (Test ().test))
-        self.assertRaises (CannotWeakReferenceError, lambda: RaisingWeakBinding (Test ().test))
+            self.assertRaises (CannotWeakReferenceError, lambda: WeakBinding        (Test ().test))
+            self.assertRaises (CannotWeakReferenceError, lambda: RaisingWeakBinding (Test ().test))
 
 
     def test_equality_1 (self):

@@ -47,7 +47,7 @@ __all__       = ('GCProtectorMeta', 'AbstractGCProtector', 'StandardGCProtector'
                  'FastGCProtector', 'RaisingGCProtector', 'DebugGCProtector')
 
 
-from notify.utils import PYTHON_IMPLEMENTATION, raise_not_implemented_exception
+from notify.utils import _PYTHON_IMPLEMENTATION, raise_not_implemented_exception
 
 
 
@@ -195,6 +195,9 @@ class SlowGCProtector (AbstractGCProtector):
         return object
 
 
+    def num_protected_objects (self):
+        return len (self.__protected_objects)
+
     def num_active_protections (self):
         num_active_protections = 0
         for object, num_object_protections in self.__protected_objects.values ():
@@ -202,6 +205,7 @@ class SlowGCProtector (AbstractGCProtector):
 
         return num_active_protections
 
+    num_protected_objects  = property (num_protected_objects)
     num_active_protections = property (num_active_protections)
 
 
@@ -225,7 +229,7 @@ class UnprotectionError (ValueError):
     """
 
 
-if PYTHON_IMPLEMENTATION == 'CPython':
+if _PYTHON_IMPLEMENTATION == 'CPython':
     from notify._gc import DebugGCProtector, FastGCProtector, RaisingGCProtector
 
     StandardGCProtector       = FastGCProtector

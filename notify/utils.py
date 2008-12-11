@@ -52,8 +52,7 @@ could just write ``__slots__ = ('__x')``, I thought it needed to be
 """
 
 __docformat__ = 'epytext en'
-__all__       = ('PYTHON_IMPLEMENTATION',
-                 'is_callable', 'is_valid_identifier', 'mangle_identifier',
+__all__       = ('is_callable', 'is_valid_identifier', 'mangle_identifier',
                  'as_string',
                  'raise_not_implemented_exception',
                  'execute',
@@ -67,17 +66,19 @@ import weakref
 from keyword import iskeyword
 
 
+# Not public because it's an unreliable guess in common case.
+
 if hasattr (sys, 'subversion'):
-    PYTHON_IMPLEMENTATION = sys.subversion[0]
+    _PYTHON_IMPLEMENTATION = sys.subversion[0]
 elif sys.version_info[:2] < (2, 5):
     try:
         weakref.ref (object ())
     except TypeError:
         # This is a guess, yeah.
-        PYTHON_IMPLEMENTATION = 'CPython'
+        _PYTHON_IMPLEMENTATION = 'CPython'
 
-if 'PYTHON_IMPLEMENTATION' not in globals ():
-    PYTHON_IMPLEMENTATION = '?'
+if '_PYTHON_IMPLEMENTATION' not in globals ():
+    _PYTHON_IMPLEMENTATION = '?'
 
 
 
