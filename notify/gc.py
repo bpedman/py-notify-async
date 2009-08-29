@@ -77,7 +77,7 @@ class GCProtectorMeta (type):
             num_active_protections = None
 
         if num_active_protections:
-            raise ValueError ('cannot set a different GC protector: current has active protections'
+            raise ValueError ('cannot set a different GC protector: current has active protections '
                               '(num_active_protections = %s)' % num_active_protections)
 
         _default = default

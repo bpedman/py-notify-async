@@ -74,3 +74,45 @@ initialization is back to normal.
 So, while we currently don't use multiple inheritance at all, let's do
 what is right and not track obscure bugs later.  Besides, who knows if
 a user of the library uses multiple inheritance for some reason?
+
+
+
+			   WEAK REFERENCES
+
+Properly handling weak references can be particularly difficult and
+even more so to test.  Especially on implementations like Jython
+which, unlike CPython, do not delete objects with no references
+immediately.  Most problematic situation is where you change reference
+field and need that cleanup code is run not more than once:
+
+	def __init__(self, some_object):
+	    self.reference = weakref.ref (some_object, self.cleanup)
+
+	# Must be called at most once.
+	def cleanup (self, ignored = None):
+	    self.reference = None
+
+	def remove_object (self):
+	    if self.reference is not None:
+	        self.cleanup ()
+
+This code is buggy, because garbage collection can be done after the
+test in remove_object(), but before it calls cleanup().  So, cleanup()
+will be called twice: first from weak reference becoming dead then
+from remove_object().
+
+Proper fix to it looks this way:
+
+	def remove_object (self):
+	    reference = self.reference
+	    if reference is not None:
+	        some_object = reference ()
+		if some_object is not None:
+	            self.cleanup ()
+
+If `some_object' above is not None then `reference' is not dead and
+cleanup() cannot have been called.  Note that both assignments are
+necessary.
+
+However, an easier fix (especially if you can call cleanup() from more
+than one place) is to never change reference value.

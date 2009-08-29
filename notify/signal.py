@@ -110,7 +110,7 @@ import weakref
 
 from notify.bind  import Binding, WeakBinding
 from notify.gc    import AbstractGCProtector
-from notify.utils import is_callable, raise_not_implemented_exception
+from notify.utils import is_callable, raise_not_implemented_exception, DummyReference
 
 try:
     import contextlib
@@ -1231,6 +1231,9 @@ class Signal (AbstractSignal):
 
 #-- Handler auto-disconnecting signal class --------------------------
 
+# Implementation note: `__parent' is always a reference (either a weak one or
+# `_NONE_REFERENCE') and never changes once the signal is created.
+
 class CleanSignal (Signal):
 
     """
@@ -1260,7 +1263,10 @@ class CleanSignal (Signal):
         if parent is not None:
             self.__parent = weakref.ref (parent, self.__orphan)
         else:
-            self.__parent = None
+            self.__parent = _NONE_REFERENCE
+
+
+    parent = property (lambda self: self.__parent ())
 
 
     def orphan (self):
@@ -1270,20 +1276,18 @@ class CleanSignal (Signal):
         protection is removed.
         """
 
-        if self.__parent is not None:
-            # Note that we must clear `__parent' first, because call to unprotect() below
-            # can invoke our collect_garbage() which might then call unprotect() once more
-            # (i.e. one time too many in result).
-            self.__parent = None
-            if self._handlers is not None:
-                AbstractGCProtector.default.unprotect (self)
+        parent = self.__parent ()
+        if parent is not None:
+            self.__orphan ()
 
     def __orphan (self, reference = None):
-        self.orphan ()
+        if self._handlers is not None:
+            AbstractGCProtector.default.unprotect (self)
 
 
     def do_connect (self, handler):
-        if self._handlers is None and self.__parent is not None:
+        parent = self.__parent ()
+        if self._handlers is None and parent is not None:
             AbstractGCProtector.default.protect (self)
 
         super (CleanSignal, self).do_connect (handler)
@@ -1291,9 +1295,10 @@ class CleanSignal (Signal):
 
     def disconnect (self, handler, *arguments, **keywords):
         if super (CleanSignal, self).disconnect (handler, *arguments, **keywords):
-            if (    self._get_emission_level () == 0
+            parent = self.__parent ()
+            if (self._get_emission_level () == 0
                 and self._handlers is None
-                and self.__parent is not None):
+                and parent is not None):
                 AbstractGCProtector.default.unprotect (self)
 
             return True
@@ -1303,9 +1308,10 @@ class CleanSignal (Signal):
 
     def disconnect_all (self, handler, *arguments, **keywords):
         if super (CleanSignal, self).disconnect_all (handler, *arguments, **keywords):
-            if (    self._get_emission_level () == 0
+            parent = self.__parent ()
+            if (self._get_emission_level () == 0
                 and self._handlers is None
-                and self.__parent is not None):
+                and parent is not None):
                 AbstractGCProtector.default.unprotect (self)
 
             return True
@@ -1337,17 +1343,22 @@ class CleanSignal (Signal):
 
             if not self._handlers:
                 self._handlers = None
-                if self.__parent is not None:
+                parent         = self.__parent ()
+                if parent is not None:
                     AbstractGCProtector.default.unprotect (self)
 
 
     def _additional_description (self, formatter):
-        if self.__parent is not None:
-            descriptions = ['parent: %s' % formatter (self.__parent ())]
+        parent = self.__parent ()
+        if parent is not None:
+            descriptions = ['parent: %s' % formatter (parent)]
         else:
             descriptions = []
 
         return descriptions + super (CleanSignal, self)._additional_description (formatter)
+
+
+_NONE_REFERENCE = DummyReference (None)
 
 
 

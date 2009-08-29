@@ -1,3 +1,15 @@
+2009-08-29  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* HACKING (Weak References): New section.
+
+	* notify/signal.py (CleanSignal.__init__, CleanSignal.orphan)
+	(CleanSignal.__orphan, CleanSignal.do_connect)
+	(CleanSignal.disconnect, CleanSignal.disconnect_all)
+	(CleanSignal.collect_garbage)
+	(CleanSignal._additional_description): Fix accordingly.
+	(CleanSignal.parent): New property.
+	(_NONE_REFERENCE): New internal constant.
+
 2008-12-11  Paul Pogonyshev  <pogonyshev@gmx.net>
 
 	* notify/gc.py (SlowGCProtector.num_protected_objects): New
