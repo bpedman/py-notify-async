@@ -102,15 +102,17 @@ G{classtree AbstractSignal}
 """
 
 __docformat__ = 'epytext en'
-__all__       = ('AbstractSignal', 'Signal', 'CleanSignal')
+__all__ = ('AbstractSignal', 'Signal', 'CleanSignal')
 
 
 import sys
 import weakref
+import Queue
+import threading
 
-from notify.bind  import Binding, WeakBinding
-from notify.gc    import AbstractGCProtector
-from notify.utils import is_callable, raise_not_implemented_exception, DummyReference
+from notify.bind    import Binding, WeakBinding
+from notify.gc      import AbstractGCProtector
+from notify.utils   import is_callable, raise_not_implemented_exception, DummyReference
 
 try:
     import contextlib
@@ -581,14 +583,14 @@ class AbstractSignal (object):
 
         from notify._2_5 import signal as _2_5
 
-        connecting                   = _2_5.connecting
-        connecting_safely            = _2_5.connecting_safely
-        blocking                     = _2_5.blocking
+        connecting = _2_5.connecting
+        connecting_safely = _2_5.connecting_safely
+        blocking = _2_5.blocking
 
         # This is needed so that Epydoc sees docstrings as UTF-8 encoded.
-        connecting.__module__        = __module__
+        connecting.__module__ = __module__
         connecting_safely.__module__ = __module__
-        blocking.__module__          = __module__
+        blocking.__module__ = __module__
 
         del _2_5
 
@@ -680,8 +682,8 @@ class AbstractSignal (object):
         pass
 
 
-    emission_level   = property (lambda self: self._get_emission_level (),
-                                 doc = ("""
+    emission_level = property (lambda self: self._get_emission_level (),
+                                 doc=("""
                                  The number of unfinished calls to C{L{emit}} method of
                                  this signal.  For instance, if this signal hasn’t been
                                  emitted at all, the return value will be 0.  If called
@@ -698,7 +700,7 @@ class AbstractSignal (object):
                                  """))
 
     emission_stopped = property (lambda self: self._is_emission_stopped (),
-                                 doc = ("""
+                                 doc=("""
                                  Flag indicating if the latest emission in progress has
                                  been stopped with C{L{stop_emission}} method.  In
                                  particular, it is C{False} if (but not only if) the
@@ -811,13 +813,13 @@ class AbstractSignal (object):
         raise exception
 
 
-    default_exception_handler   = staticmethod (default_exception_handler)
-    ignoring_exception_handler  = staticmethod (ignoring_exception_handler)
-    printing_exception_handler  = staticmethod (printing_exception_handler)
+    default_exception_handler = staticmethod (default_exception_handler)
+    ignoring_exception_handler = staticmethod (ignoring_exception_handler)
+    printing_exception_handler = staticmethod (printing_exception_handler)
     reraising_exception_handler = staticmethod (reraising_exception_handler)
 
 
-    exception_handler           = default_exception_handler
+    exception_handler = default_exception_handler
     """
     Handler for exceptions occured in signal handlers.  When a signal handler doesn’t
     return but raises an exception instead, C{AbstractSignal.exception_handler} is called.
@@ -920,10 +922,10 @@ class Signal (AbstractSignal):
     interested in C{L{CleanSignal}}.
     """
 
-    __slots__ = ('_handlers', '_blocked_handlers', '__accumulator', '__emission_level')
+    __slots__ = ('threads', '_handlers', '_blocked_handlers', '__accumulator', '__emission_level')
 
 
-    def __init__(self, accumulator = None):
+    def __init__(self, accumulator=None, threads=3):
         """
         Create a new C{Signal} with specified C{accumulator}.  By default, the signal will
         not have any accumulator, so its C{L{emit}} method will always discard handlers’s
@@ -931,6 +933,8 @@ class Signal (AbstractSignal):
 
         @param  accumulator: optional accumulator for signal handlers’ return values.
         @type   accumulator: C{L{AbstractAccumulator}} or C{None}
+        @param  threads: Maximum number of threads that will be started
+        @type   threads: C{int}
 
         @raises TypeError:   if C{accumulator} is not C{None} and not an instance of
                              C{AbstractAccumulator}.
@@ -941,14 +945,15 @@ class Signal (AbstractSignal):
 
         super (Signal, self).__init__()
 
-        self._handlers         = None
+        self.threads = 3
+        self._handlers = None
         self._blocked_handlers = _EMPTY_TUPLE
-        self.__accumulator     = accumulator
-        self.__emission_level  = 0
+        self.__accumulator = accumulator
+        self.__emission_level = 0
 
 
     accumulator = property (lambda self: self.__accumulator,
-                            doc = ("""
+                            doc=("""
                             The L{accumulator <AbstractAccumulator>} this signal was
                             created with or C{None}.  Accumulator cannot be changed, it
                             can only be specified at signal creation time.
@@ -1034,7 +1039,7 @@ class Signal (AbstractSignal):
                 else:
                     handlers[index] = None
 
-                if (    self._blocked_handlers is not _EMPTY_TUPLE
+                if (self._blocked_handlers is not _EMPTY_TUPLE
                     and handler not in handlers[:index]):
                     # This is the last handler, need to make sure it is not listed in
                     # `_blocked_handlers'.
@@ -1062,9 +1067,9 @@ class Signal (AbstractSignal):
             handler = Binding (handler, arguments, keywords)
 
         if self.__emission_level == 0:
-            old_length     = len (self._handlers)
+            old_length = len (self._handlers)
             self._handlers = [_handler for _handler in self._handlers if _handler != handler]
-            any_removed    = (len (self._handlers) != old_length)
+            any_removed = (len (self._handlers) != old_length)
 
             if not self._handlers:
                 self._handlers = None
@@ -1075,7 +1080,7 @@ class Signal (AbstractSignal):
             for index, _handler in enumerate (self._handlers):
                 if _handler == handler:
                     self._handlers[index] = None
-                    any_removed           = True
+                    any_removed = True
 
         if any_removed and self._blocked_handlers is not _EMPTY_TUPLE:
             self._blocked_handlers = [_handler for _handler in self._blocked_handlers
@@ -1128,7 +1133,7 @@ class Signal (AbstractSignal):
 
     def emit (self, *arguments, **keywords):
         # Speed optimization.
-        handlers    = self._handlers
+        handlers = self._handlers
         accumulator = self.__accumulator
 
         if accumulator is not None:
@@ -1136,9 +1141,13 @@ class Signal (AbstractSignal):
 
         if handlers is not None:
             try:
-                saved_emission_level  = self.__emission_level
+                saved_emission_level = self.__emission_level
                 self.__emission_level = abs (saved_emission_level) + 1
-                might_have_garbage    = False
+                might_have_garbage = False
+
+                if accumulator is None:
+                    # Handler execution work queue for threads
+                    work_queue = Queue.Queue()
 
                 for handler in handlers:
                     # Disconnected while in emission handlers are temporary set to None.
@@ -1166,11 +1175,9 @@ class Signal (AbstractSignal):
                     # Another speed optimization, check if we even need that
                     # `handler_value' first.
                     if accumulator is None:
-                        try:
-                            handler (*arguments, **keywords)
-                        except:
-                            AbstractSignal.exception_handler (self, sys.exc_info () [1], handler)
+                        work_queue.put(handler)
                     else:
+                        # Needs to be processed in order, don't use threads
                         try:
                             handler_value = handler (*arguments, **keywords)
                         except:
@@ -1180,6 +1187,19 @@ class Signal (AbstractSignal):
                             if not accumulator.should_continue (value):
                                 might_have_garbage = True
                                 break
+
+                if accumulator is None:
+                    max_threads = self.max_threads()
+                    # Start the worker threads to start processing the handlers
+                    for _ in range(max_threads):
+                        t = SignalHandler(self, work_queue, arguments, keywords)
+                        try:
+                            t.daemon = True
+                        except:
+                            print sys.exc_info()[:-1]
+                            raise
+                        t.start()
+                    work_queue.join()
             finally:
                 self.__emission_level = saved_emission_level
                 if might_have_garbage and saved_emission_level == 0:
@@ -1190,6 +1210,12 @@ class Signal (AbstractSignal):
         else:
             return accumulator.post_process_value (value)
 
+    def max_threads(self):
+        """ Calculates maximum number of threads that will be started """
+        num_handlers = self.count_handlers()
+        if self.threads < num_handlers:
+            return self.threads
+        return num_handlers
 
     def _get_emission_level (self):
         return abs (self.__emission_level)
@@ -1227,7 +1253,28 @@ class Signal (AbstractSignal):
 
         return descriptions + super (Signal, self)._additional_description (formatter)
 
+class SignalHandler(threading.Thread):
 
+    def __init__(self, signal, queue, args, kwargs):
+        super(SignalHandler, self).__init__()
+        self.signal = signal
+        self.queue = queue
+        self.args = args
+        self.kwargs = kwargs
+
+    def run(self):
+        while True:
+            try:
+                handler = self.queue.get()
+            except Queue.Empty:
+                break
+
+            try:
+                handler (*self.args, **self.kwargs)
+            except:
+                AbstractSignal.exception_handler (self.signal, sys.exc_info () [1], handler)
+            finally:
+                self.queue.task_done()
 
 #-- Handler auto-disconnecting signal class --------------------------
 
@@ -1248,7 +1295,7 @@ class CleanSignal (Signal):
     __slots__ = ('__parent', '__weakref__')
 
 
-    def __init__(self, parent = None, accumulator = None):
+    def __init__(self, parent=None, accumulator=None):
         """
         Create a new C{CleanSignal} with specified C{parent} and C{accumulator}.  If
         C{parent} is not C{None}, it will be protected from garbage collection while the
@@ -1280,7 +1327,7 @@ class CleanSignal (Signal):
         if parent is not None:
             self.__orphan ()
 
-    def __orphan (self, reference = None):
+    def __orphan (self, reference=None):
         if self._handlers is not None:
             AbstractGCProtector.default.unprotect (self)
 
@@ -1343,7 +1390,7 @@ class CleanSignal (Signal):
 
             if not self._handlers:
                 self._handlers = None
-                parent         = self.__parent ()
+                parent = self.__parent ()
                 if parent is not None:
                     AbstractGCProtector.default.unprotect (self)
 

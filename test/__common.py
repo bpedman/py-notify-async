@@ -49,7 +49,18 @@ class NotifyTestObject (object):
     def assert_results (self, *results):
         valid_results = list (results)
 
+        try:
+            self.results.sort()
+            results.sort()
+        except: pass
+
         if self.results != valid_results:
+            if len(self.results) == len(valid_results):
+                for item in self.results:
+                    if not (item in valid_results):
+                        break
+                else:
+                    return
             raise AssertionError ('results: %s; expected: %s' % (self.results, valid_results))
 
 
@@ -86,7 +97,7 @@ class NotifyTestCase (unittest.TestCase):
     except TypeError:
         ALL_OBJECTS_ARE_WEAKLY_REFERABLE = False
 
-    REASON_OLD_PYTHON                 = 'because they require a later Python version to run'
+    REASON_OLD_PYTHON = 'because they require a later Python version to run'
     REASON_INVALID_FOR_IMPLEMENTATION = 'because they are not valid for your Python implementation'
 
     __test_skip_reasons = []
@@ -101,7 +112,7 @@ class NotifyTestCase (unittest.TestCase):
         gc.set_threshold (0, 0, 0)
 
         self.__num_collectable_objects = self.collect_garbage ()
-        self.__num_active_protections  = AbstractGCProtector.default.num_active_protections
+        self.__num_active_protections = AbstractGCProtector.default.num_active_protections
 
 
     # It is important to leave no garbage behind, since `AbstractGCProtector.default' is
@@ -127,12 +138,12 @@ class NotifyTestCase (unittest.TestCase):
                                  AbstractGCProtector.default.num_active_protections))
 
 
-    def non_existing_attribute_setter (self, object, name = 'this_attribute_sure_doesnt_exist'):
+    def non_existing_attribute_setter (self, object, name='this_attribute_sure_doesnt_exist'):
         return lambda: setattr (object, name, None)
 
 
     def assert_equal_thoroughly (self, value1, value2):
-        self.assert_(    value1 == value2)
+        self.assert_(value1 == value2)
         self.assert_(not value1 != value2)
 
         try:
@@ -148,7 +159,7 @@ class NotifyTestCase (unittest.TestCase):
 
 
     def assert_not_equal_thoroughly (self, value1, value2):
-        self.assert_(    value1 != value2)
+        self.assert_(value1 != value2)
         self.assert_(not value1 == value2)
 
         # Note: hashes are _not_ required to be different, so don't test them.
@@ -172,14 +183,14 @@ class NotifyTestCase (unittest.TestCase):
         if num_objects == 0:
             return 0
 
-        num_passes  = 0
+        num_passes = 0
         while num_passes < 20:
             gc.collect ()
             num_objects_new = count_garbage_collectable_objects ()
 
             if num_objects_new < num_objects:
-                num_objects  = num_objects_new
-                num_passes  += 1
+                num_objects = num_objects_new
+                num_passes += 1
             else:
                 return num_objects
 
@@ -187,7 +198,7 @@ class NotifyTestCase (unittest.TestCase):
         return -1
 
 
-    def note_skipped_tests (tests_defined = False, reason = REASON_OLD_PYTHON):
+    def note_skipped_tests (tests_defined=False, reason=REASON_OLD_PYTHON):
         if tests_defined:
             return True
 
